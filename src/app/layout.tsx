@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, Inter } from 'next/font/google';
 import './globals.css';
 
 const geistSans = Geist({
@@ -12,6 +12,8 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+const inter = Inter({ subsets: ['latin'] });
+
 export const metadata: Metadata = {
   title: 'Budżet domowy',
   description: 'Aplikacja do zarządzania budżetem domowym',
@@ -23,10 +25,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pl">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="pl" className={`${inter.className} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+
         {children}
       </body>
     </html>
