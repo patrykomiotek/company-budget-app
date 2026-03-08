@@ -11,11 +11,32 @@ const createTransactionSchema = z.object({
   date: z.string(),
   subcategoryId: z.string().min(1, 'Wybierz podkategorię'),
   description: z.string().optional(),
+  merchantName: z.string().optional(),
 });
 
 const updateTransactionSchema = createTransactionSchema.extend({
   id: z.string().min(1),
 });
+
+async function findOrCreateMerchant(name: string, userId: string): Promise<number> {
+  const existing = await prisma.merchant.findFirst({
+    where: { name, userId },
+  });
+  if (existing) return existing.id;
+
+  const created = await prisma.merchant.create({
+    data: { name, userId },
+  });
+  return created.id;
+}
+
+async function resolveSubcategoryId(publicId: string): Promise<number> {
+  const sub = await prisma.subcategory.findUnique({
+    where: { publicId },
+  });
+  if (!sub) throw new Error('Podkategoria nie została znaleziona');
+  return sub.id;
+}
 
 export async function createTransactionCommand(
   input: z.infer<typeof createTransactionSchema>
@@ -24,17 +45,25 @@ export async function createTransactionCommand(
     const user = await requireUser();
     const validated = createTransactionSchema.parse(input);
 
-    const transaction = await prisma.transaction.create({
+    const subcategoryId = await resolveSubcategoryId(validated.subcategoryId);
+
+    let merchantId: number | null = null;
+    if (validated.merchantName) {
+      merchantId = await findOrCreateMerchant(validated.merchantName, user.id);
+    }
+
+    await prisma.transaction.create({
       data: {
         amount: validated.amount,
         date: new Date(validated.date),
-        subcategoryId: validated.subcategoryId,
+        subcategoryId,
         description: validated.description || null,
+        merchantId,
         userId: user.id,
       },
     });
 
-    return { success: true, data: transaction };
+    return { success: true };
   } catch (error) {
     return handleCommandError(error, 'Nie udało się dodać transakcji');
   }
@@ -47,27 +76,31 @@ export async function updateTransactionCommand(
     const user = await requireUser();
     const validated = updateTransactionSchema.parse(input);
 
-    const existing = await prisma.transaction.findFirst({
-      where: { id: validated.id, userId: user.id },
+    const transaction = await prisma.transaction.findFirst({
+      where: { publicId: validated.id, userId: user.id },
     });
 
-    if (!existing) {
+    if (!transaction) {
       return { success: false, error: 'Transakcja nie została znaleziona' };
     }
 
-    const updated = await prisma.transaction.updateMany({
-      where: { id: validated.id, userId: user.id },
+    const subcategoryId = await resolveSubcategoryId(validated.subcategoryId);
+
+    let merchantId: number | null = null;
+    if (validated.merchantName) {
+      merchantId = await findOrCreateMerchant(validated.merchantName, user.id);
+    }
+
+    await prisma.transaction.update({
+      where: { id: transaction.id },
       data: {
         amount: validated.amount,
         date: new Date(validated.date),
-        subcategoryId: validated.subcategoryId,
+        subcategoryId,
         description: validated.description || null,
+        merchantId,
       },
     });
-
-    if (updated.count === 0) {
-      return { success: false, error: 'Transakcja nie została znaleziona' };
-    }
 
     return { success: true };
   } catch (error) {
@@ -76,18 +109,22 @@ export async function updateTransactionCommand(
 }
 
 export async function deleteTransactionCommand(
-  id: string
+  publicId: string
 ): Promise<OperationResult> {
   try {
     const user = await requireUser();
 
-    const deleted = await prisma.transaction.deleteMany({
-      where: { id, userId: user.id },
+    const transaction = await prisma.transaction.findFirst({
+      where: { publicId, userId: user.id },
     });
 
-    if (deleted.count === 0) {
+    if (!transaction) {
       return { success: false, error: 'Transakcja nie została znaleziona' };
     }
+
+    await prisma.transaction.delete({
+      where: { id: transaction.id },
+    });
 
     return { success: true };
   } catch (error) {

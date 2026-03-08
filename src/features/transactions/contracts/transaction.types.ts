@@ -3,8 +3,11 @@ export interface TransactionWithDetails {
   amount: number;
   date: Date;
   description: string | null;
+  merchantId: string | null;
+  merchantName: string | null;
   subcategoryId: string;
   subcategoryName: string;
+  categoryId: string;
   categoryName: string;
   categoryType: string;
   createdAt: Date;

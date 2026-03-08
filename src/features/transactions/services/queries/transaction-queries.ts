@@ -29,15 +29,21 @@ export async function getTransactionsQuery(
     where.date = { ...(where.date as object), lte: new Date(filters.dateTo) };
   }
   if (filters?.subcategoryId) {
-    where.subcategoryId = filters.subcategoryId;
+    where.subcategory = { publicId: filters.subcategoryId };
   }
   if (filters?.categoryId) {
-    where.subcategory = { categoryId: filters.categoryId };
+    where.subcategory = {
+      ...(where.subcategory as object),
+      category: { publicId: filters.categoryId },
+    };
   }
   if (filters?.type) {
     where.subcategory = {
       ...(where.subcategory as object),
-      category: { type: filters.type },
+      category: {
+        ...((where.subcategory as Record<string, unknown>)?.category as object),
+        type: filters.type,
+      },
     };
   }
 
@@ -48,6 +54,7 @@ export async function getTransactionsQuery(
         subcategory: {
           include: { category: true },
         },
+        merchant: true,
       },
       orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
       skip: (safePage - 1) * safePageSize,
@@ -57,12 +64,15 @@ export async function getTransactionsQuery(
   ]);
 
   const items: TransactionWithDetails[] = transactions.map((t) => ({
-    id: t.id,
+    id: t.publicId,
     amount: Number(t.amount),
     date: t.date,
     description: t.description,
-    subcategoryId: t.subcategoryId,
+    merchantId: t.merchant?.publicId ?? null,
+    merchantName: t.merchant?.name ?? null,
+    subcategoryId: t.subcategory.publicId,
     subcategoryName: t.subcategory.name,
+    categoryId: t.subcategory.category.publicId,
     categoryName: t.subcategory.category.name,
     categoryType: t.subcategory.category.type,
     createdAt: t.createdAt,

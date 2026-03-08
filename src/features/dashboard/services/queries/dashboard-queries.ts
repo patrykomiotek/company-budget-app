@@ -35,6 +35,7 @@ export async function getMonthSummaryQuery(
   for (const t of transactions) {
     const amount = Math.round(Number(t.amount) * 100) / 100;
     const cat = t.subcategory.category;
+    const catPublicId = cat.publicId;
 
     if (cat.type === 'INCOME') {
       totalIncome += amount;
@@ -42,26 +43,27 @@ export async function getMonthSummaryQuery(
       totalExpense += amount;
     }
 
-    if (!categoryMap.has(cat.id)) {
-      categoryMap.set(cat.id, {
-        categoryId: cat.id,
+    if (!categoryMap.has(catPublicId)) {
+      categoryMap.set(catPublicId, {
+        categoryId: catPublicId,
         categoryName: cat.name,
         total: 0,
         subcategories: [],
       });
     }
 
-    const summary = categoryMap.get(cat.id)!;
+    const summary = categoryMap.get(catPublicId)!;
     summary.total += amount;
 
+    const subPublicId = t.subcategory.publicId;
     const existingSub = summary.subcategories.find(
-      (s) => s.subcategoryId === t.subcategoryId
+      (s) => s.subcategoryId === subPublicId
     );
     if (existingSub) {
       existingSub.total += amount;
     } else {
       summary.subcategories.push({
-        subcategoryId: t.subcategoryId,
+        subcategoryId: subPublicId,
         subcategoryName: t.subcategory.name,
         total: amount,
       });

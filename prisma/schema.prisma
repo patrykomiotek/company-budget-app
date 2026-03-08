@@ -20,6 +20,7 @@ model User {
   accounts      Account[]
   transactions  Transaction[]
   receipts      Receipt[]
+  merchants     Merchant[]
 
   @@map("users")
 }
@@ -76,7 +77,8 @@ enum CategoryType {
 }
 
 model Category {
-  id        String       @id @default(cuid())
+  id        Int          @id @default(autoincrement())
+  publicId  String       @unique @default(uuid()) @map("public_id") @db.Uuid
   name      String
   type      CategoryType
   sortOrder Int          @default(0) @map("sort_order")
@@ -90,10 +92,11 @@ model Category {
 }
 
 model Subcategory {
-  id         String   @id @default(cuid())
+  id         Int      @id @default(autoincrement())
+  publicId   String   @unique @default(uuid()) @map("public_id") @db.Uuid
   name       String
   sortOrder  Int      @default(0) @map("sort_order")
-  categoryId String   @map("category_id")
+  categoryId Int      @map("category_id")
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
@@ -104,28 +107,49 @@ model Subcategory {
   @@map("subcategories")
 }
 
+model Merchant {
+  id        Int      @id @default(autoincrement())
+  publicId  String   @unique @default(uuid()) @map("public_id") @db.Uuid
+  name      String
+  logoUrl   String?  @map("logo_url")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@unique([name, userId])
+  @@map("merchants")
+}
+
 model Transaction {
-  id            String   @id @default(cuid())
+  id            Int      @id @default(autoincrement())
+  publicId      String   @unique @default(uuid()) @map("public_id") @db.Uuid
   amount        Decimal  @db.Decimal(10, 2)
   date          DateTime @db.Date
   description   String?
-  subcategoryId String   @map("subcategory_id")
+  merchantId    Int?     @map("merchant_id")
+  subcategoryId Int      @map("subcategory_id")
   userId        String   @map("user_id")
-  receiptId     String?  @map("receipt_id")
+  receiptId     Int?     @map("receipt_id")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
+  merchant    Merchant?   @relation(fields: [merchantId], references: [id])
   subcategory Subcategory @relation(fields: [subcategoryId], references: [id])
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   receipt     Receipt?    @relation(fields: [receiptId], references: [id])
 
   @@index([userId, date])
   @@index([subcategoryId])
+  @@index([merchantId])
   @@map("transactions")
 }
 
 model Receipt {
-  id        String   @id @default(cuid())
+  id        Int      @id @default(autoincrement())
+  publicId  String   @unique @default(uuid()) @map("public_id") @db.Uuid
   fileName  String   @map("file_name")
   filePath  String   @map("file_path")
   mimeType  String   @map("mime_type")

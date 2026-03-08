@@ -19,5 +19,16 @@ export async function getCategoriesQuery(
     orderBy: { sortOrder: 'asc' },
   });
 
-  return categories;
+  return categories.map((c) => ({
+    id: c.publicId,
+    name: c.name,
+    type: c.type,
+    sortOrder: c.sortOrder,
+    subcategories: c.subcategories.map((s) => ({
+      id: s.publicId,
+      name: s.name,
+      sortOrder: s.sortOrder,
+      categoryId: c.publicId,
+    })),
+  }));
 }

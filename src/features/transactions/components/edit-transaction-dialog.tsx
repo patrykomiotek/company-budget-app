@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,33 +15,61 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { MerchantCombobox } from '@/components/merchant-combobox';
-import { createTransactionCommand } from '../services/commands/transaction-commands';
+import { updateTransactionCommand } from '../services/commands/transaction-commands';
+import type { TransactionWithDetails } from '../contracts/transaction.types';
 import type { CategoryWithSubcategories } from '@/features/categories/contracts/category.types';
 
-interface TransactionFormProps {
+interface EditTransactionDialogProps {
+  transaction: TransactionWithDetails | null;
   categories: CategoryWithSubcategories[];
   merchants: { id: string; name: string }[];
-  defaultType?: 'INCOME' | 'EXPENSE';
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function TransactionForm({ categories, merchants, defaultType = 'EXPENSE' }: TransactionFormProps) {
+export function EditTransactionDialog({
+  transaction,
+  categories,
+  merchants,
+  open,
+  onOpenChange,
+}: EditTransactionDialogProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [type, setType] = useState<'INCOME' | 'EXPENSE'>(defaultType);
+  const [type, setType] = useState<'INCOME' | 'EXPENSE'>('EXPENSE');
   const [categoryId, setCategoryId] = useState('');
   const [subcategoryId, setSubcategoryId] = useState('');
   const [amount, setAmount] = useState('');
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [date, setDate] = useState('');
   const [description, setDescription] = useState('');
   const [merchantName, setMerchantName] = useState('');
+
+  useEffect(() => {
+    if (transaction) {
+      setType(transaction.categoryType as 'INCOME' | 'EXPENSE');
+      setCategoryId(transaction.categoryId);
+      setSubcategoryId(transaction.subcategoryId);
+      setAmount(transaction.amount.toString());
+      setDate(new Date(transaction.date).toISOString().split('T')[0]);
+      setDescription(transaction.description || '');
+      setMerchantName(transaction.merchantName || '');
+    }
+  }, [transaction]);
 
   const filteredCategories = categories.filter((c) => c.type === type);
   const selectedCategory = filteredCategories.find((c) => c.id === categoryId);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!transaction) return;
 
     const parsedAmount = parseFloat(amount);
     if (Number.isNaN(parsedAmount) || parsedAmount <= 0) {
@@ -53,7 +80,8 @@ export function TransactionForm({ categories, merchants, defaultType = 'EXPENSE'
     setLoading(true);
 
     try {
-      const result = await createTransactionCommand({
+      const result = await updateTransactionCommand({
+        id: transaction.id,
         amount: parsedAmount,
         date,
         subcategoryId,
@@ -62,8 +90,8 @@ export function TransactionForm({ categories, merchants, defaultType = 'EXPENSE'
       });
 
       if (result.success) {
-        toast.success('Transakcja dodana');
-        router.push('/transactions');
+        toast.success('Transakcja zaktualizowana');
+        onOpenChange(false);
         router.refresh();
       } else {
         toast.error(result.error);
@@ -76,11 +104,11 @@ export function TransactionForm({ categories, merchants, defaultType = 'EXPENSE'
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Dodaj transakcję</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Edytuj transakcję</DialogTitle>
+        </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -101,9 +129,9 @@ export function TransactionForm({ categories, merchants, defaultType = 'EXPENSE'
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="date">Data</Label>
+              <Label htmlFor="edit-date">Data</Label>
               <Input
-                id="date"
+                id="edit-date"
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
@@ -153,9 +181,9 @@ export function TransactionForm({ categories, merchants, defaultType = 'EXPENSE'
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Kwota (PLN)</Label>
+            <Label htmlFor="edit-amount">Kwota (PLN)</Label>
             <Input
-              id="amount"
+              id="edit-amount"
               type="number"
               step="0.01"
               min="0.01"
@@ -176,25 +204,22 @@ export function TransactionForm({ categories, merchants, defaultType = 'EXPENSE'
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Opis (opcjonalnie)</Label>
+            <Label htmlFor="edit-description">Opis (opcjonalnie)</Label>
             <Input
-              id="description"
+              id="edit-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="np. Zakupy w Biedronce"
             />
           </div>
 
-          <div className="flex gap-2">
+          <DialogFooter>
             <Button type="submit" disabled={loading || !subcategoryId}>
-              {loading ? 'Dodawanie...' : 'Dodaj'}
+              {loading ? 'Zapisywanie...' : 'Zapisz'}
             </Button>
-            <Button type="button" variant="outline" onClick={() => router.back()}>
-              Anuluj
-            </Button>
-          </div>
+          </DialogFooter>
         </form>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   );
 }

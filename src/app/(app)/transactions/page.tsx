@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getTransactionsQuery } from '@/features/transactions/services/queries/transaction-queries';
 import { getCategoriesQuery } from '@/features/categories/services/queries/category-queries';
+import { getMerchantsForSelectQuery } from '@/features/merchants/services/queries/merchant-queries';
 import { TransactionsTable } from '@/features/transactions/components/transactions-table';
 import { TransactionFilters } from '@/features/transactions/components/transaction-filters';
 
@@ -20,20 +21,23 @@ interface TransactionsPageProps {
 
 export default async function TransactionsPage({ searchParams }: TransactionsPageProps) {
   const params = await searchParams;
-  const categories = await getCategoriesQuery();
   const parsedPage = params.page ? parseInt(params.page, 10) : 1;
   const page = Number.isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage;
 
-  const result = await getTransactionsQuery(
-    {
-      type: params.type as 'INCOME' | 'EXPENSE' | undefined,
-      categoryId: params.categoryId,
-      subcategoryId: params.subcategoryId,
-      dateFrom: params.dateFrom,
-      dateTo: params.dateTo,
-    },
-    page
-  );
+  const [categories, merchants, result] = await Promise.all([
+    getCategoriesQuery(),
+    getMerchantsForSelectQuery(),
+    getTransactionsQuery(
+      {
+        type: params.type as 'INCOME' | 'EXPENSE' | undefined,
+        categoryId: params.categoryId,
+        subcategoryId: params.subcategoryId,
+        dateFrom: params.dateFrom,
+        dateTo: params.dateTo,
+      },
+      page
+    ),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -58,7 +62,11 @@ export default async function TransactionsPage({ searchParams }: TransactionsPag
 
       <Card>
         <CardContent className="p-0">
-          <TransactionsTable transactions={result.items} />
+          <TransactionsTable
+            transactions={result.items}
+            categories={categories}
+            merchants={merchants}
+          />
         </CardContent>
       </Card>
 
