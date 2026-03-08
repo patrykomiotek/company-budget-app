@@ -30,7 +30,7 @@ export async function getMerchantByIdQuery(publicId: string) {
     where: { publicId, userId: user.id },
   });
 
-  if (!merchant) return null;
+  if (!merchant) {return null;}
 
   return {
     id: merchant.publicId,

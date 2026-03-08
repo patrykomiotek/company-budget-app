@@ -9,7 +9,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select';
 import type { CategoryWithSubcategories } from '@/features/categories/contracts/category.types';
 
@@ -51,13 +50,17 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
     ? categories.filter((c) => c.type === type)
     : categories;
 
+  const typeLabels: Record<string, string> = { all: 'Wszystko', EXPENSE: 'Wydatki', INCOME: 'Przychody' };
+  const typeLabel = typeLabels[type || 'all'];
+  const categoryLabel = filteredCategories.find((c) => c.id === categoryId)?.name ?? 'Wszystkie';
+
   return (
     <div className="flex flex-wrap gap-4 items-end">
       <div className="space-y-1">
         <Label className="text-xs">Typ</Label>
         <Select value={type || 'all'} onValueChange={(v) => updateFilter('type', v ?? '')}>
           <SelectTrigger className="w-[140px]">
-            <SelectValue />
+            <span>{typeLabel}</span>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Wszystko</SelectItem>
@@ -71,7 +74,7 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
         <Label className="text-xs">Kategoria</Label>
         <Select value={categoryId || 'all'} onValueChange={(v) => updateFilter('categoryId', v ?? '')}>
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Wszystkie" />
+            <span>{categoryLabel}</span>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Wszystkie</SelectItem>

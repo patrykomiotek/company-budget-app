@@ -14,7 +14,6 @@ import {
   SelectItem,
   SelectLabel,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MerchantCombobox } from '@/components/merchant-combobox';
@@ -40,6 +39,9 @@ export function TransactionForm({ categories, merchants, defaultType = 'EXPENSE'
 
   const filteredCategories = categories.filter((c) => c.type === type);
   const selectedCategory = filteredCategories.find((c) => c.id === categoryId);
+  const typeLabel = type === 'INCOME' ? 'Przychód' : 'Wydatek';
+  const categoryLabel = selectedCategory?.name ?? 'Wybierz kategorię';
+  const subcategoryLabel = selectedCategory?.subcategories.find((s) => s.id === subcategoryId)?.name ?? 'Wybierz podkategorię';
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,8 +65,11 @@ export function TransactionForm({ categories, merchants, defaultType = 'EXPENSE'
 
       if (result.success) {
         toast.success('Transakcja dodana');
-        router.push('/transactions');
-        router.refresh();
+        setCategoryId('');
+        setSubcategoryId('');
+        setAmount('');
+        setDescription('');
+        setMerchantName('');
       } else {
         toast.error(result.error);
       }
@@ -86,13 +91,13 @@ export function TransactionForm({ categories, merchants, defaultType = 'EXPENSE'
             <div className="space-y-2">
               <Label>Typ</Label>
               <Select value={type} onValueChange={(v) => {
-                if (!v) return;
+                if (!v) {return;}
                 setType(v as 'INCOME' | 'EXPENSE');
                 setCategoryId('');
                 setSubcategoryId('');
               }}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <span>{typeLabel}</span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="EXPENSE">Wydatek</SelectItem>
@@ -119,7 +124,7 @@ export function TransactionForm({ categories, merchants, defaultType = 'EXPENSE'
               setSubcategoryId('');
             }}>
               <SelectTrigger>
-                <SelectValue placeholder="Wybierz kategorię" />
+                <span>{categoryLabel}</span>
               </SelectTrigger>
               <SelectContent>
                 {filteredCategories.map((cat) => (
@@ -136,7 +141,7 @@ export function TransactionForm({ categories, merchants, defaultType = 'EXPENSE'
               <Label>Podkategoria</Label>
               <Select value={subcategoryId} onValueChange={(v) => setSubcategoryId(v ?? '')}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Wybierz podkategorię" />
+                  <span>{subcategoryLabel}</span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>

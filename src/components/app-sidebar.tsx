@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Receipt, PlusCircle, Store, User, LogOut } from 'lucide-react';
+import { LayoutDashboard, Receipt, PlusCircle, Store, Tags, User, LogOut } from 'lucide-react';
 import { authClient } from '@/shared/lib/auth/client';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -11,6 +11,7 @@ const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/transactions', label: 'Transakcje', icon: Receipt },
   { href: '/transactions/new', label: 'Dodaj', icon: PlusCircle },
+  { href: '/categories', label: 'Kategorie', icon: Tags },
   { href: '/merchants', label: 'Sprzedawcy', icon: Store },
   { href: '/account', label: 'Konto', icon: User },
 ];

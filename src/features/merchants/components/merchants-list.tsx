@@ -27,7 +27,7 @@ export function MerchantsList({ merchants }: MerchantsListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function handleDelete(id: string) {
-    if (!confirm('Czy na pewno chcesz usunąć tego sprzedawcę? Transakcje zostaną odłączone.')) return;
+    if (!confirm('Czy na pewno chcesz usunąć tego sprzedawcę? Transakcje zostaną odłączone.')) {return;}
 
     setDeletingId(id);
     try {

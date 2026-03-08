@@ -22,7 +22,7 @@ async function findOrCreateMerchant(name: string, userId: string): Promise<numbe
   const existing = await prisma.merchant.findFirst({
     where: { name, userId },
   });
-  if (existing) return existing.id;
+  if (existing) {return existing.id;}
 
   const created = await prisma.merchant.create({
     data: { name, userId },
@@ -34,7 +34,7 @@ async function resolveSubcategoryId(publicId: string): Promise<number> {
   const sub = await prisma.subcategory.findUnique({
     where: { publicId },
   });
-  if (!sub) throw new Error('Podkategoria nie została znaleziona');
+  if (!sub) {throw new Error('Podkategoria nie została znaleziona');}
   return sub.id;
 }
 

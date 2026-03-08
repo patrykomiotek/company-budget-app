@@ -33,7 +33,7 @@ export function TransactionsTable({ transactions, categories, merchants }: Trans
   const [editingTransaction, setEditingTransaction] = useState<TransactionWithDetails | null>(null);
 
   async function handleDelete(id: string) {
-    if (!confirm('Czy na pewno chcesz usunąć tę transakcję?')) return;
+    if (!confirm('Czy na pewno chcesz usunąć tę transakcję?')) {return;}
 
     setDeletingId(id);
     try {
@@ -127,7 +127,7 @@ export function TransactionsTable({ transactions, categories, merchants }: Trans
         merchants={merchants}
         open={!!editingTransaction}
         onOpenChange={(open) => {
-          if (!open) setEditingTransaction(null);
+          if (!open) {setEditingTransaction(null);}
         }}
       />
     </>

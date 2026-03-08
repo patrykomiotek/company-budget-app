@@ -13,7 +13,6 @@ import {
   SelectItem,
   SelectLabel,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select';
 import {
   Dialog,
@@ -66,10 +65,13 @@ export function EditTransactionDialog({
 
   const filteredCategories = categories.filter((c) => c.type === type);
   const selectedCategory = filteredCategories.find((c) => c.id === categoryId);
+  const typeLabel = type === 'INCOME' ? 'Przychód' : 'Wydatek';
+  const categoryLabel = selectedCategory?.name ?? 'Wybierz kategorię';
+  const subcategoryLabel = selectedCategory?.subcategories.find((s) => s.id === subcategoryId)?.name ?? 'Wybierz podkategorię';
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!transaction) return;
+    if (!transaction) {return;}
 
     const parsedAmount = parseFloat(amount);
     if (Number.isNaN(parsedAmount) || parsedAmount <= 0) {
@@ -114,13 +116,13 @@ export function EditTransactionDialog({
             <div className="space-y-2">
               <Label>Typ</Label>
               <Select value={type} onValueChange={(v) => {
-                if (!v) return;
+                if (!v) {return;}
                 setType(v as 'INCOME' | 'EXPENSE');
                 setCategoryId('');
                 setSubcategoryId('');
               }}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <span>{typeLabel}</span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="EXPENSE">Wydatek</SelectItem>
@@ -147,7 +149,7 @@ export function EditTransactionDialog({
               setSubcategoryId('');
             }}>
               <SelectTrigger>
-                <SelectValue placeholder="Wybierz kategorię" />
+                <span>{categoryLabel}</span>
               </SelectTrigger>
               <SelectContent>
                 {filteredCategories.map((cat) => (
@@ -164,7 +166,7 @@ export function EditTransactionDialog({
               <Label>Podkategoria</Label>
               <Select value={subcategoryId} onValueChange={(v) => setSubcategoryId(v ?? '')}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Wybierz podkategorię" />
+                  <span>{subcategoryLabel}</span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
