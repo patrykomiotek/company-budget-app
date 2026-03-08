@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/shared/lib/auth/helpers';
-import { AppSidebar } from '@/components/app-sidebar';
+import { AppSidebar, SidebarProvider } from '@/components/app-sidebar';
 import { Toaster } from '@/components/ui/sonner';
 
 export default async function AppLayout({
@@ -15,10 +15,12 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="flex min-h-screen">
-      <AppSidebar />
-      <main className="flex-1 p-6">{children}</main>
-      <Toaster />
-    </div>
+    <SidebarProvider>
+      <div className="flex min-h-screen">
+        <AppSidebar />
+        <main className="flex-1 p-6">{children}</main>
+        <Toaster />
+      </div>
+    </SidebarProvider>
   );
 }

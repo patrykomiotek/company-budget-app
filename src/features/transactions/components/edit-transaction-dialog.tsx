@@ -9,9 +9,7 @@ import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
 } from '@/components/ui/select';
 import {
@@ -21,6 +19,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { SearchableSelect } from '@/components/searchable-select';
 import { MerchantCombobox } from '@/components/merchant-combobox';
 import { updateTransactionCommand } from '../services/commands/transaction-commands';
 import type { TransactionWithDetails } from '../contracts/transaction.types';
@@ -65,9 +64,9 @@ export function EditTransactionDialog({
 
   const filteredCategories = categories.filter((c) => c.type === type);
   const selectedCategory = filteredCategories.find((c) => c.id === categoryId);
-  const typeLabel = type === 'INCOME' ? 'Przychód' : 'Wydatek';
-  const categoryLabel = selectedCategory?.name ?? 'Wybierz kategorię';
-  const subcategoryLabel = selectedCategory?.subcategories.find((s) => s.id === subcategoryId)?.name ?? 'Wybierz podkategorię';
+
+  const categoryOptions = filteredCategories.map((c) => ({ value: c.id, label: c.name }));
+  const subcategoryOptions = selectedCategory?.subcategories.map((s) => ({ value: s.id, label: s.name })) ?? [];
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -122,7 +121,7 @@ export function EditTransactionDialog({
                 setSubcategoryId('');
               }}>
                 <SelectTrigger>
-                  <span>{typeLabel}</span>
+                  <span>{type === 'INCOME' ? 'Przychód' : 'Wydatek'}</span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="EXPENSE">Wydatek</SelectItem>
@@ -144,41 +143,28 @@ export function EditTransactionDialog({
 
           <div className="space-y-2">
             <Label>Kategoria</Label>
-            <Select value={categoryId} onValueChange={(v) => {
-              setCategoryId(v ?? '');
-              setSubcategoryId('');
-            }}>
-              <SelectTrigger>
-                <span>{categoryLabel}</span>
-              </SelectTrigger>
-              <SelectContent>
-                {filteredCategories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={categoryId}
+              onChange={(v) => {
+                setCategoryId(v);
+                setSubcategoryId('');
+              }}
+              options={categoryOptions}
+              placeholder="Wybierz kategorię"
+              searchPlaceholder="Szukaj kategorii..."
+            />
           </div>
 
           {selectedCategory && (
             <div className="space-y-2">
               <Label>Podkategoria</Label>
-              <Select value={subcategoryId} onValueChange={(v) => setSubcategoryId(v ?? '')}>
-                <SelectTrigger>
-                  <span>{subcategoryLabel}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>{selectedCategory.name}</SelectLabel>
-                    {selectedCategory.subcategories.map((sub) => (
-                      <SelectItem key={sub.id} value={sub.id}>
-                        {sub.name}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                value={subcategoryId}
+                onChange={setSubcategoryId}
+                options={subcategoryOptions}
+                placeholder="Wybierz podkategorię"
+                searchPlaceholder="Szukaj podkategorii..."
+              />
             </div>
           )}
 
