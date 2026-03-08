@@ -1,0 +1,23 @@
+'use server';
+
+import { prisma } from '@/shared/lib/prisma';
+import type { CategoryType } from '@/lib/generated/prisma/client';
+import type { CategoryWithSubcategories } from '../../contracts/category.types';
+
+export async function getCategoriesQuery(
+  type?: CategoryType
+): Promise<CategoryWithSubcategories[]> {
+  const where = type ? { type } : {};
+
+  const categories = await prisma.category.findMany({
+    where,
+    include: {
+      subcategories: {
+        orderBy: { sortOrder: 'asc' },
+      },
+    },
+    orderBy: { sortOrder: 'asc' },
+  });
+
+  return categories;
+}
