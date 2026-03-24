@@ -19,7 +19,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   transactions  Transaction[]
-  receipts      Receipt[]
+  invoiceFiles  InvoiceFile[]
   merchants     Merchant[]
   employees     Employee[]
   products      Product[]
@@ -178,7 +178,7 @@ model Transaction {
   employeeId     Int?            @map("employee_id")
   customerId     Int?            @map("customer_id")
   userId         String          @map("user_id")
-  receiptId      Int?            @map("receipt_id")
+  invoiceFileId  Int?            @map("receipt_id")
   createdAt      DateTime        @default(now()) @map("created_at")
   updatedAt      DateTime        @updatedAt @map("updated_at")
 
@@ -188,7 +188,7 @@ model Transaction {
   employee    Employee?             @relation(fields: [employeeId], references: [id])
   customer    Customer?             @relation(fields: [customerId], references: [id])
   user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  receipt     Receipt?              @relation(fields: [receiptId], references: [id])
+  invoiceFile InvoiceFile?          @relation(fields: [invoiceFileId], references: [id])
   lineItems   TransactionLineItem[]
 
   @@index([userId, date])
@@ -277,7 +277,7 @@ model TransactionLineItem {
   @@map("transaction_line_items")
 }
 
-model Receipt {
+model InvoiceFile {
   id        Int      @id @default(autoincrement())
   publicId  String   @unique @default(uuid()) @map("public_id") @db.Uuid
   fileName  String   @map("file_name")
