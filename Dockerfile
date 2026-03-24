@@ -47,6 +47,7 @@ COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
 # Install Prisma CLI + deps needed for migrations (dotenv, tsx for prisma.config.ts)
 RUN npm install --prefix /tmp prisma@latest @prisma/engines@latest dotenv tsx typescript && \
+    cp -r /tmp/node_modules/.bin ./node_modules/.bin && \
     cp -r /tmp/node_modules/prisma ./node_modules/prisma && \
     cp -r /tmp/node_modules/@prisma ./node_modules/@prisma && \
     cp -r /tmp/node_modules/dotenv ./node_modules/dotenv && \
