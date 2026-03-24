@@ -1,8 +1,11 @@
-'use server';
+"use server";
 
-import { prisma } from '@/shared/lib/prisma';
-import { requireUser } from '@/shared/lib/auth/helpers';
-import type { CustomerOption, CustomerItem } from '../../contracts/customer.types';
+import { prisma } from "@/shared/lib/prisma";
+import { requireUser } from "@/shared/lib/auth/helpers";
+import type {
+  CustomerOption,
+  CustomerItem,
+} from "../../contracts/customer.types";
 
 export async function getCustomersForSelectQuery(): Promise<CustomerOption[]> {
   const user = await requireUser();
@@ -10,7 +13,7 @@ export async function getCustomersForSelectQuery(): Promise<CustomerOption[]> {
   const customers = await prisma.customer.findMany({
     where: { userId: user.id },
     select: { publicId: true, name: true, nip: true },
-    orderBy: { name: 'asc' },
+    orderBy: { name: "asc" },
   });
 
   return customers.map((c) => ({
@@ -28,7 +31,7 @@ export async function getCustomersListQuery(): Promise<CustomerItem[]> {
     include: {
       _count: { select: { transactions: true } },
     },
-    orderBy: { name: 'asc' },
+    orderBy: { name: "asc" },
   });
 
   return customers.map((c) => ({
@@ -48,7 +51,9 @@ export async function getCustomerByIdQuery(publicId: string) {
     where: { publicId, userId: user.id },
   });
 
-  if (!customer) return null;
+  if (!customer) {
+    return null;
+  }
 
   return {
     id: customer.publicId,

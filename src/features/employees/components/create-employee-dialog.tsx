@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { PlusCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { PlusCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { createEmployeeCommand } from '../services/commands/employee-commands';
+} from "@/components/ui/dialog";
+import { createEmployeeCommand } from "../services/commands/employee-commands";
 
 interface CompanyOption {
   id: string;
@@ -35,17 +35,19 @@ export function CreateEmployeeButton({ companies }: CreateEmployeeButtonProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [name, setName] = useState('');
-  const [companyId, setCompanyId] = useState(companies[0]?.id ?? '');
+  const [name, setName] = useState("");
+  const [companyId, setCompanyId] = useState(companies[0]?.id ?? "");
 
   function reset() {
-    setName('');
-    setCompanyId(companies[0]?.id ?? '');
+    setName("");
+    setCompanyId(companies[0]?.id ?? "");
   }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !companyId) return;
+    if (!name.trim() || !companyId) {
+      return;
+    }
 
     setLoading(true);
     try {
@@ -54,7 +56,7 @@ export function CreateEmployeeButton({ companies }: CreateEmployeeButtonProps) {
         companyPublicId: companyId,
       });
       if (result.success) {
-        toast.success('Współpracownik dodany');
+        toast.success("Współpracownik dodany");
         reset();
         setOpen(false);
         router.refresh();
@@ -62,7 +64,7 @@ export function CreateEmployeeButton({ companies }: CreateEmployeeButtonProps) {
         toast.error(result.error);
       }
     } catch {
-      toast.error('Wystąpił błąd');
+      toast.error("Wystąpił błąd");
     } finally {
       setLoading(false);
     }
@@ -75,7 +77,15 @@ export function CreateEmployeeButton({ companies }: CreateEmployeeButtonProps) {
         Dodaj
       </Button>
 
-      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          setOpen(v);
+          if (!v) {
+            reset();
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Nowy współpracownik</DialogTitle>
@@ -94,9 +104,15 @@ export function CreateEmployeeButton({ companies }: CreateEmployeeButtonProps) {
             </div>
             <div className="space-y-2">
               <Label>Firma</Label>
-              <Select value={companyId} onValueChange={(v) => setCompanyId(v ?? '')}>
+              <Select
+                value={companyId}
+                onValueChange={(v) => setCompanyId(v ?? "")}
+              >
                 <SelectTrigger>
-                  <span>{companies.find((c) => c.id === companyId)?.name ?? 'Wybierz firmę'}</span>
+                  <span>
+                    {companies.find((c) => c.id === companyId)?.name ??
+                      "Wybierz firmę"}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   {companies.map((company) => (
@@ -108,11 +124,18 @@ export function CreateEmployeeButton({ companies }: CreateEmployeeButtonProps) {
               </Select>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+              >
                 Anuluj
               </Button>
-              <Button type="submit" disabled={loading || !name.trim() || !companyId}>
-                {loading ? 'Dodawanie...' : 'Dodaj'}
+              <Button
+                type="submit"
+                disabled={loading || !name.trim() || !companyId}
+              >
+                {loading ? "Dodawanie..." : "Dodaj"}
               </Button>
             </DialogFooter>
           </form>

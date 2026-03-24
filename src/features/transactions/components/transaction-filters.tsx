@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useRouter, useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-} from '@/components/ui/select';
-import type { CategoryWithSubcategories } from '@/features/categories/contracts/category.types';
+} from "@/components/ui/select";
+import type { CategoryWithSubcategories } from "@/features/categories/contracts/category.types";
 
 interface TransactionFiltersProps {
   categories: CategoryWithSubcategories[];
@@ -22,71 +22,76 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
 
   function updateFilter(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
-    if (value && value !== 'all') {
+    if (value && value !== "all") {
       params.set(key, value);
     } else {
       params.delete(key);
     }
-    if (key === 'categoryId') {
-      params.delete('subcategoryId');
+    if (key === "categoryId") {
+      params.delete("subcategoryId");
     }
-    if (key === 'type' || key === 'transactionType') {
-      params.delete('categoryId');
-      params.delete('subcategoryId');
+    if (key === "type" || key === "transactionType") {
+      params.delete("categoryId");
+      params.delete("subcategoryId");
     }
     router.push(`/transactions?${params.toString()}`);
   }
 
   function clearFilters() {
-    router.push('/transactions');
+    router.push("/transactions");
   }
 
-  const transactionType = searchParams.get('transactionType') ?? '';
-  const type = searchParams.get('type') ?? '';
-  const categoryId = searchParams.get('categoryId') ?? '';
-  const dateFrom = searchParams.get('dateFrom') ?? '';
-  const dateTo = searchParams.get('dateTo') ?? '';
+  const transactionType = searchParams.get("transactionType") ?? "";
+  const type = searchParams.get("type") ?? "";
+  const categoryId = searchParams.get("categoryId") ?? "";
+  const dateFrom = searchParams.get("dateFrom") ?? "";
+  const dateTo = searchParams.get("dateTo") ?? "";
 
-  const activeType = transactionType || type || '';
+  const activeType = transactionType || type || "";
 
   const typeLabels: Record<string, string> = {
-    all: 'Wszystko',
-    EXPENSE: 'Wydatki',
-    INCOME: 'Przychody',
-    FORECAST_EXPENSE: 'Prognozy wydatków',
-    FORECAST_INCOME: 'Prognozy przychodów',
+    all: "Wszystko",
+    EXPENSE: "Wydatki",
+    INCOME: "Przychody",
+    FORECAST_EXPENSE: "Prognozy wydatków",
+    FORECAST_INCOME: "Prognozy przychodów",
   };
-  const typeLabel = typeLabels[activeType || 'all'] ?? typeLabels['all'];
+  const typeLabel = typeLabels[activeType || "all"] ?? typeLabels["all"];
 
   // Filter categories based on selected type
   const filteredCategories = activeType
     ? categories.filter((c) => {
-        if (activeType === 'INCOME' || activeType === 'FORECAST_INCOME') return c.type === 'INCOME';
-        if (activeType === 'EXPENSE' || activeType === 'FORECAST_EXPENSE') return c.type === 'EXPENSE';
+        if (activeType === "INCOME" || activeType === "FORECAST_INCOME") {
+          return c.type === "INCOME";
+        }
+        if (activeType === "EXPENSE" || activeType === "FORECAST_EXPENSE") {
+          return c.type === "EXPENSE";
+        }
         return true;
       })
     : categories;
 
-  const categoryLabel = filteredCategories.find((c) => c.id === categoryId)?.name ?? 'Wszystkie';
+  const categoryLabel =
+    filteredCategories.find((c) => c.id === categoryId)?.name ?? "Wszystkie";
 
   return (
     <div className="flex flex-wrap gap-4 items-end">
       <div className="space-y-1">
         <Label className="text-xs">Typ</Label>
         <Select
-          value={activeType || 'all'}
+          value={activeType || "all"}
           onValueChange={(v) => {
-            const val = v ?? '';
+            const val = v ?? "";
             const params = new URLSearchParams(searchParams.toString());
-            params.delete('type');
-            params.delete('transactionType');
-            params.delete('categoryId');
-            params.delete('subcategoryId');
-            if (val && val !== 'all') {
-              if (['INCOME', 'EXPENSE'].includes(val)) {
-                params.set('type', val);
+            params.delete("type");
+            params.delete("transactionType");
+            params.delete("categoryId");
+            params.delete("subcategoryId");
+            if (val && val !== "all") {
+              if (["INCOME", "EXPENSE"].includes(val)) {
+                params.set("type", val);
               } else {
-                params.set('transactionType', val);
+                params.set("transactionType", val);
               }
             }
             router.push(`/transactions?${params.toString()}`);
@@ -107,7 +112,10 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
 
       <div className="space-y-1">
         <Label className="text-xs">Kategoria</Label>
-        <Select value={categoryId || 'all'} onValueChange={(v) => updateFilter('categoryId', v ?? '')}>
+        <Select
+          value={categoryId || "all"}
+          onValueChange={(v) => updateFilter("categoryId", v ?? "")}
+        >
           <SelectTrigger className="w-[200px]">
             <span>{categoryLabel}</span>
           </SelectTrigger>
@@ -127,7 +135,7 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
         <Input
           type="date"
           value={dateFrom}
-          onChange={(e) => updateFilter('dateFrom', e.target.value)}
+          onChange={(e) => updateFilter("dateFrom", e.target.value)}
           className="w-[160px]"
         />
       </div>
@@ -137,7 +145,7 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
         <Input
           type="date"
           value={dateTo}
-          onChange={(e) => updateFilter('dateTo', e.target.value)}
+          onChange={(e) => updateFilter("dateTo", e.target.value)}
           className="w-[160px]"
         />
       </div>

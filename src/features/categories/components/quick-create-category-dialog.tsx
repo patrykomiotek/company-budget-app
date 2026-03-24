@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Plus, X } from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { Plus, X } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { quickCreateCategoryCommand } from '../services/commands/category-commands';
-import type { CategoryWithSubcategories } from '../contracts/category.types';
+} from "@/components/ui/dialog";
+import { quickCreateCategoryCommand } from "../services/commands/category-commands";
+import type { CategoryWithSubcategories } from "../contracts/category.types";
 
 interface QuickCreateCategoryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  type: 'INCOME' | 'EXPENSE';
+  type: "INCOME" | "EXPENSE";
   onCreated: (category: CategoryWithSubcategories) => void;
 }
 
@@ -30,15 +30,17 @@ export function QuickCreateCategoryDialog({
   onCreated,
 }: QuickCreateCategoryDialogProps) {
   const [loading, setLoading] = useState(false);
-  const [name, setName] = useState('');
-  const [subcategoryInputs, setSubcategoryInputs] = useState(['']);
+  const [name, setName] = useState("");
+  const [subcategoryInputs, setSubcategoryInputs] = useState([""]);
 
   function addSubcategory() {
-    setSubcategoryInputs([...subcategoryInputs, '']);
+    setSubcategoryInputs([...subcategoryInputs, ""]);
   }
 
   function removeSubcategory(index: number) {
-    if (subcategoryInputs.length <= 1) return;
+    if (subcategoryInputs.length <= 1) {
+      return;
+    }
     setSubcategoryInputs(subcategoryInputs.filter((_, i) => i !== index));
   }
 
@@ -49,20 +51,22 @@ export function QuickCreateCategoryDialog({
   }
 
   function reset() {
-    setName('');
-    setSubcategoryInputs(['']);
+    setName("");
+    setSubcategoryInputs([""]);
   }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const subcategoryNames = subcategoryInputs.map((s) => s.trim()).filter(Boolean);
+    const subcategoryNames = subcategoryInputs
+      .map((s) => s.trim())
+      .filter(Boolean);
     if (!name.trim()) {
-      toast.error('Podaj nazwę kategorii');
+      toast.error("Podaj nazwę kategorii");
       return;
     }
     if (subcategoryNames.length === 0) {
-      toast.error('Dodaj przynajmniej jedną podkategorię');
+      toast.error("Dodaj przynajmniej jedną podkategorię");
       return;
     }
 
@@ -80,21 +84,29 @@ export function QuickCreateCategoryDialog({
         reset();
         onOpenChange(false);
       } else {
-        toast.error(result.error ?? 'Nie udało się utworzyć kategorii');
+        toast.error(result.error ?? "Nie udało się utworzyć kategorii");
       }
     } catch {
-      toast.error('Wystąpił błąd');
+      toast.error("Wystąpił błąd");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        onOpenChange(v);
+        if (!v) {
+          reset();
+        }
+      }}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            Nowa kategoria ({type === 'INCOME' ? 'przychodów' : 'wydatków'})
+            Nowa kategoria ({type === "INCOME" ? "przychodów" : "wydatków"})
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
@@ -132,18 +144,27 @@ export function QuickCreateCategoryDialog({
                 </div>
               ))}
             </div>
-            <Button type="button" variant="outline" size="sm" onClick={addSubcategory}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addSubcategory}
+            >
               <Plus className="h-3 w-3 mr-1" />
               Dodaj podkategorię
             </Button>
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Anuluj
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Tworzenie...' : 'Utwórz'}
+              {loading ? "Tworzenie..." : "Utwórz"}
             </Button>
           </DialogFooter>
         </form>

@@ -1,10 +1,15 @@
-'use server';
+"use server";
 
-import { prisma } from '@/shared/lib/prisma';
-import { requireUser } from '@/shared/lib/auth/helpers';
-import type { EmployeeOption, EmployeeItem } from '../../contracts/employee.types';
+import { prisma } from "@/shared/lib/prisma";
+import { requireUser } from "@/shared/lib/auth/helpers";
+import type {
+  EmployeeOption,
+  EmployeeItem,
+} from "../../contracts/employee.types";
 
-export async function getEmployeesQuery(companyId?: number): Promise<EmployeeOption[]> {
+export async function getEmployeesQuery(
+  companyId?: number,
+): Promise<EmployeeOption[]> {
   const user = await requireUser();
 
   const employees = await prisma.employee.findMany({
@@ -13,7 +18,7 @@ export async function getEmployeesQuery(companyId?: number): Promise<EmployeeOpt
       ...(companyId ? { companyId } : {}),
     },
     select: { publicId: true, name: true },
-    orderBy: { name: 'asc' },
+    orderBy: { name: "asc" },
   });
 
   return employees.map((e) => ({
@@ -31,7 +36,7 @@ export async function getEmployeesListQuery(): Promise<EmployeeItem[]> {
       company: { select: { name: true } },
       _count: { select: { transactions: true } },
     },
-    orderBy: [{ company: { name: 'asc' } }, { name: 'asc' }],
+    orderBy: [{ company: { name: "asc" } }, { name: "asc" }],
   });
 
   return employees.map((e) => ({
@@ -50,7 +55,9 @@ export async function getEmployeeByIdQuery(publicId: string) {
     include: { company: { select: { publicId: true, name: true } } },
   });
 
-  if (!employee) return null;
+  if (!employee) {
+    return null;
+  }
 
   return {
     id: employee.publicId,

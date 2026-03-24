@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import { Check, ChevronsUpDown, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { useEffect, useRef, useState } from "react";
+import { Check, ChevronsUpDown, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -11,7 +11,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command';
+} from "@/components/ui/command";
 
 interface CustomerOption {
   id: string;
@@ -25,30 +25,41 @@ interface CustomerComboboxProps {
   customers: CustomerOption[];
 }
 
-export function CustomerCombobox({ value, onChange, customers }: CustomerComboboxProps) {
+export function CustomerCombobox({
+  value,
+  onChange,
+  customers,
+}: CustomerComboboxProps) {
   const [open, setOpen] = useState(false);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setOpen(false);
-        setInputValue('');
+        setInputValue("");
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
 
   const filtered = inputValue
-    ? customers.filter((c) => c.name.toLowerCase().includes(inputValue.toLowerCase()))
+    ? customers.filter((c) =>
+        c.name.toLowerCase().includes(inputValue.toLowerCase()),
+      )
     : customers;
 
-  const showCreateOption = inputValue && !customers.some(
-    (c) => c.name.toLowerCase() === inputValue.toLowerCase()
-  );
+  const showCreateOption =
+    inputValue &&
+    !customers.some((c) => c.name.toLowerCase() === inputValue.toLowerCase());
 
   return (
     <div ref={containerRef} className="relative">
@@ -61,7 +72,7 @@ export function CustomerCombobox({ value, onChange, customers }: CustomerCombobo
         onClick={() => setOpen(!open)}
       >
         <span className="truncate">
-          {value || 'Wybierz lub dodaj klienta...'}
+          {value || "Wybierz lub dodaj klienta..."}
         </span>
         <div className="flex items-center gap-1 ml-2">
           {value && (
@@ -69,7 +80,7 @@ export function CustomerCombobox({ value, onChange, customers }: CustomerCombobo
               className="h-4 w-4 shrink-0 opacity-50 hover:opacity-100"
               onClick={(e) => {
                 e.stopPropagation();
-                onChange('');
+                onChange("");
               }}
             />
           )}
@@ -88,7 +99,7 @@ export function CustomerCombobox({ value, onChange, customers }: CustomerCombobo
             <CommandList>
               {!showCreateOption && filtered.length === 0 && (
                 <CommandEmpty>
-                  {inputValue ? 'Brak wyników' : 'Wpisz nazwę klienta'}
+                  {inputValue ? "Brak wyników" : "Wpisz nazwę klienta"}
                 </CommandEmpty>
               )}
               <CommandGroup>
@@ -98,10 +109,12 @@ export function CustomerCombobox({ value, onChange, customers }: CustomerCombobo
                     onSelect={() => {
                       onChange(inputValue);
                       setOpen(false);
-                      setInputValue('');
+                      setInputValue("");
                     }}
                   >
-                    <span>Dodaj: <strong>{inputValue}</strong></span>
+                    <span>
+                      Dodaj: <strong>{inputValue}</strong>
+                    </span>
                   </CommandItem>
                 )}
                 {filtered.map((customer) => (
@@ -109,15 +122,15 @@ export function CustomerCombobox({ value, onChange, customers }: CustomerCombobo
                     key={customer.id}
                     value={customer.name}
                     onSelect={() => {
-                      onChange(customer.name === value ? '' : customer.name);
+                      onChange(customer.name === value ? "" : customer.name);
                       setOpen(false);
-                      setInputValue('');
+                      setInputValue("");
                     }}
                   >
                     <Check
                       className={cn(
-                        'mr-2 h-4 w-4',
-                        value === customer.name ? 'opacity-100' : 'opacity-0'
+                        "mr-2 h-4 w-4",
+                        value === customer.name ? "opacity-100" : "opacity-0",
                       )}
                     />
                     <span>{customer.name}</span>

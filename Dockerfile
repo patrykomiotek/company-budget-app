@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
 COPY prisma.config.ts ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 # --- Builder ---
 FROM base AS builder
@@ -40,14 +40,22 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Prisma: schema, config, migrations for `prisma migrate deploy`
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
-# Install Prisma CLI for migrations in production
-RUN npm install --prefix /tmp prisma@latest @prisma/engines@latest && \
+# Install Prisma CLI + deps needed for migrations (dotenv, tsx for prisma.config.ts)
+RUN npm install --prefix /tmp prisma@latest @prisma/engines@latest dotenv tsx typescript && \
     cp -r /tmp/node_modules/prisma ./node_modules/prisma && \
     cp -r /tmp/node_modules/@prisma ./node_modules/@prisma && \
+    cp -r /tmp/node_modules/dotenv ./node_modules/dotenv && \
+    cp -r /tmp/node_modules/tsx ./node_modules/tsx && \
+    cp -r /tmp/node_modules/typescript ./node_modules/typescript && \
     rm -rf /tmp/node_modules
+
+# Also copy the generated Prisma client (needed for seed if run)
+COPY --from=builder /app/src/lib/generated ./src/lib/generated
 
 USER nextjs
 

@@ -1,34 +1,33 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
-import { toast } from 'sonner';
-import { ChevronDown, PlusCircle, Repeat } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { format } from "date-fns";
+import { toast } from "sonner";
+import { ChevronDown, PlusCircle, Repeat } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-} from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SearchableSelect } from '@/components/searchable-select';
-import { MerchantCombobox } from '@/components/merchant-combobox';
-import { EmployeeCombobox } from '@/features/employees/components/employee-combobox';
-import { CustomerCombobox } from '@/features/customers/components/customer-combobox';
-import { InvoiceFields } from '@/features/invoices/components/invoice-fields';
-import { LineItemsForm } from '@/features/invoices/components/line-items-form';
-import { QuickCreateCategoryDialog } from '@/features/categories/components/quick-create-category-dialog';
-import { SubscriptionDialog } from './subscription-dialog';
-import { createTransactionCommand } from '../services/commands/transaction-commands';
-import { useCompany } from '@/shared/context/company-context';
-import type { CategoryWithSubcategories } from '@/features/categories/contracts/category.types';
-import type { TransactionType, Currency } from '../contracts/transaction.types';
-import { TRANSACTION_TYPE_LABELS } from '../contracts/transaction.types';
-import type { LineItemRow } from '@/features/invoices/contracts/invoice.types';
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SearchableSelect } from "@/components/searchable-select";
+import { MerchantCombobox } from "@/components/merchant-combobox";
+import { EmployeeCombobox } from "@/features/employees/components/employee-combobox";
+import { CustomerCombobox } from "@/features/customers/components/customer-combobox";
+import { InvoiceFields } from "@/features/invoices/components/invoice-fields";
+import { LineItemsForm } from "@/features/invoices/components/line-items-form";
+import { QuickCreateCategoryDialog } from "@/features/categories/components/quick-create-category-dialog";
+import { SubscriptionDialog } from "./subscription-dialog";
+import { createTransactionCommand } from "../services/commands/transaction-commands";
+import { useCompany } from "@/shared/context/company-context";
+import type { CategoryWithSubcategories } from "@/features/categories/contracts/category.types";
+import type { TransactionType, Currency } from "../contracts/transaction.types";
+import type { LineItemRow } from "@/features/invoices/contracts/invoice.types";
 
 interface TransactionFormProps {
   categories: CategoryWithSubcategories[];
@@ -38,30 +37,38 @@ interface TransactionFormProps {
   products: { id: string; name: string }[];
 }
 
-const isIncomeType = (type: TransactionType) => type === 'INCOME' || type === 'FORECAST_INCOME';
+const isIncomeType = (type: TransactionType) =>
+  type === "INCOME" || type === "FORECAST_INCOME";
 
-const isExpenseType = (type: TransactionType) => type === 'EXPENSE' || type === 'FORECAST_EXPENSE';
+const isExpenseType = (type: TransactionType) =>
+  type === "EXPENSE" || type === "FORECAST_EXPENSE";
 const getCategoryFilterType = (type: TransactionType) =>
-  type === 'INCOME' || type === 'FORECAST_INCOME' ? 'INCOME' : 'EXPENSE';
+  type === "INCOME" || type === "FORECAST_INCOME" ? "INCOME" : "EXPENSE";
 
-export function TransactionForm({ categories: initialCategories, merchants, customers, employees, products }: TransactionFormProps) {
+export function TransactionForm({
+  categories: initialCategories,
+  merchants,
+  customers,
+  employees,
+  products,
+}: TransactionFormProps) {
   const router = useRouter();
   const { companies, activeCompanyId } = useCompany();
   const [loading, setLoading] = useState(false);
-  const [type, setType] = useState<TransactionType>('EXPENSE');
-  const [categoryId, setCategoryId] = useState('');
-  const [subcategoryId, setSubcategoryId] = useState('');
-  const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState<Currency>('PLN');
-  const [exchangeRate, setExchangeRate] = useState('');
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [description, setDescription] = useState('');
-  const [merchantName, setMerchantName] = useState('');
-  const [customerName, setCustomerName] = useState('');
-  const [employeeName, setEmployeeName] = useState('');
-  const [companyId, setCompanyId] = useState(activeCompanyId ?? '');
-  const [invoiceNumber, setInvoiceNumber] = useState('');
-  const [invoiceDueDate, setInvoiceDueDate] = useState('');
+  const [type, setType] = useState<TransactionType>("EXPENSE");
+  const [categoryId, setCategoryId] = useState("");
+  const [subcategoryId, setSubcategoryId] = useState("");
+  const [amount, setAmount] = useState("");
+  const [currency, setCurrency] = useState<Currency>("PLN");
+  const [exchangeRate, setExchangeRate] = useState("");
+  const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [description, setDescription] = useState("");
+  const [merchantName, setMerchantName] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [employeeName, setEmployeeName] = useState("");
+  const [companyId, setCompanyId] = useState(activeCompanyId ?? "");
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [invoiceDueDate, setInvoiceDueDate] = useState("");
   const [lineItems, setLineItems] = useState<LineItemRow[]>([]);
   const [showInvoice, setShowInvoice] = useState(false);
   const [showLineItems, setShowLineItems] = useState(false);
@@ -70,11 +77,20 @@ export function TransactionForm({ categories: initialCategories, merchants, cust
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
 
   const filterType = getCategoryFilterType(type);
-  const filteredCategories = localCategories.filter((c) => c.type === filterType);
+  const filteredCategories = localCategories.filter(
+    (c) => c.type === filterType,
+  );
   const selectedCategory = filteredCategories.find((c) => c.id === categoryId);
 
-  const categoryOptions = filteredCategories.map((c) => ({ value: c.id, label: c.name }));
-  const subcategoryOptions = selectedCategory?.subcategories.map((s) => ({ value: s.id, label: s.name })) ?? [];
+  const categoryOptions = filteredCategories.map((c) => ({
+    value: c.id,
+    label: c.name,
+  }));
+  const subcategoryOptions =
+    selectedCategory?.subcategories.map((s) => ({
+      value: s.id,
+      label: s.name,
+    })) ?? [];
 
   const needsCompanySelection = !activeCompanyId;
 
@@ -83,12 +99,12 @@ export function TransactionForm({ categories: initialCategories, merchants, cust
 
     const parsedAmount = parseFloat(amount);
     if (Number.isNaN(parsedAmount) || parsedAmount <= 0) {
-      toast.error('Kwota musi być większa od 0');
+      toast.error("Kwota musi być większa od 0");
       return;
     }
 
-    if (currency !== 'PLN' && !exchangeRate) {
-      toast.error('Podaj kurs wymiany dla waluty obcej');
+    if (currency !== "PLN" && !exchangeRate) {
+      toast.error("Podaj kurs wymiany dla waluty obcej");
       return;
     }
 
@@ -99,38 +115,44 @@ export function TransactionForm({ categories: initialCategories, merchants, cust
         type,
         amount: parsedAmount,
         currency,
-        exchangeRate: currency !== 'PLN' ? parseFloat(exchangeRate) : undefined,
+        exchangeRate: currency !== "PLN" ? parseFloat(exchangeRate) : undefined,
         date,
         subcategoryId,
         description: description || undefined,
-        merchantName: isExpenseType(type) && merchantName ? merchantName : undefined,
-        customerName: isIncomeType(type) && customerName ? customerName : undefined,
+        merchantName:
+          isExpenseType(type) && merchantName ? merchantName : undefined,
+        customerName:
+          isIncomeType(type) && customerName ? customerName : undefined,
         companyPublicId: companyId || undefined,
-        employeeName: isExpenseType(type) && employeeName ? employeeName : undefined,
+        employeeName:
+          isExpenseType(type) && employeeName ? employeeName : undefined,
         invoiceNumber: invoiceNumber || undefined,
         invoiceDueDate: invoiceDueDate || undefined,
-        lineItems: lineItems.length > 0
-          ? lineItems.filter((li) => li.name && li.quantity > 0 && li.unitPrice > 0).map((li) => ({
-              name: li.name,
-              quantity: li.quantity,
-              unitPrice: li.unitPrice,
-              vatRate: li.vatRate,
-            }))
-          : undefined,
+        lineItems:
+          lineItems.length > 0
+            ? lineItems
+                .filter((li) => li.name && li.quantity > 0 && li.unitPrice > 0)
+                .map((li) => ({
+                  name: li.name,
+                  quantity: li.quantity,
+                  unitPrice: li.unitPrice,
+                  vatRate: li.vatRate,
+                }))
+            : undefined,
       });
 
       if (result.success) {
-        toast.success('Transakcja dodana');
-        setCategoryId('');
-        setSubcategoryId('');
-        setAmount('');
-        setExchangeRate('');
-        setDescription('');
-        setMerchantName('');
-        setCustomerName('');
-        setEmployeeName('');
-        setInvoiceNumber('');
-        setInvoiceDueDate('');
+        toast.success("Transakcja dodana");
+        setCategoryId("");
+        setSubcategoryId("");
+        setAmount("");
+        setExchangeRate("");
+        setDescription("");
+        setMerchantName("");
+        setCustomerName("");
+        setEmployeeName("");
+        setInvoiceNumber("");
+        setInvoiceDueDate("");
         setLineItems([]);
         setShowInvoice(false);
         setShowLineItems(false);
@@ -138,7 +160,7 @@ export function TransactionForm({ categories: initialCategories, merchants, cust
         toast.error(result.error);
       }
     } catch {
-      toast.error('Wystąpił błąd. Spróbuj ponownie.');
+      toast.error("Wystąpił błąd. Spróbuj ponownie.");
     } finally {
       setLoading(false);
     }
@@ -163,26 +185,28 @@ export function TransactionForm({ categories: initialCategories, merchants, cust
           <div className="space-y-2">
             <Label>Typ</Label>
             <div className="flex flex-wrap gap-2">
-              {([
-                { value: 'EXPENSE', label: 'Wydatek' },
-                { value: 'INCOME', label: 'Przychód' },
-                { value: 'FORECAST_EXPENSE', label: 'Prognoza wydatku' },
-                { value: 'FORECAST_INCOME', label: 'Prognoza przychodu' },
-              ] as const).map((option) => (
+              {(
+                [
+                  { value: "EXPENSE", label: "Wydatek" },
+                  { value: "INCOME", label: "Przychód" },
+                  { value: "FORECAST_EXPENSE", label: "Prognoza wydatku" },
+                  { value: "FORECAST_INCOME", label: "Prognoza przychodu" },
+                ] as const
+              ).map((option) => (
                 <button
                   key={option.value}
                   type="button"
                   className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${
                     type === option.value
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-background hover:bg-muted border-input'
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background hover:bg-muted border-input"
                   }`}
                   onClick={() => {
                     setType(option.value);
-                    setCategoryId('');
-                    setSubcategoryId('');
+                    setCategoryId("");
+                    setSubcategoryId("");
                     if (!isExpenseType(option.value)) {
-                      setEmployeeName('');
+                      setEmployeeName("");
                     }
                   }}
                 >
@@ -206,9 +230,15 @@ export function TransactionForm({ categories: initialCategories, merchants, cust
           {needsCompanySelection && (
             <div className="space-y-2">
               <Label>Firma</Label>
-              <Select value={companyId} onValueChange={(v) => setCompanyId(v ?? '')}>
+              <Select
+                value={companyId}
+                onValueChange={(v) => setCompanyId(v ?? "")}
+              >
                 <SelectTrigger>
-                  <span>{companies.find((c) => c.id === companyId)?.name ?? 'Wybierz firmę'}</span>
+                  <span>
+                    {companies.find((c) => c.id === companyId)?.name ??
+                      "Wybierz firmę"}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   {companies.map((company) => (
@@ -239,7 +269,7 @@ export function TransactionForm({ categories: initialCategories, merchants, cust
               value={categoryId}
               onChange={(v) => {
                 setCategoryId(v);
-                setSubcategoryId('');
+                setSubcategoryId("");
               }}
               options={categoryOptions}
               placeholder="Wybierz kategorię"
@@ -263,10 +293,15 @@ export function TransactionForm({ categories: initialCategories, merchants, cust
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2 col-span-1">
               <Label>Waluta</Label>
-              <Select value={currency} onValueChange={(v) => {
-                setCurrency(v as Currency);
-                if (v === 'PLN') setExchangeRate('');
-              }}>
+              <Select
+                value={currency}
+                onValueChange={(v) => {
+                  setCurrency(v as Currency);
+                  if (v === "PLN") {
+                    setExchangeRate("");
+                  }
+                }}
+              >
                 <SelectTrigger>
                   <span>{currency}</span>
                 </SelectTrigger>
@@ -290,7 +325,7 @@ export function TransactionForm({ categories: initialCategories, merchants, cust
                 required
               />
             </div>
-            {currency !== 'PLN' && (
+            {currency !== "PLN" && (
               <div className="space-y-2 col-span-1">
                 <Label htmlFor="exchangeRate">Kurs do PLN</Label>
                 <Input
@@ -356,7 +391,9 @@ export function TransactionForm({ categories: initialCategories, merchants, cust
               onClick={() => setShowInvoice(!showInvoice)}
             >
               <span>Faktura (opcjonalnie)</span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${showInvoice ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${showInvoice ? "rotate-180" : ""}`}
+              />
             </button>
             {showInvoice && (
               <div className="px-4 pb-4">
@@ -378,7 +415,9 @@ export function TransactionForm({ categories: initialCategories, merchants, cust
               onClick={() => setShowLineItems(!showLineItems)}
             >
               <span>Pozycje faktury (opcjonalnie)</span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${showLineItems ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${showLineItems ? "rotate-180" : ""}`}
+              />
             </button>
             {showLineItems && (
               <div className="px-4 pb-4">
@@ -393,9 +432,13 @@ export function TransactionForm({ categories: initialCategories, merchants, cust
 
           <div className="flex gap-2">
             <Button type="submit" disabled={loading || !subcategoryId}>
-              {loading ? 'Dodawanie...' : 'Dodaj'}
+              {loading ? "Dodawanie..." : "Dodaj"}
             </Button>
-            <Button type="button" variant="outline" onClick={() => router.back()}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+            >
               Anuluj
             </Button>
           </div>
@@ -409,7 +452,7 @@ export function TransactionForm({ categories: initialCategories, merchants, cust
         onCreated={(newCategory) => {
           setLocalCategories((prev) => [...prev, newCategory]);
           setCategoryId(newCategory.id);
-          setSubcategoryId('');
+          setSubcategoryId("");
         }}
       />
 

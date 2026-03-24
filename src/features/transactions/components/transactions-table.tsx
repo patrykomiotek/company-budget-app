@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
-import { pl } from 'date-fns/locale';
-import { Pencil, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { format } from "date-fns";
+import { pl } from "date-fns/locale";
+import { Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -15,11 +15,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { EditTransactionDialog } from './edit-transaction-dialog';
-import { deleteTransactionCommand } from '../services/commands/transaction-commands';
-import type { TransactionWithDetails, TransactionType } from '../contracts/transaction.types';
-import type { CategoryWithSubcategories } from '@/features/categories/contracts/category.types';
+} from "@/components/ui/table";
+import { EditTransactionDialog } from "./edit-transaction-dialog";
+import { deleteTransactionCommand } from "../services/commands/transaction-commands";
+import type {
+  TransactionWithDetails,
+  TransactionType,
+} from "../contracts/transaction.types";
+import type { CategoryWithSubcategories } from "@/features/categories/contracts/category.types";
 
 interface TransactionsTableProps {
   transactions: TransactionWithDetails[];
@@ -30,36 +33,52 @@ interface TransactionsTableProps {
   products: { id: string; name: string }[];
 }
 
-const typeBadgeConfig: Record<TransactionType, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
-  INCOME: { label: 'Przychód', variant: 'default' },
-  EXPENSE: { label: 'Wydatek', variant: 'destructive' },
-  FORECAST_INCOME: { label: 'Prognoza +', variant: 'outline' },
-  FORECAST_EXPENSE: { label: 'Prognoza -', variant: 'outline' },
+const typeBadgeConfig: Record<
+  TransactionType,
+  {
+    label: string;
+    variant: "default" | "secondary" | "outline" | "destructive";
+  }
+> = {
+  INCOME: { label: "Przychód", variant: "default" },
+  EXPENSE: { label: "Wydatek", variant: "destructive" },
+  FORECAST_INCOME: { label: "Prognoza +", variant: "outline" },
+  FORECAST_EXPENSE: { label: "Prognoza -", variant: "outline" },
 };
 
 function isIncomeType(type: TransactionType) {
-  return type === 'INCOME' || type === 'FORECAST_INCOME';
+  return type === "INCOME" || type === "FORECAST_INCOME";
 }
 
-export function TransactionsTable({ transactions, categories, merchants, customers, employees, products }: TransactionsTableProps) {
+export function TransactionsTable({
+  transactions,
+  categories,
+  merchants,
+  customers,
+  employees,
+  products,
+}: TransactionsTableProps) {
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [editingTransaction, setEditingTransaction] = useState<TransactionWithDetails | null>(null);
+  const [editingTransaction, setEditingTransaction] =
+    useState<TransactionWithDetails | null>(null);
 
   async function handleDelete(id: string) {
-    if (!confirm('Czy na pewno chcesz usunąć tę transakcję?')) return;
+    if (!confirm("Czy na pewno chcesz usunąć tę transakcję?")) {
+      return;
+    }
 
     setDeletingId(id);
     try {
       const result = await deleteTransactionCommand(id);
       if (result.success) {
-        toast.success('Transakcja usunięta');
+        toast.success("Transakcja usunięta");
         router.refresh();
       } else {
         toast.error(result.error);
       }
     } catch {
-      toast.error('Nie udało się usunąć transakcji');
+      toast.error("Nie udało się usunąć transakcji");
     } finally {
       setDeletingId(null);
     }
@@ -96,32 +115,40 @@ export function TransactionsTable({ transactions, categories, merchants, custome
             return (
               <TableRow key={t.id}>
                 <TableCell>
-                  <Badge variant={badge.variant} className="text-xs whitespace-nowrap">
+                  <Badge
+                    variant={badge.variant}
+                    className="text-xs whitespace-nowrap"
+                  >
                     {badge.label}
                   </Badge>
                 </TableCell>
                 <TableCell className="whitespace-nowrap">
-                  {format(new Date(t.date), 'd MMM yyyy', { locale: pl })}
+                  {format(new Date(t.date), "d MMM yyyy", { locale: pl })}
                 </TableCell>
                 <TableCell>
-                  <div className="text-xs text-muted-foreground">{t.categoryName}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {t.categoryName}
+                  </div>
                   <div>{t.subcategoryName}</div>
                 </TableCell>
-                <TableCell>{t.customerName || t.merchantName || '—'}</TableCell>
-                <TableCell>{t.employeeName || '—'}</TableCell>
+                <TableCell>{t.customerName || t.merchantName || "—"}</TableCell>
+                <TableCell>{t.employeeName || "—"}</TableCell>
                 <TableCell className="text-muted-foreground max-w-[200px] truncate">
-                  {t.description || '—'}
+                  {t.description || "—"}
                 </TableCell>
                 <TableCell className="text-xs">
-                  {t.invoiceNumber || '—'}
+                  {t.invoiceNumber || "—"}
                 </TableCell>
-                <TableCell className={`text-right font-mono whitespace-nowrap ${
-                  income ? 'text-green-600' : 'text-red-600'
-                }`}>
+                <TableCell
+                  className={`text-right font-mono whitespace-nowrap ${
+                    income ? "text-green-600" : "text-red-600"
+                  }`}
+                >
                   <div>
-                    {income ? '+' : '-'}{t.amount.toFixed(2)} {t.currency}
+                    {income ? "+" : "-"}
+                    {t.amount.toFixed(2)} {t.currency}
                   </div>
-                  {t.currency !== 'PLN' && t.amountPln && (
+                  {t.currency !== "PLN" && t.amountPln && (
                     <div className="text-xs text-muted-foreground">
                       ≈ {t.amountPln.toFixed(2)} PLN
                     </div>
@@ -163,7 +190,9 @@ export function TransactionsTable({ transactions, categories, merchants, custome
         products={products}
         open={!!editingTransaction}
         onOpenChange={(open) => {
-          if (!open) setEditingTransaction(null);
+          if (!open) {
+            setEditingTransaction(null);
+          }
         }}
       />
     </>

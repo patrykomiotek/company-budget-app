@@ -1,13 +1,16 @@
-'use server';
+"use server";
 
-import { prisma } from '@/shared/lib/prisma';
-import { requireUser } from '@/shared/lib/auth/helpers';
-import { getActiveCompanyFilter } from '@/shared/lib/company/helpers';
-import type { MonthSummary, CategorySummary } from '@/features/transactions/contracts/transaction.types';
+import { prisma } from "@/shared/lib/prisma";
+import { requireUser } from "@/shared/lib/auth/helpers";
+import { getActiveCompanyFilter } from "@/shared/lib/company/helpers";
+import type {
+  MonthSummary,
+  CategorySummary,
+} from "@/features/transactions/contracts/transaction.types";
 
 export async function getMonthSummaryQuery(
   year: number,
-  month: number
+  month: number,
 ): Promise<MonthSummary> {
   const user = await requireUser();
   const companyFilter = await getActiveCompanyFilter();
@@ -45,16 +48,16 @@ export async function getMonthSummaryQuery(
     const catPublicId = cat.publicId;
 
     switch (t.type) {
-      case 'INCOME':
+      case "INCOME":
         totalIncome += amount;
         break;
-      case 'EXPENSE':
+      case "EXPENSE":
         totalExpense += amount;
         break;
-      case 'FORECAST_INCOME':
+      case "FORECAST_INCOME":
         forecastIncome += amount;
         break;
-      case 'FORECAST_EXPENSE':
+      case "FORECAST_EXPENSE":
         forecastExpense += amount;
         break;
       default:
@@ -75,7 +78,7 @@ export async function getMonthSummaryQuery(
 
     const subPublicId = t.subcategory.publicId;
     const existingSub = summary.subcategories.find(
-      (s) => s.subcategoryId === subPublicId
+      (s) => s.subcategoryId === subPublicId,
     );
     if (existingSub) {
       existingSub.total += amount;
@@ -100,10 +103,7 @@ export async function getMonthSummaryQuery(
   };
 }
 
-export async function getDailySummaryQuery(
-  year: number,
-  month: number
-) {
+export async function getDailySummaryQuery(year: number, month: number) {
   const user = await requireUser();
   const companyFilter = await getActiveCompanyFilter();
 
@@ -124,16 +124,21 @@ export async function getDailySummaryQuery(
         include: { category: true },
       },
     },
-    orderBy: { date: 'asc' },
+    orderBy: { date: "asc" },
   });
 
-  const dailyMap = new Map<string, { totalIncome: number; totalExpense: number }>();
+  const dailyMap = new Map<
+    string,
+    { totalIncome: number; totalExpense: number }
+  >();
 
   for (const t of transactions) {
     // Only count actual transactions in daily summary, not forecasts
-    if (t.type === 'FORECAST_INCOME' || t.type === 'FORECAST_EXPENSE') continue;
+    if (t.type === "FORECAST_INCOME" || t.type === "FORECAST_EXPENSE") {
+      continue;
+    }
 
-    const dateKey = t.date.toISOString().split('T')[0];
+    const dateKey = t.date.toISOString().split("T")[0];
     const rawAmount = Number(t.amount);
     const rate = t.exchangeRate ? Number(t.exchangeRate) : 1;
     const amount = Math.round(rawAmount * rate * 100) / 100;
@@ -143,7 +148,7 @@ export async function getDailySummaryQuery(
     }
 
     const daily = dailyMap.get(dateKey)!;
-    if (t.type === 'INCOME') {
+    if (t.type === "INCOME") {
       daily.totalIncome += amount;
     } else {
       daily.totalExpense += amount;

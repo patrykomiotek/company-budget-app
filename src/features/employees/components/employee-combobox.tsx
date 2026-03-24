@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import { Check, ChevronsUpDown, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { useEffect, useRef, useState } from "react";
+import { Check, ChevronsUpDown, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -11,7 +11,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command';
+} from "@/components/ui/command";
 
 interface EmployeeOption {
   id: string;
@@ -24,30 +24,41 @@ interface EmployeeComboboxProps {
   employees: EmployeeOption[];
 }
 
-export function EmployeeCombobox({ value, onChange, employees }: EmployeeComboboxProps) {
+export function EmployeeCombobox({
+  value,
+  onChange,
+  employees,
+}: EmployeeComboboxProps) {
   const [open, setOpen] = useState(false);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setOpen(false);
-        setInputValue('');
+        setInputValue("");
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
 
   const filtered = inputValue
-    ? employees.filter((e) => e.name.toLowerCase().includes(inputValue.toLowerCase()))
+    ? employees.filter((e) =>
+        e.name.toLowerCase().includes(inputValue.toLowerCase()),
+      )
     : employees;
 
-  const showCreateOption = inputValue && !employees.some(
-    (e) => e.name.toLowerCase() === inputValue.toLowerCase()
-  );
+  const showCreateOption =
+    inputValue &&
+    !employees.some((e) => e.name.toLowerCase() === inputValue.toLowerCase());
 
   return (
     <div ref={containerRef} className="relative">
@@ -60,7 +71,7 @@ export function EmployeeCombobox({ value, onChange, employees }: EmployeeCombobo
         onClick={() => setOpen(!open)}
       >
         <span className="truncate">
-          {value || 'Wybierz lub dodaj współpracownika...'}
+          {value || "Wybierz lub dodaj współpracownika..."}
         </span>
         <div className="flex items-center gap-1 ml-2">
           {value && (
@@ -68,7 +79,7 @@ export function EmployeeCombobox({ value, onChange, employees }: EmployeeCombobo
               className="h-4 w-4 shrink-0 opacity-50 hover:opacity-100"
               onClick={(e) => {
                 e.stopPropagation();
-                onChange('');
+                onChange("");
               }}
             />
           )}
@@ -86,7 +97,7 @@ export function EmployeeCombobox({ value, onChange, employees }: EmployeeCombobo
             />
             <CommandList>
               <CommandEmpty>
-                {inputValue ? 'Brak wyników' : 'Wpisz imię osoby'}
+                {inputValue ? "Brak wyników" : "Wpisz imię osoby"}
               </CommandEmpty>
               <CommandGroup>
                 {showCreateOption && (
@@ -95,10 +106,12 @@ export function EmployeeCombobox({ value, onChange, employees }: EmployeeCombobo
                     onSelect={() => {
                       onChange(inputValue);
                       setOpen(false);
-                      setInputValue('');
+                      setInputValue("");
                     }}
                   >
-                    <span>Dodaj: <strong>{inputValue}</strong></span>
+                    <span>
+                      Dodaj: <strong>{inputValue}</strong>
+                    </span>
                   </CommandItem>
                 )}
                 {filtered.map((employee) => (
@@ -106,15 +119,15 @@ export function EmployeeCombobox({ value, onChange, employees }: EmployeeCombobo
                     key={employee.id}
                     value={employee.name}
                     onSelect={() => {
-                      onChange(employee.name === value ? '' : employee.name);
+                      onChange(employee.name === value ? "" : employee.name);
                       setOpen(false);
-                      setInputValue('');
+                      setInputValue("");
                     }}
                   >
                     <Check
                       className={cn(
-                        'mr-2 h-4 w-4',
-                        value === employee.name ? 'opacity-100' : 'opacity-0'
+                        "mr-2 h-4 w-4",
+                        value === employee.name ? "opacity-100" : "opacity-0",
                       )}
                     />
                     {employee.name}

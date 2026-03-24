@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Pencil, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -13,9 +13,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { deleteCustomerCommand } from '../services/commands/customer-commands';
-import type { CustomerItem } from '../contracts/customer.types';
+} from "@/components/ui/table";
+import { deleteCustomerCommand } from "../services/commands/customer-commands";
+import type { CustomerItem } from "../contracts/customer.types";
 
 interface CustomersListProps {
   customers: CustomerItem[];
@@ -26,19 +26,25 @@ export function CustomersList({ customers }: CustomersListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function handleDelete(id: string) {
-    if (!confirm('Czy na pewno chcesz usunąć tego klienta? Transakcje zostaną odłączone.')) return;
+    if (
+      !confirm(
+        "Czy na pewno chcesz usunąć tego klienta? Transakcje zostaną odłączone.",
+      )
+    ) {
+      return;
+    }
 
     setDeletingId(id);
     try {
       const result = await deleteCustomerCommand(id);
       if (result.success) {
-        toast.success('Klient usunięty');
+        toast.success("Klient usunięty");
         router.refresh();
       } else {
         toast.error(result.error);
       }
     } catch {
-      toast.error('Nie udało się usunąć klienta');
+      toast.error("Nie udało się usunąć klienta");
     } finally {
       setDeletingId(null);
     }
@@ -47,7 +53,8 @@ export function CustomersList({ customers }: CustomersListProps) {
   if (customers.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        Brak klientów. Dodaj klienta klikając przycisk powyżej lub podczas tworzenia transakcji.
+        Brak klientów. Dodaj klienta klikając przycisk powyżej lub podczas
+        tworzenia transakcji.
       </div>
     );
   }
@@ -68,14 +75,20 @@ export function CustomersList({ customers }: CustomersListProps) {
         {customers.map((c) => (
           <TableRow key={c.id}>
             <TableCell className="font-medium">{c.name}</TableCell>
-            <TableCell className="text-muted-foreground text-sm">{c.nip || '—'}</TableCell>
-            <TableCell>{c.city || '—'}</TableCell>
-            <TableCell className="text-sm">{c.email || '—'}</TableCell>
+            <TableCell className="text-muted-foreground text-sm">
+              {c.nip || "—"}
+            </TableCell>
+            <TableCell>{c.city || "—"}</TableCell>
+            <TableCell className="text-sm">{c.email || "—"}</TableCell>
             <TableCell className="text-right">{c.transactionCount}</TableCell>
             <TableCell>
               <div className="flex gap-1">
                 <Link href={`/customers/${c.id}/edit`}>
-                  <Button variant="ghost" size="icon" aria-label="Edytuj klienta">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Edytuj klienta"
+                  >
                     <Pencil className="h-4 w-4" />
                   </Button>
                 </Link>

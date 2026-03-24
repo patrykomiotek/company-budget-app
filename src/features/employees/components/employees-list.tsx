@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Pencil, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -13,10 +13,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { deleteEmployeeCommand } from '../services/commands/employee-commands';
-import type { EmployeeItem } from '../contracts/employee.types';
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { deleteEmployeeCommand } from "../services/commands/employee-commands";
+import type { EmployeeItem } from "../contracts/employee.types";
 
 interface EmployeesListProps {
   employees: EmployeeItem[];
@@ -27,19 +27,25 @@ export function EmployeesList({ employees }: EmployeesListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function handleDelete(id: string) {
-    if (!confirm('Czy na pewno chcesz usunąć tę osobę? Transakcje zostaną odłączone.')) return;
+    if (
+      !confirm(
+        "Czy na pewno chcesz usunąć tę osobę? Transakcje zostaną odłączone.",
+      )
+    ) {
+      return;
+    }
 
     setDeletingId(id);
     try {
       const result = await deleteEmployeeCommand(id);
       if (result.success) {
-        toast.success('Osoba usunięta');
+        toast.success("Osoba usunięta");
         router.refresh();
       } else {
         toast.error(result.error);
       }
     } catch {
-      toast.error('Nie udało się usunąć osoby');
+      toast.error("Nie udało się usunąć osoby");
     } finally {
       setDeletingId(null);
     }

@@ -1,28 +1,28 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { format } from "date-fns";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { useCompany } from '@/shared/context/company-context';
-import { createSubscriptionCommand } from '../services/commands/subscription-commands';
-import type { Currency } from '../contracts/transaction.types';
+} from "@/components/ui/dialog";
+import { useCompany } from "@/shared/context/company-context";
+import { createSubscriptionCommand } from "../services/commands/subscription-commands";
+import type { Currency } from "../contracts/transaction.types";
 
 interface SubscriptionDialogProps {
   open: boolean;
@@ -30,35 +30,38 @@ interface SubscriptionDialogProps {
 }
 
 const DURATION_OPTIONS = [
-  { value: 1, label: '1 miesiąc' },
-  { value: 3, label: '3 miesiące' },
-  { value: 6, label: '6 miesięcy' },
-  { value: 12, label: '12 miesięcy' },
+  { value: 1, label: "1 miesiąc" },
+  { value: 3, label: "3 miesiące" },
+  { value: 6, label: "6 miesięcy" },
+  { value: 12, label: "12 miesięcy" },
 ];
 
-export function SubscriptionDialog({ open, onOpenChange }: SubscriptionDialogProps) {
+export function SubscriptionDialog({
+  open,
+  onOpenChange,
+}: SubscriptionDialogProps) {
   const router = useRouter();
   const { companies, activeCompanyId } = useCompany();
   const [loading, setLoading] = useState(false);
-  const [toolName, setToolName] = useState('');
-  const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState<Currency>('PLN');
-  const [exchangeRate, setExchangeRate] = useState('');
-  const [startMonth, setStartMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [toolName, setToolName] = useState("");
+  const [amount, setAmount] = useState("");
+  const [currency, setCurrency] = useState<Currency>("PLN");
+  const [exchangeRate, setExchangeRate] = useState("");
+  const [startMonth, setStartMonth] = useState(format(new Date(), "yyyy-MM"));
   const [months, setMonths] = useState(1);
-  const [companyId, setCompanyId] = useState(activeCompanyId ?? '');
-  const [description, setDescription] = useState('');
+  const [companyId, setCompanyId] = useState(activeCompanyId ?? "");
+  const [description, setDescription] = useState("");
 
   const needsCompanySelection = !activeCompanyId;
 
   function reset() {
-    setToolName('');
-    setAmount('');
-    setCurrency('PLN');
-    setExchangeRate('');
-    setStartMonth(format(new Date(), 'yyyy-MM'));
+    setToolName("");
+    setAmount("");
+    setCurrency("PLN");
+    setExchangeRate("");
+    setStartMonth(format(new Date(), "yyyy-MM"));
     setMonths(1);
-    setDescription('');
+    setDescription("");
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -66,25 +69,25 @@ export function SubscriptionDialog({ open, onOpenChange }: SubscriptionDialogPro
 
     const parsedAmount = parseFloat(amount);
     if (Number.isNaN(parsedAmount) || parsedAmount <= 0) {
-      toast.error('Kwota musi być większa od 0');
+      toast.error("Kwota musi być większa od 0");
       return;
     }
 
-    if (currency !== 'PLN' && !exchangeRate) {
-      toast.error('Podaj kurs wymiany');
+    if (currency !== "PLN" && !exchangeRate) {
+      toast.error("Podaj kurs wymiany");
       return;
     }
 
-    if (currency !== 'PLN') {
+    if (currency !== "PLN") {
       const parsedRate = parseFloat(exchangeRate);
       if (Number.isNaN(parsedRate) || parsedRate <= 0) {
-        toast.error('Podaj prawidłowy kurs wymiany');
+        toast.error("Podaj prawidłowy kurs wymiany");
         return;
       }
     }
 
     if (needsCompanySelection && !companyId) {
-      toast.error('Wybierz firmę');
+      toast.error("Wybierz firmę");
       return;
     }
 
@@ -94,7 +97,7 @@ export function SubscriptionDialog({ open, onOpenChange }: SubscriptionDialogPro
         toolName: toolName.trim(),
         amount: parsedAmount,
         currency,
-        exchangeRate: currency !== 'PLN' ? parseFloat(exchangeRate) : undefined,
+        exchangeRate: currency !== "PLN" ? parseFloat(exchangeRate) : undefined,
         startMonth,
         months,
         companyPublicId: companyId || undefined,
@@ -102,22 +105,32 @@ export function SubscriptionDialog({ open, onOpenChange }: SubscriptionDialogPro
       });
 
       if (result.success && result.data) {
-        toast.success(`Utworzono ${result.data.count} transakcji dla "${toolName}"`);
+        toast.success(
+          `Utworzono ${result.data.count} transakcji dla "${toolName}"`,
+        );
         reset();
         onOpenChange(false);
         router.refresh();
       } else {
-        toast.error(result.error ?? 'Nie udało się utworzyć subskrypcji');
+        toast.error(result.error ?? "Nie udało się utworzyć subskrypcji");
       }
     } catch {
-      toast.error('Wystąpił błąd');
+      toast.error("Wystąpił błąd");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        onOpenChange(v);
+        if (!v) {
+          reset();
+        }
+      }}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Dodaj subskrypcję narzędzia</DialogTitle>
@@ -138,9 +151,15 @@ export function SubscriptionDialog({ open, onOpenChange }: SubscriptionDialogPro
           {needsCompanySelection && (
             <div className="space-y-2">
               <Label>Firma</Label>
-              <Select value={companyId} onValueChange={(v) => setCompanyId(v ?? '')}>
+              <Select
+                value={companyId}
+                onValueChange={(v) => setCompanyId(v ?? "")}
+              >
                 <SelectTrigger>
-                  <span>{companies.find((c) => c.id === companyId)?.name ?? 'Wybierz firmę'}</span>
+                  <span>
+                    {companies.find((c) => c.id === companyId)?.name ??
+                      "Wybierz firmę"}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   {companies.map((company) => (
@@ -156,10 +175,15 @@ export function SubscriptionDialog({ open, onOpenChange }: SubscriptionDialogPro
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Waluta</Label>
-              <Select value={currency} onValueChange={(v) => {
-                setCurrency((v ?? 'PLN') as Currency);
-                if (v === 'PLN') setExchangeRate('');
-              }}>
+              <Select
+                value={currency}
+                onValueChange={(v) => {
+                  setCurrency((v ?? "PLN") as Currency);
+                  if (v === "PLN") {
+                    setExchangeRate("");
+                  }
+                }}
+              >
                 <SelectTrigger>
                   <span>{currency}</span>
                 </SelectTrigger>
@@ -185,7 +209,7 @@ export function SubscriptionDialog({ open, onOpenChange }: SubscriptionDialogPro
             </div>
           </div>
 
-          {currency !== 'PLN' && (
+          {currency !== "PLN" && (
             <div className="space-y-2">
               <Label htmlFor="sub-rate">Kurs do PLN</Label>
               <Input
@@ -221,8 +245,8 @@ export function SubscriptionDialog({ open, onOpenChange }: SubscriptionDialogPro
                     type="button"
                     className={`px-2.5 py-1 rounded-md text-xs border transition-colors ${
                       months === opt.value
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-background hover:bg-muted border-input'
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background hover:bg-muted border-input"
                     }`}
                     onClick={() => setMonths(opt.value)}
                   >
@@ -244,16 +268,22 @@ export function SubscriptionDialog({ open, onOpenChange }: SubscriptionDialogPro
           </div>
 
           <div className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
-            Zostanie utworzonych <strong>{months}</strong> transakcji ({amount ? `${amount} ${currency}` : '...'} / mies.)
-            w kategorii <strong>Narzędzia i subskrypcje</strong> → <strong>{toolName || '...'}</strong>
+            Zostanie utworzonych <strong>{months}</strong> transakcji (
+            {amount ? `${amount} ${currency}` : "..."} / mies.) w kategorii{" "}
+            <strong>Narzędzia i subskrypcje</strong> →{" "}
+            <strong>{toolName || "..."}</strong>
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Anuluj
             </Button>
             <Button type="submit" disabled={loading || !toolName.trim()}>
-              {loading ? 'Tworzenie...' : `Utwórz ${months} transakcji`}
+              {loading ? "Tworzenie..." : `Utwórz ${months} transakcji`}
             </Button>
           </DialogFooter>
         </form>
