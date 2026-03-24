@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Company Budget App
+
+Financial dashboard for managing budgets across multiple companies (Anna PRO, Web Amigos).
+
+## Features
+
+- **Transactions**: Income, expenses, and forecasts with multi-currency support (PLN, EUR, USD)
+- **Company context**: Switch between Anna PRO, Web Amigos, or view combined data
+- **Customers & Merchants**: B2B customer management (who pays you) and merchant/vendor tracking (who you pay)
+- **Invoices**: Invoice number, due date, and line items (products/services) on transactions
+- **Subscriptions**: Quick tool subscription creation with auto-generated monthly transactions
+- **Categories**: Income/expense categories with subcategories, inline creation
+- **Employees**: Collaborator management with assignment to expense transactions
+- **P&L Dashboard**: Monthly profit & loss with actual vs forecast, category breakdowns
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router), React 19, TypeScript
+- **Styling**: Tailwind CSS v4, shadcn/ui (base-ui)
+- **Database**: PostgreSQL, Prisma 7
+- **Auth**: better-auth
+- **Validation**: Zod, react-hook-form
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 22+
+- PostgreSQL database
+
+### Setup
 
 ```bash
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env .env.local
+# Edit .env.local with your DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL
+
+# Run migrations
+npx prisma migrate dev
+
+# Seed database (companies + categories)
+npx prisma db seed
+
+# Start dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Production build (standalone) |
+| `npm run lint` | Run ESLint |
+| `npx prisma migrate dev` | Apply migrations |
+| `npx prisma generate` | Regenerate Prisma client |
+| `npx prisma db seed` | Seed companies and categories |
 
-## Learn More
+## Deployment
 
-To learn more about Next.js, take a look at the following resources:
+Deployed on **Railway** via Docker.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `railway.toml` — build + deploy config
+- `Dockerfile` — multi-stage build (node:22-alpine)
+- Pre-deploy: `prisma migrate deploy`
+- Healthcheck: `/api/healthcheck`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## CI/CD
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **GitHub Actions**: Lint + build on PR/push to `dev` and `main`
+- **Semantic Release**: Auto-versioning and GitHub releases on `main`
+- **CodeRabbit**: Automated code review on PRs
+- **Git hooks**: Husky + lint-staged (ESLint, Prettier) + commitlint (conventional commits)
