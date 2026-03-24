@@ -5,12 +5,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getTransactionsQuery } from '@/features/transactions/services/queries/transaction-queries';
 import { getCategoriesQuery } from '@/features/categories/services/queries/category-queries';
 import { getMerchantsForSelectQuery } from '@/features/merchants/services/queries/merchant-queries';
+import { getCustomersForSelectQuery } from '@/features/customers/services/queries/customer-queries';
+import { getEmployeesQuery } from '@/features/employees/services/queries/employee-queries';
+import { getProductsQuery } from '@/features/products/services/queries/product-queries';
 import { TransactionsTable } from '@/features/transactions/components/transactions-table';
 import { TransactionFilters } from '@/features/transactions/components/transaction-filters';
+import type { TransactionType } from '@/features/transactions/contracts/transaction.types';
 
 interface TransactionsPageProps {
   searchParams: Promise<{
     type?: string;
+    transactionType?: string;
     categoryId?: string;
     subcategoryId?: string;
     dateFrom?: string;
@@ -24,12 +29,16 @@ export default async function TransactionsPage({ searchParams }: TransactionsPag
   const parsedPage = params.page ? parseInt(params.page, 10) : 1;
   const page = Number.isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage;
 
-  const [categories, merchants, result] = await Promise.all([
+  const [categories, merchants, customers, employees, products, result] = await Promise.all([
     getCategoriesQuery(),
     getMerchantsForSelectQuery(),
+    getCustomersForSelectQuery(),
+    getEmployeesQuery(),
+    getProductsQuery(),
     getTransactionsQuery(
       {
         type: params.type as 'INCOME' | 'EXPENSE' | undefined,
+        transactionType: params.transactionType as TransactionType | undefined,
         categoryId: params.categoryId,
         subcategoryId: params.subcategoryId,
         dateFrom: params.dateFrom,
@@ -66,6 +75,9 @@ export default async function TransactionsPage({ searchParams }: TransactionsPag
             transactions={result.items}
             categories={categories}
             merchants={merchants}
+            customers={customers}
+            employees={employees}
+            products={products}
           />
         </CardContent>
       </Card>

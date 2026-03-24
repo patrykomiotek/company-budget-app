@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,60 +22,119 @@ import {
 } from '@/components/ui/dialog';
 import { SearchableSelect } from '@/components/searchable-select';
 import { MerchantCombobox } from '@/components/merchant-combobox';
+import { CustomerCombobox } from '@/features/customers/components/customer-combobox';
+import { EmployeeCombobox } from '@/features/employees/components/employee-combobox';
+import { InvoiceFields } from '@/features/invoices/components/invoice-fields';
+import { LineItemsForm } from '@/features/invoices/components/line-items-form';
 import { updateTransactionCommand } from '../services/commands/transaction-commands';
-import type { TransactionWithDetails } from '../contracts/transaction.types';
+import { useCompany } from '@/shared/context/company-context';
+import type { TransactionWithDetails, TransactionType, Currency } from '../contracts/transaction.types';
+import { TRANSACTION_TYPE_LABELS } from '../contracts/transaction.types';
 import type { CategoryWithSubcategories } from '@/features/categories/contracts/category.types';
+import type { LineItemRow } from '@/features/invoices/contracts/invoice.types';
+import { calculateLineItem } from '@/features/invoices/contracts/invoice.types';
 
 interface EditTransactionDialogProps {
   transaction: TransactionWithDetails | null;
   categories: CategoryWithSubcategories[];
   merchants: { id: string; name: string }[];
+  customers: { id: string; name: string; nip?: string | null }[];
+  employees: { id: string; name: string }[];
+  products: { id: string; name: string }[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+const isExpenseType = (type: TransactionType) => type === 'EXPENSE' || type === 'FORECAST_EXPENSE';
+const isIncomeType = (type: TransactionType) => type === 'INCOME' || type === 'FORECAST_INCOME';
+const getCategoryFilterType = (type: TransactionType) =>
+  type === 'INCOME' || type === 'FORECAST_INCOME' ? 'INCOME' : 'EXPENSE';
 
 export function EditTransactionDialog({
   transaction,
   categories,
   merchants,
+  customers,
+  employees,
+  products,
   open,
   onOpenChange,
 }: EditTransactionDialogProps) {
   const router = useRouter();
+  const { companies, activeCompanyId } = useCompany();
   const [loading, setLoading] = useState(false);
-  const [type, setType] = useState<'INCOME' | 'EXPENSE'>('EXPENSE');
+  const [type, setType] = useState<TransactionType>('EXPENSE');
   const [categoryId, setCategoryId] = useState('');
   const [subcategoryId, setSubcategoryId] = useState('');
   const [amount, setAmount] = useState('');
+  const [currency, setCurrency] = useState<Currency>('PLN');
+  const [exchangeRate, setExchangeRate] = useState('');
   const [date, setDate] = useState('');
   const [description, setDescription] = useState('');
   const [merchantName, setMerchantName] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [employeeName, setEmployeeName] = useState('');
+  const [companyId, setCompanyId] = useState('');
+  const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [invoiceDueDate, setInvoiceDueDate] = useState('');
+  const [lineItems, setLineItems] = useState<LineItemRow[]>([]);
+  const [showInvoice, setShowInvoice] = useState(false);
+  const [showLineItems, setShowLineItems] = useState(false);
 
   useEffect(() => {
     if (transaction) {
-      setType(transaction.categoryType as 'INCOME' | 'EXPENSE');
+      setType(transaction.type);
       setCategoryId(transaction.categoryId);
       setSubcategoryId(transaction.subcategoryId);
       setAmount(transaction.amount.toString());
+      setCurrency(transaction.currency);
+      setExchangeRate(transaction.exchangeRate?.toString() ?? '');
       setDate(new Date(transaction.date).toISOString().split('T')[0]);
       setDescription(transaction.description || '');
       setMerchantName(transaction.merchantName || '');
+      setCustomerName(transaction.customerName || '');
+      setEmployeeName(transaction.employeeName || '');
+      setCompanyId(transaction.companyId || activeCompanyId || '');
+      setInvoiceNumber(transaction.invoiceNumber || '');
+      setInvoiceDueDate(
+        transaction.invoiceDueDate
+          ? new Date(transaction.invoiceDueDate).toISOString().split('T')[0]
+          : ''
+      );
+      setLineItems(
+        transaction.lineItems.map((li) => ({
+          key: li.id,
+          name: li.name,
+          quantity: li.quantity,
+          unitPrice: li.unitPrice,
+          vatRate: li.vatRate,
+          ...calculateLineItem(li),
+        }))
+      );
+      setShowInvoice(!!transaction.invoiceNumber || !!transaction.invoiceDueDate);
+      setShowLineItems(transaction.lineItems.length > 0);
     }
-  }, [transaction]);
+  }, [transaction, activeCompanyId]);
 
-  const filteredCategories = categories.filter((c) => c.type === type);
+  const filterType = getCategoryFilterType(type);
+  const filteredCategories = categories.filter((c) => c.type === filterType);
   const selectedCategory = filteredCategories.find((c) => c.id === categoryId);
-
   const categoryOptions = filteredCategories.map((c) => ({ value: c.id, label: c.name }));
   const subcategoryOptions = selectedCategory?.subcategories.map((s) => ({ value: s.id, label: s.name })) ?? [];
+  const needsCompanySelection = !activeCompanyId;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!transaction) {return;}
+    if (!transaction) return;
 
     const parsedAmount = parseFloat(amount);
     if (Number.isNaN(parsedAmount) || parsedAmount <= 0) {
       toast.error('Kwota musi być większa od 0');
+      return;
+    }
+
+    if (currency !== 'PLN' && !exchangeRate) {
+      toast.error('Podaj kurs wymiany dla waluty obcej');
       return;
     }
 
@@ -83,11 +143,27 @@ export function EditTransactionDialog({
     try {
       const result = await updateTransactionCommand({
         id: transaction.id,
+        type,
         amount: parsedAmount,
+        currency,
+        exchangeRate: currency !== 'PLN' ? parseFloat(exchangeRate) : undefined,
         date,
         subcategoryId,
         description: description || undefined,
-        merchantName: merchantName || undefined,
+        merchantName: isExpenseType(type) && merchantName ? merchantName : undefined,
+        customerName: isIncomeType(type) && customerName ? customerName : undefined,
+        companyPublicId: companyId || undefined,
+        employeeName: isExpenseType(type) && employeeName ? employeeName : undefined,
+        invoiceNumber: invoiceNumber || undefined,
+        invoiceDueDate: invoiceDueDate || undefined,
+        lineItems: lineItems.length > 0
+          ? lineItems.filter((li) => li.name && li.quantity > 0 && li.unitPrice > 0).map((li) => ({
+              name: li.name,
+              quantity: li.quantity,
+              unitPrice: li.unitPrice,
+              vatRate: li.vatRate,
+            }))
+          : undefined,
       });
 
       if (result.success) {
@@ -106,7 +182,7 @@ export function EditTransactionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edytuj transakcję</DialogTitle>
         </DialogHeader>
@@ -115,17 +191,20 @@ export function EditTransactionDialog({
             <div className="space-y-2">
               <Label>Typ</Label>
               <Select value={type} onValueChange={(v) => {
-                if (!v) {return;}
-                setType(v as 'INCOME' | 'EXPENSE');
+                if (!v) return;
+                setType(v as TransactionType);
                 setCategoryId('');
                 setSubcategoryId('');
+                if (!isExpenseType(v as TransactionType)) setEmployeeName('');
               }}>
                 <SelectTrigger>
-                  <span>{type === 'INCOME' ? 'Przychód' : 'Wydatek'}</span>
+                  <span>{TRANSACTION_TYPE_LABELS[type]}</span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="EXPENSE">Wydatek</SelectItem>
                   <SelectItem value="INCOME">Przychód</SelectItem>
+                  <SelectItem value="FORECAST_EXPENSE">Prognoza wydatku</SelectItem>
+                  <SelectItem value="FORECAST_INCOME">Prognoza przychodu</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -140,6 +219,24 @@ export function EditTransactionDialog({
               />
             </div>
           </div>
+
+          {needsCompanySelection && (
+            <div className="space-y-2">
+              <Label>Firma</Label>
+              <Select value={companyId} onValueChange={(v) => setCompanyId(v ?? '')}>
+                <SelectTrigger>
+                  <span>{companies.find((c) => c.id === companyId)?.name ?? 'Wybierz firmę'}</span>
+                </SelectTrigger>
+                <SelectContent>
+                  {companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Kategoria</Label>
@@ -168,28 +265,83 @@ export function EditTransactionDialog({
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="edit-amount">Kwota (PLN)</Label>
-            <Input
-              id="edit-amount"
-              type="number"
-              step="0.01"
-              min="0.01"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-              required
-            />
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Waluta</Label>
+              <Select value={currency} onValueChange={(v) => {
+                setCurrency(v as Currency);
+                if (v === 'PLN') setExchangeRate('');
+              }}>
+                <SelectTrigger>
+                  <span>{currency}</span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PLN">PLN</SelectItem>
+                  <SelectItem value="EUR">EUR</SelectItem>
+                  <SelectItem value="USD">USD</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-amount">Kwota</Label>
+              <Input
+                id="edit-amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+                required
+              />
+            </div>
+            {currency !== 'PLN' && (
+              <div className="space-y-2">
+                <Label htmlFor="edit-exchangeRate">Kurs do PLN</Label>
+                <Input
+                  id="edit-exchangeRate"
+                  type="number"
+                  step="0.0001"
+                  min="0.0001"
+                  value={exchangeRate}
+                  onChange={(e) => setExchangeRate(e.target.value)}
+                  placeholder="np. 4.28"
+                  required
+                />
+              </div>
+            )}
           </div>
 
-          <div className="space-y-2">
-            <Label>Sprzedawca (opcjonalnie)</Label>
-            <MerchantCombobox
-              value={merchantName}
-              onChange={setMerchantName}
-              merchants={merchants}
-            />
-          </div>
+          {isExpenseType(type) ? (
+            <div className="space-y-2">
+              <Label>Sprzedawca (opcjonalnie)</Label>
+              <MerchantCombobox
+                value={merchantName}
+                onChange={setMerchantName}
+                merchants={merchants}
+              />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label>Klient (opcjonalnie)</Label>
+              <CustomerCombobox
+                value={customerName}
+                onChange={setCustomerName}
+                customers={customers}
+              />
+            </div>
+          )}
+
+          {isExpenseType(type) && (
+            <div className="space-y-2">
+              <Label>Osoba przypisana (opcjonalnie)</Label>
+              <EmployeeCombobox
+                value={employeeName}
+                onChange={setEmployeeName}
+                employees={employees}
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="edit-description">Opis (opcjonalnie)</Label>
@@ -197,8 +349,49 @@ export function EditTransactionDialog({
               id="edit-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="np. Zakupy w Biedronce"
+              placeholder="np. Szkolenie storytelling"
             />
+          </div>
+
+          <div className="border rounded-md">
+            <button
+              type="button"
+              className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium hover:bg-muted/50"
+              onClick={() => setShowInvoice(!showInvoice)}
+            >
+              <span>Faktura</span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${showInvoice ? 'rotate-180' : ''}`} />
+            </button>
+            {showInvoice && (
+              <div className="px-4 pb-4">
+                <InvoiceFields
+                  invoiceNumber={invoiceNumber}
+                  invoiceDueDate={invoiceDueDate}
+                  onInvoiceNumberChange={setInvoiceNumber}
+                  onInvoiceDueDateChange={setInvoiceDueDate}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="border rounded-md">
+            <button
+              type="button"
+              className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium hover:bg-muted/50"
+              onClick={() => setShowLineItems(!showLineItems)}
+            >
+              <span>Pozycje faktury</span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${showLineItems ? 'rotate-180' : ''}`} />
+            </button>
+            {showLineItems && (
+              <div className="px-4 pb-4">
+                <LineItemsForm
+                  items={lineItems}
+                  onChange={setLineItems}
+                  products={products}
+                />
+              </div>
+            )}
           </div>
 
           <DialogFooter>

@@ -59,6 +59,7 @@ export function MerchantsList({ merchants }: MerchantsListProps) {
         <TableRow>
           <TableHead className="w-12"></TableHead>
           <TableHead>Nazwa</TableHead>
+          <TableHead>NIP</TableHead>
           <TableHead className="text-right">Transakcje</TableHead>
           <TableHead className="w-20"></TableHead>
         </TableRow>
@@ -75,6 +76,7 @@ export function MerchantsList({ merchants }: MerchantsListProps) {
               </Avatar>
             </TableCell>
             <TableCell className="font-medium">{m.name}</TableCell>
+            <TableCell className="text-muted-foreground text-sm">{m.nip || '—'}</TableCell>
             <TableCell className="text-right">{m.transactionCount}</TableCell>
             <TableCell>
               <div className="flex gap-1">

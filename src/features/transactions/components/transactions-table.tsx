@@ -18,22 +18,36 @@ import {
 } from '@/components/ui/table';
 import { EditTransactionDialog } from './edit-transaction-dialog';
 import { deleteTransactionCommand } from '../services/commands/transaction-commands';
-import type { TransactionWithDetails } from '../contracts/transaction.types';
+import type { TransactionWithDetails, TransactionType } from '../contracts/transaction.types';
 import type { CategoryWithSubcategories } from '@/features/categories/contracts/category.types';
 
 interface TransactionsTableProps {
   transactions: TransactionWithDetails[];
   categories: CategoryWithSubcategories[];
   merchants: { id: string; name: string }[];
+  customers: { id: string; name: string; nip?: string | null }[];
+  employees: { id: string; name: string }[];
+  products: { id: string; name: string }[];
 }
 
-export function TransactionsTable({ transactions, categories, merchants }: TransactionsTableProps) {
+const typeBadgeConfig: Record<TransactionType, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
+  INCOME: { label: 'Przychód', variant: 'default' },
+  EXPENSE: { label: 'Wydatek', variant: 'destructive' },
+  FORECAST_INCOME: { label: 'Prognoza +', variant: 'outline' },
+  FORECAST_EXPENSE: { label: 'Prognoza -', variant: 'outline' },
+};
+
+function isIncomeType(type: TransactionType) {
+  return type === 'INCOME' || type === 'FORECAST_INCOME';
+}
+
+export function TransactionsTable({ transactions, categories, merchants, customers, employees, products }: TransactionsTableProps) {
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingTransaction, setEditingTransaction] = useState<TransactionWithDetails | null>(null);
 
   async function handleDelete(id: string) {
-    if (!confirm('Czy na pewno chcesz usunąć tę transakcję?')) {return;}
+    if (!confirm('Czy na pewno chcesz usunąć tę transakcję?')) return;
 
     setDeletingId(id);
     try {
@@ -64,60 +78,79 @@ export function TransactionsTable({ transactions, categories, merchants }: Trans
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>Typ</TableHead>
             <TableHead>Data</TableHead>
             <TableHead>Kategoria</TableHead>
-            <TableHead>Podkategoria</TableHead>
-            <TableHead>Sprzedawca</TableHead>
+            <TableHead>Kontrahent</TableHead>
+            <TableHead>Osoba</TableHead>
             <TableHead>Opis</TableHead>
+            <TableHead>Nr faktury</TableHead>
             <TableHead className="text-right">Kwota</TableHead>
             <TableHead className="w-20"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {transactions.map((t) => (
-            <TableRow key={t.id}>
-              <TableCell className="whitespace-nowrap">
-                {format(new Date(t.date), 'd MMM yyyy', { locale: pl })}
-              </TableCell>
-              <TableCell>
-                <Badge variant={t.categoryType === 'INCOME' ? 'default' : 'secondary'}>
-                  {t.categoryName}
-                </Badge>
-              </TableCell>
-              <TableCell>{t.subcategoryName}</TableCell>
-              <TableCell>{t.merchantName || '—'}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {t.description || '—'}
-              </TableCell>
-              <TableCell className={`text-right font-mono whitespace-nowrap ${
-                t.categoryType === 'INCOME' ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {t.categoryType === 'INCOME' ? '+' : '-'}
-                {t.amount.toFixed(2)} zł
-              </TableCell>
-              <TableCell>
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setEditingTransaction(t)}
-                    aria-label="Edytuj transakcję"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(t.id)}
-                    disabled={deletingId === t.id}
-                    aria-label="Usuń transakcję"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
+          {transactions.map((t) => {
+            const badge = typeBadgeConfig[t.type];
+            const income = isIncomeType(t.type);
+            return (
+              <TableRow key={t.id}>
+                <TableCell>
+                  <Badge variant={badge.variant} className="text-xs whitespace-nowrap">
+                    {badge.label}
+                  </Badge>
+                </TableCell>
+                <TableCell className="whitespace-nowrap">
+                  {format(new Date(t.date), 'd MMM yyyy', { locale: pl })}
+                </TableCell>
+                <TableCell>
+                  <div className="text-xs text-muted-foreground">{t.categoryName}</div>
+                  <div>{t.subcategoryName}</div>
+                </TableCell>
+                <TableCell>{t.customerName || t.merchantName || '—'}</TableCell>
+                <TableCell>{t.employeeName || '—'}</TableCell>
+                <TableCell className="text-muted-foreground max-w-[200px] truncate">
+                  {t.description || '—'}
+                </TableCell>
+                <TableCell className="text-xs">
+                  {t.invoiceNumber || '—'}
+                </TableCell>
+                <TableCell className={`text-right font-mono whitespace-nowrap ${
+                  income ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  <div>
+                    {income ? '+' : '-'}{t.amount.toFixed(2)} {t.currency}
+                  </div>
+                  {t.currency !== 'PLN' && t.amountPln && (
+                    <div className="text-xs text-muted-foreground">
+                      ≈ {t.amountPln.toFixed(2)} PLN
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setEditingTransaction(t)}
+                      aria-label="Edytuj transakcję"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(t.id)}
+                      disabled={deletingId === t.id}
+                      aria-label="Usuń transakcję"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
 
@@ -125,9 +158,12 @@ export function TransactionsTable({ transactions, categories, merchants }: Trans
         transaction={editingTransaction}
         categories={categories}
         merchants={merchants}
+        customers={customers}
+        employees={employees}
+        products={products}
         open={!!editingTransaction}
         onOpenChange={(open) => {
-          if (!open) {setEditingTransaction(null);}
+          if (!open) setEditingTransaction(null);
         }}
       />
     </>

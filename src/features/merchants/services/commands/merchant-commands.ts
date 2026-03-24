@@ -6,9 +6,40 @@ import { requireUser } from '@/shared/lib/auth/helpers';
 import { handleCommandError } from '@/shared/utils/error-handling';
 import type { OperationResult } from '@/shared/types/common';
 
+const createMerchantSchema = z.object({
+  name: z.string().min(1, 'Nazwa jest wymagana'),
+  nip: z.string().optional(),
+});
+
+export async function createMerchantCommand(
+  input: z.infer<typeof createMerchantSchema>
+): Promise<OperationResult> {
+  try {
+    const user = await requireUser();
+    const validated = createMerchantSchema.parse(input);
+
+    const existing = await prisma.merchant.findFirst({
+      where: { name: validated.name, userId: user.id },
+    });
+
+    if (existing) {
+      return { success: false, error: 'Sprzedawca o tej nazwie już istnieje' };
+    }
+
+    await prisma.merchant.create({
+      data: { name: validated.name, nip: validated.nip || null, userId: user.id },
+    });
+
+    return { success: true };
+  } catch (error) {
+    return handleCommandError(error, 'Nie udało się dodać sprzedawcy');
+  }
+}
+
 const updateMerchantSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1, 'Nazwa jest wymagana'),
+  nip: z.string().optional(),
   logoUrl: z.string().url('Niepoprawny URL').optional().or(z.literal('')),
 });
 
@@ -35,6 +66,7 @@ export async function updateMerchantCommand(
       where: { id: merchant.id },
       data: {
         name: validated.name,
+        nip: validated.nip || null,
         logoUrl: validated.logoUrl || null,
       },
     });

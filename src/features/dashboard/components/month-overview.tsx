@@ -1,17 +1,25 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import type { MonthSummary } from '@/features/transactions/contracts/transaction.types';
 
 interface MonthOverviewProps {
   summary: MonthSummary;
   monthLabel: string;
+  companyName?: string | null;
 }
 
-export function MonthOverview({ summary, monthLabel }: MonthOverviewProps) {
+export function MonthOverview({ summary, monthLabel, companyName }: MonthOverviewProps) {
+  const hasForecast = summary.forecastIncome > 0 || summary.forecastExpense > 0;
+  const totalExpenseForBar = summary.totalExpense + summary.forecastExpense;
+
   return (
     <div className="space-y-6">
+      {companyName && (
+        <p className="text-sm text-muted-foreground">Firma: {companyName}</p>
+      )}
+
+      {/* Actual values */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
@@ -53,10 +61,59 @@ export function MonthOverview({ summary, monthLabel }: MonthOverviewProps) {
         </Card>
       </div>
 
+      {/* Forecast values */}
+      {hasForecast && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="border-dashed">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Prognoza przychodów
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xl font-semibold text-green-600/70">
+                {summary.forecastIncome.toFixed(2)} zł
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-dashed">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Prognoza wydatków
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xl font-semibold text-red-600/70">
+                {summary.forecastExpense.toFixed(2)} zł
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-dashed">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Prognozowany bilans
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {(() => {
+                const forecastBalance = (summary.totalIncome + summary.forecastIncome) - (summary.totalExpense + summary.forecastExpense);
+                return (
+                  <p className={`text-xl font-semibold ${forecastBalance >= 0 ? 'text-green-600/70' : 'text-red-600/70'}`}>
+                    {forecastBalance >= 0 ? '+' : ''}{forecastBalance.toFixed(2)} zł
+                  </p>
+                );
+              })()}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {summary.categorySummaries.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Wydatki wg kategorii — {monthLabel}</CardTitle>
+            <CardTitle className="text-lg">Podsumowanie wg kategorii — {monthLabel}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -71,12 +128,12 @@ export function MonthOverview({ summary, monthLabel }: MonthOverviewProps) {
                         {cs.total.toFixed(2)} zł
                       </span>
                     </div>
-                    {summary.totalExpense > 0 && (
+                    {totalExpenseForBar > 0 && (
                       <div className="w-full bg-muted rounded-full h-2">
                         <div
                           className="bg-primary rounded-full h-2 transition-all"
                           style={{
-                            width: `${Math.min((cs.total / summary.totalExpense) * 100, 100)}%`,
+                            width: `${Math.min((cs.total / totalExpenseForBar) * 100, 100)}%`,
                           }}
                         />
                       </div>

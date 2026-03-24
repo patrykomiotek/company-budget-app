@@ -6,6 +6,7 @@ import { requireUser } from '@/shared/lib/auth/helpers';
 import { handleCommandError } from '@/shared/utils/error-handling';
 import type { OperationResult } from '@/shared/types/common';
 import type { CategoryType } from '@/lib/generated/prisma/client';
+import type { CategoryWithSubcategories } from '../../contracts/category.types';
 
 const subcategorySchema = z.object({
   id: z.string().optional(),
@@ -140,5 +141,52 @@ export async function updateCategoryCommand(
     return { success: true };
   } catch (error) {
     return handleCommandError(error, 'Nie udało się zaktualizować kategorii');
+  }
+}
+
+const quickCreateCategorySchema = z.object({
+  name: z.string().min(1, 'Nazwa jest wymagana'),
+  type: z.enum(['INCOME', 'EXPENSE']),
+  subcategoryNames: z.array(z.string().min(1)).min(1, 'Dodaj przynajmniej jedną podkategorię'),
+});
+
+export async function quickCreateCategoryCommand(
+  input: z.infer<typeof quickCreateCategorySchema>
+): Promise<OperationResult<CategoryWithSubcategories>> {
+  try {
+    await requireUser();
+    const validated = quickCreateCategorySchema.parse(input);
+
+    const category = await prisma.category.create({
+      data: {
+        name: validated.name,
+        type: validated.type as CategoryType,
+        subcategories: {
+          create: validated.subcategoryNames.map((name, i) => ({
+            name,
+            sortOrder: i,
+          })),
+        },
+      },
+      include: { subcategories: true },
+    });
+
+    return {
+      success: true,
+      data: {
+        id: category.publicId,
+        name: category.name,
+        type: category.type,
+        sortOrder: category.sortOrder,
+        subcategories: category.subcategories.map((s) => ({
+          id: s.publicId,
+          name: s.name,
+          sortOrder: s.sortOrder,
+          categoryId: category.publicId,
+        })),
+      },
+    };
+  } catch (error) {
+    return handleCommandError(error, 'Nie udało się utworzyć kategorii');
   }
 }

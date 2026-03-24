@@ -2,6 +2,8 @@ import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { getMonthSummaryQuery } from '@/features/dashboard/services/queries/dashboard-queries';
 import { MonthOverview } from '@/features/dashboard/components/month-overview';
+import { getActiveCompanyPublicId } from '@/shared/lib/company/helpers';
+import { getCompaniesQuery } from '@/shared/lib/company/queries';
 
 interface DashboardPageProps {
   searchParams: Promise<{ year?: string; month?: string }>;
@@ -17,8 +19,15 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     ? now.getMonth() + 1
     : parsedMonth;
 
-  const summary = await getMonthSummaryQuery(year, month);
+  const [summary, activeCompanyPublicId, companies] = await Promise.all([
+    getMonthSummaryQuery(year, month),
+    getActiveCompanyPublicId(),
+    getCompaniesQuery(),
+  ]);
   const monthLabel = format(new Date(year, month - 1), 'LLLL yyyy', { locale: pl });
+  const companyName = activeCompanyPublicId
+    ? companies.find((c) => c.id === activeCompanyPublicId)?.name ?? null
+    : null;
 
   return (
     <div className="space-y-6">
@@ -41,7 +50,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </div>
       </div>
 
-      <MonthOverview summary={summary} monthLabel={monthLabel} />
+      <MonthOverview summary={summary} monthLabel={monthLabel} companyName={companyName} />
     </div>
   );
 }

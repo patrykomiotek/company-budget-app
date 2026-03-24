@@ -2,6 +2,7 @@
 
 import { prisma } from '@/shared/lib/prisma';
 import { requireUser } from '@/shared/lib/auth/helpers';
+import { getActiveCompanyFilter } from '@/shared/lib/company/helpers';
 import type { MonthSummary, CategorySummary } from '@/features/transactions/contracts/transaction.types';
 
 export async function getMonthSummaryQuery(
@@ -9,6 +10,7 @@ export async function getMonthSummaryQuery(
   month: number
 ): Promise<MonthSummary> {
   const user = await requireUser();
+  const companyFilter = await getActiveCompanyFilter();
 
   const startDate = new Date(Date.UTC(year, month - 1, 1));
   const endDate = new Date(Date.UTC(year, month, 0));
@@ -16,6 +18,7 @@ export async function getMonthSummaryQuery(
   const transactions = await prisma.transaction.findMany({
     where: {
       userId: user.id,
+      ...companyFilter,
       date: {
         gte: startDate,
         lte: endDate,
@@ -30,17 +33,32 @@ export async function getMonthSummaryQuery(
 
   let totalIncome = 0;
   let totalExpense = 0;
+  let forecastIncome = 0;
+  let forecastExpense = 0;
   const categoryMap = new Map<string, CategorySummary>();
 
   for (const t of transactions) {
-    const amount = Math.round(Number(t.amount) * 100) / 100;
+    const rawAmount = Number(t.amount);
+    const rate = t.exchangeRate ? Number(t.exchangeRate) : 1;
+    const amount = Math.round(rawAmount * rate * 100) / 100;
     const cat = t.subcategory.category;
     const catPublicId = cat.publicId;
 
-    if (cat.type === 'INCOME') {
-      totalIncome += amount;
-    } else {
-      totalExpense += amount;
+    switch (t.type) {
+      case 'INCOME':
+        totalIncome += amount;
+        break;
+      case 'EXPENSE':
+        totalExpense += amount;
+        break;
+      case 'FORECAST_INCOME':
+        forecastIncome += amount;
+        break;
+      case 'FORECAST_EXPENSE':
+        forecastExpense += amount;
+        break;
+      default:
+        break;
     }
 
     if (!categoryMap.has(catPublicId)) {
@@ -70,13 +88,14 @@ export async function getMonthSummaryQuery(
     }
   }
 
-  totalIncome = Math.round(totalIncome * 100) / 100;
-  totalExpense = Math.round(totalExpense * 100) / 100;
+  const round = (n: number) => Math.round(n * 100) / 100;
 
   return {
-    totalIncome,
-    totalExpense,
-    balance: Math.round((totalIncome - totalExpense) * 100) / 100,
+    totalIncome: round(totalIncome),
+    totalExpense: round(totalExpense),
+    forecastIncome: round(forecastIncome),
+    forecastExpense: round(forecastExpense),
+    balance: round(totalIncome - totalExpense),
     categorySummaries: Array.from(categoryMap.values()),
   };
 }
@@ -86,6 +105,7 @@ export async function getDailySummaryQuery(
   month: number
 ) {
   const user = await requireUser();
+  const companyFilter = await getActiveCompanyFilter();
 
   const startDate = new Date(Date.UTC(year, month - 1, 1));
   const endDate = new Date(Date.UTC(year, month, 0));
@@ -93,6 +113,7 @@ export async function getDailySummaryQuery(
   const transactions = await prisma.transaction.findMany({
     where: {
       userId: user.id,
+      ...companyFilter,
       date: {
         gte: startDate,
         lte: endDate,
@@ -109,15 +130,20 @@ export async function getDailySummaryQuery(
   const dailyMap = new Map<string, { totalIncome: number; totalExpense: number }>();
 
   for (const t of transactions) {
+    // Only count actual transactions in daily summary, not forecasts
+    if (t.type === 'FORECAST_INCOME' || t.type === 'FORECAST_EXPENSE') continue;
+
     const dateKey = t.date.toISOString().split('T')[0];
-    const amount = Math.round(Number(t.amount) * 100) / 100;
+    const rawAmount = Number(t.amount);
+    const rate = t.exchangeRate ? Number(t.exchangeRate) : 1;
+    const amount = Math.round(rawAmount * rate * 100) / 100;
 
     if (!dailyMap.has(dateKey)) {
       dailyMap.set(dateKey, { totalIncome: 0, totalExpense: 0 });
     }
 
     const daily = dailyMap.get(dateKey)!;
-    if (t.subcategory.category.type === 'INCOME') {
+    if (t.type === 'INCOME') {
       daily.totalIncome += amount;
     } else {
       daily.totalExpense += amount;

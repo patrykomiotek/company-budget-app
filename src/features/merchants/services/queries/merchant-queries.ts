@@ -18,6 +18,7 @@ export async function getMerchantsListQuery(): Promise<MerchantItem[]> {
   return merchants.map((m) => ({
     id: m.publicId,
     name: m.name,
+    nip: m.nip,
     logoUrl: m.logoUrl,
     transactionCount: m._count.transactions,
   }));
@@ -35,6 +36,7 @@ export async function getMerchantByIdQuery(publicId: string) {
   return {
     id: merchant.publicId,
     name: merchant.name,
+    nip: merchant.nip,
     logoUrl: merchant.logoUrl,
   };
 }

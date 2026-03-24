@@ -1,4 +1,5 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+dotenv.config({ path: ['.env.local', '.env'] });
 import { PrismaClient } from '../src/lib/generated/prisma/client.js';
 import { CategoryType } from '../src/lib/generated/prisma/enums.js';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -213,7 +214,22 @@ const expenseCategories = [
   },
 ];
 
+const companies = [
+  { name: 'Anna PRO' },
+  { name: 'Web Amigos' },
+];
+
 async function main() {
+  console.log('Seeding companies...');
+
+  for (const comp of companies) {
+    await prisma.company.upsert({
+      where: { name: comp.name },
+      update: {},
+      create: { name: comp.name },
+    });
+  }
+
   console.log('Seeding categories...');
 
   for (let i = 0; i < incomeCategories.length; i++) {

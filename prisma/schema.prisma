@@ -21,6 +21,9 @@ model User {
   transactions  Transaction[]
   receipts      Receipt[]
   merchants     Merchant[]
+  employees     Employee[]
+  products      Product[]
+  customers     Customer[]
 
   @@map("users")
 }
@@ -76,6 +79,24 @@ enum CategoryType {
   EXPENSE
 }
 
+enum TransactionType {
+  INCOME
+  EXPENSE
+  FORECAST_INCOME
+  FORECAST_EXPENSE
+}
+
+enum Currency {
+  PLN
+  EUR
+  USD
+}
+
+enum ProductType {
+  PRODUCT
+  SERVICE
+}
+
 model Category {
   id        Int          @id @default(autoincrement())
   publicId  String       @unique @default(uuid()) @map("public_id") @db.Uuid
@@ -107,16 +128,33 @@ model Subcategory {
   @@map("subcategories")
 }
 
+model Company {
+  id        Int      @id @default(autoincrement())
+  publicId  String   @unique @default(uuid()) @map("public_id") @db.Uuid
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  transactions Transaction[]
+  merchants    Merchant[]
+  employees    Employee[]
+
+  @@map("companies")
+}
+
 model Merchant {
   id        Int      @id @default(autoincrement())
   publicId  String   @unique @default(uuid()) @map("public_id") @db.Uuid
   name      String
+  nip       String?
   logoUrl   String?  @map("logo_url")
   userId    String   @map("user_id")
+  companyId Int?     @map("company_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company      Company?      @relation(fields: [companyId], references: [id])
   transactions Transaction[]
 
   @@unique([name, userId])
@@ -124,27 +162,119 @@ model Merchant {
 }
 
 model Transaction {
-  id            Int      @id @default(autoincrement())
-  publicId      String   @unique @default(uuid()) @map("public_id") @db.Uuid
-  amount        Decimal  @db.Decimal(10, 2)
-  date          DateTime @db.Date
-  description   String?
-  merchantId    Int?     @map("merchant_id")
-  subcategoryId Int      @map("subcategory_id")
-  userId        String   @map("user_id")
-  receiptId     Int?     @map("receipt_id")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id             Int             @id @default(autoincrement())
+  publicId       String          @unique @default(uuid()) @map("public_id") @db.Uuid
+  type           TransactionType @default(EXPENSE)
+  amount         Decimal         @db.Decimal(10, 2)
+  currency       Currency        @default(PLN)
+  exchangeRate   Decimal?        @map("exchange_rate") @db.Decimal(10, 4)
+  date           DateTime        @db.Date
+  description    String?
+  invoiceNumber  String?         @map("invoice_number")
+  invoiceDueDate DateTime?       @map("invoice_due_date") @db.Date
+  merchantId     Int?            @map("merchant_id")
+  subcategoryId  Int             @map("subcategory_id")
+  companyId      Int?            @map("company_id")
+  employeeId     Int?            @map("employee_id")
+  customerId     Int?            @map("customer_id")
+  userId         String          @map("user_id")
+  receiptId      Int?            @map("receipt_id")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
 
-  merchant    Merchant?   @relation(fields: [merchantId], references: [id])
-  subcategory Subcategory @relation(fields: [subcategoryId], references: [id])
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  receipt     Receipt?    @relation(fields: [receiptId], references: [id])
+  merchant    Merchant?             @relation(fields: [merchantId], references: [id])
+  subcategory Subcategory           @relation(fields: [subcategoryId], references: [id])
+  company     Company?              @relation(fields: [companyId], references: [id])
+  employee    Employee?             @relation(fields: [employeeId], references: [id])
+  customer    Customer?             @relation(fields: [customerId], references: [id])
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  receipt     Receipt?              @relation(fields: [receiptId], references: [id])
+  lineItems   TransactionLineItem[]
 
   @@index([userId, date])
   @@index([subcategoryId])
   @@index([merchantId])
+  @@index([companyId])
+  @@index([employeeId])
+  @@index([customerId])
+  @@index([type])
   @@map("transactions")
+}
+
+model Employee {
+  id        Int      @id @default(autoincrement())
+  publicId  String   @unique @default(uuid()) @map("public_id") @db.Uuid
+  name      String
+  companyId Int      @map("company_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@unique([name, companyId])
+  @@map("employees")
+}
+
+model Customer {
+  id         Int      @id @default(autoincrement())
+  publicId   String   @unique @default(uuid()) @map("public_id") @db.Uuid
+  name       String
+  nip        String?
+  street     String?
+  postalCode String?  @map("postal_code")
+  city       String?
+  email      String?
+  phone      String?
+  notes      String?
+  userId     String   @map("user_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@unique([name, userId])
+  @@map("customers")
+}
+
+model Product {
+  id        Int         @id @default(autoincrement())
+  publicId  String      @unique @default(uuid()) @map("public_id") @db.Uuid
+  name      String
+  type      ProductType @default(SERVICE)
+  userId    String      @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lineItems TransactionLineItem[]
+
+  @@unique([name, userId])
+  @@map("products")
+}
+
+model TransactionLineItem {
+  id            Int      @id @default(autoincrement())
+  publicId      String   @unique @default(uuid()) @map("public_id") @db.Uuid
+  name          String
+  quantity      Decimal  @db.Decimal(10, 3)
+  unitPrice     Decimal  @map("unit_price") @db.Decimal(10, 2)
+  vatRate       Decimal  @map("vat_rate") @db.Decimal(5, 2)
+  netAmount     Decimal  @map("net_amount") @db.Decimal(10, 2)
+  grossAmount   Decimal  @map("gross_amount") @db.Decimal(10, 2)
+  transactionId Int      @map("transaction_id")
+  productId     Int?     @map("product_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  product     Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([transactionId])
+  @@map("transaction_line_items")
 }
 
 model Receipt {

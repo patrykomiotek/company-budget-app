@@ -30,7 +30,7 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
     if (key === 'categoryId') {
       params.delete('subcategoryId');
     }
-    if (key === 'type') {
+    if (key === 'type' || key === 'transactionType') {
       params.delete('categoryId');
       params.delete('subcategoryId');
     }
@@ -41,31 +41,66 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
     router.push('/transactions');
   }
 
+  const transactionType = searchParams.get('transactionType') ?? '';
   const type = searchParams.get('type') ?? '';
   const categoryId = searchParams.get('categoryId') ?? '';
   const dateFrom = searchParams.get('dateFrom') ?? '';
   const dateTo = searchParams.get('dateTo') ?? '';
 
-  const filteredCategories = type
-    ? categories.filter((c) => c.type === type)
+  const activeType = transactionType || type || '';
+
+  const typeLabels: Record<string, string> = {
+    all: 'Wszystko',
+    EXPENSE: 'Wydatki',
+    INCOME: 'Przychody',
+    FORECAST_EXPENSE: 'Prognozy wydatków',
+    FORECAST_INCOME: 'Prognozy przychodów',
+  };
+  const typeLabel = typeLabels[activeType || 'all'] ?? typeLabels['all'];
+
+  // Filter categories based on selected type
+  const filteredCategories = activeType
+    ? categories.filter((c) => {
+        if (activeType === 'INCOME' || activeType === 'FORECAST_INCOME') return c.type === 'INCOME';
+        if (activeType === 'EXPENSE' || activeType === 'FORECAST_EXPENSE') return c.type === 'EXPENSE';
+        return true;
+      })
     : categories;
 
-  const typeLabels: Record<string, string> = { all: 'Wszystko', EXPENSE: 'Wydatki', INCOME: 'Przychody' };
-  const typeLabel = typeLabels[type || 'all'];
   const categoryLabel = filteredCategories.find((c) => c.id === categoryId)?.name ?? 'Wszystkie';
 
   return (
     <div className="flex flex-wrap gap-4 items-end">
       <div className="space-y-1">
         <Label className="text-xs">Typ</Label>
-        <Select value={type || 'all'} onValueChange={(v) => updateFilter('type', v ?? '')}>
-          <SelectTrigger className="w-[140px]">
+        <Select
+          value={activeType || 'all'}
+          onValueChange={(v) => {
+            const val = v ?? '';
+            const params = new URLSearchParams(searchParams.toString());
+            params.delete('type');
+            params.delete('transactionType');
+            params.delete('categoryId');
+            params.delete('subcategoryId');
+            if (val && val !== 'all') {
+              if (['INCOME', 'EXPENSE'].includes(val)) {
+                params.set('type', val);
+              } else {
+                params.set('transactionType', val);
+              }
+            }
+            router.push(`/transactions?${params.toString()}`);
+          }}
+        >
+          <SelectTrigger className="w-[180px]">
             <span>{typeLabel}</span>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Wszystko</SelectItem>
             <SelectItem value="EXPENSE">Wydatki</SelectItem>
             <SelectItem value="INCOME">Przychody</SelectItem>
+            <SelectItem value="FORECAST_EXPENSE">Prognozy wydatków</SelectItem>
+            <SelectItem value="FORECAST_INCOME">Prognozy przychodów</SelectItem>
           </SelectContent>
         </Select>
       </div>
