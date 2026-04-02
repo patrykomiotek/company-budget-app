@@ -40,6 +40,8 @@ const createTransactionSchema = z.object({
   lineItems: z.array(lineItemInputSchema).optional(),
   fakturowniaInvoiceId: z.number().int().positive().optional(),
   projectName: z.string().optional(),
+  isPaid: z.boolean().optional(),
+  invoiceSent: z.boolean().optional(),
 });
 
 const updateTransactionSchema = createTransactionSchema.extend({
@@ -151,6 +153,8 @@ export async function createTransactionCommand(
             ? new Date(validated.invoiceDueDate)
             : null,
           fakturowniaInvoiceId: validated.fakturowniaInvoiceId ?? null,
+          isPaid: validated.isPaid ?? false,
+          invoiceSent: validated.invoiceSent ?? false,
           userId: user.id,
         },
       });
@@ -266,6 +270,8 @@ export async function updateTransactionCommand(
           invoiceDueDate: validated.invoiceDueDate
             ? new Date(validated.invoiceDueDate)
             : null,
+          isPaid: validated.isPaid ?? false,
+          invoiceSent: validated.invoiceSent ?? false,
         },
       });
 
@@ -310,6 +316,46 @@ export async function updateTransactionCommand(
     return { success: true };
   } catch (error) {
     return handleCommandError(error, "Nie udało się zaktualizować transakcji");
+  }
+}
+
+export async function convertForecastToActualCommand(
+  publicId: string,
+): Promise<OperationResult> {
+  try {
+    const user = await requireUser();
+
+    const transaction = await prisma.transaction.findFirst({
+      where: { publicId, userId: user.id },
+    });
+
+    if (!transaction) {
+      return { success: false, error: "Transakcja nie została znaleziona" };
+    }
+
+    let newType: PrismaTransactionType;
+    if (transaction.type === "FORECAST_EXPENSE") {
+      newType = "EXPENSE";
+    } else if (transaction.type === "FORECAST_INCOME") {
+      newType = "INCOME";
+    } else {
+      return {
+        success: false,
+        error: "Tylko prognozy mogą być zamienione na rzeczywiste transakcje",
+      };
+    }
+
+    await prisma.transaction.update({
+      where: { id: transaction.id },
+      data: { type: newType },
+    });
+
+    return { success: true };
+  } catch (error) {
+    return handleCommandError(
+      error,
+      "Nie udało się zamienić prognozy na transakcję",
+    );
   }
 }
 

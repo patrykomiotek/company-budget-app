@@ -21,6 +21,8 @@ interface TransactionsPageProps {
     subcategoryId?: string;
     dateFrom?: string;
     dateTo?: string;
+    isPaid?: string;
+    invoiceSent?: string;
     page?: string;
   }>;
 }
@@ -55,6 +57,8 @@ export default async function TransactionsPage({
         subcategoryId: params.subcategoryId,
         dateFrom: params.dateFrom,
         dateTo: params.dateTo,
+        isPaid: params.isPaid,
+        invoiceSent: params.invoiceSent,
       },
       page,
     ),

@@ -105,6 +105,8 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
   const categoryId = searchParams.get("categoryId") ?? "";
   const dateFrom = searchParams.get("dateFrom") ?? "";
   const dateTo = searchParams.get("dateTo") ?? "";
+  const isPaid = searchParams.get("isPaid") ?? "";
+  const invoiceSent = searchParams.get("invoiceSent") ?? "";
 
   // Default to current month on first load if no date filters set
   useEffect(() => {
@@ -267,7 +269,7 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
           type="date"
           value={dateFrom}
           onChange={(e) => updateFilter("dateFrom", e.target.value)}
-          className="w-[160px] h-9"
+          className="w-[160px] h-8"
         />
       </div>
 
@@ -277,11 +279,57 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
           type="date"
           value={dateTo}
           onChange={(e) => updateFilter("dateTo", e.target.value)}
-          className="w-[160px] h-9"
+          className="w-[160px] h-8"
         />
       </div>
 
-      <Button variant="ghost" size="sm" className="h-9" onClick={clearFilters}>
+      <div className="space-y-1">
+        <Label className="text-xs">Opłacone</Label>
+        <Select
+          value={isPaid || "all"}
+          onValueChange={(v) => updateFilter("isPaid", v ?? "")}
+        >
+          <SelectTrigger className="w-[140px]">
+            <span>
+              {isPaid === "true"
+                ? "Tak"
+                : isPaid === "false"
+                  ? "Nie"
+                  : "Wszystkie"}
+            </span>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Wszystkie</SelectItem>
+            <SelectItem value="true">Tak</SelectItem>
+            <SelectItem value="false">Nie</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-1">
+        <Label className="text-xs">Faktura wysłana</Label>
+        <Select
+          value={invoiceSent || "all"}
+          onValueChange={(v) => updateFilter("invoiceSent", v ?? "")}
+        >
+          <SelectTrigger className="w-[160px]">
+            <span>
+              {invoiceSent === "true"
+                ? "Tak"
+                : invoiceSent === "false"
+                  ? "Nie"
+                  : "Wszystkie"}
+            </span>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Wszystkie</SelectItem>
+            <SelectItem value="true">Tak</SelectItem>
+            <SelectItem value="false">Nie</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Button variant="ghost" size="sm" className="h-8" onClick={clearFilters}>
         Wyczyść filtry
       </Button>
     </div>

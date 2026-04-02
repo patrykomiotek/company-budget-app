@@ -4,14 +4,18 @@ Financial dashboard for managing budgets across multiple companies (Anna PRO, We
 
 ## Features
 
-- **Transactions**: Income, expenses, and forecasts with multi-currency support (PLN, EUR, USD)
+- **Dashboard**: Monthly P&L with actual vs forecast, category breakdowns, entity count widgets (customers, projects, products, merchants, employees), payment status alerts (unpaid income/expenses, unsent invoices) with direct links
+- **Transactions**: Income, expenses, and forecasts with multi-currency support (PLN, EUR, USD). Payment tracking (`isPaid`), invoice sent tracking (`invoiceSent` for expenses). Forecast-to-actual conversion
+- **Reports**: Financial reports with chart.js bar charts. Filter by type (income/expenses/both), date range, grouping (year/quarter/month/week/day), company department, and amount mode (netto/brutto/VAT)
 - **Company context**: Switch between Anna PRO, Web Amigos, or view combined data
 - **Customers & Merchants**: B2B customer management (who pays you) and merchant/vendor tracking (who you pay)
+- **Projects**: Project management with customer association and status tracking (active/completed/archived)
+- **Products & Services**: Product/service catalog linked to invoice line items
 - **Invoices**: Invoice number, due date, and line items (products/services) on transactions
 - **Subscriptions**: Quick tool subscription creation with auto-generated monthly transactions
 - **Categories**: Income/expense categories with subcategories, inline creation
 - **Employees**: Collaborator management with assignment to expense transactions
-- **P&L Dashboard**: Monthly profit & loss with actual vs forecast, category breakdowns
+- **Fakturownia integration**: Pull-on-demand invoice import from Fakturownia.pl API
 
 ## Tech Stack
 

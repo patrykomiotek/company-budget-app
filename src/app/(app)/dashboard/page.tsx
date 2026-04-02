@@ -1,32 +1,40 @@
-import { format } from 'date-fns';
-import { pl } from 'date-fns/locale';
-import { getMonthSummaryQuery } from '@/features/dashboard/services/queries/dashboard-queries';
-import { MonthOverview } from '@/features/dashboard/components/month-overview';
-import { getActiveCompanyPublicId } from '@/shared/lib/company/helpers';
-import { getCompaniesQuery } from '@/shared/lib/company/queries';
+import { format } from "date-fns";
+import { pl } from "date-fns/locale";
+import { getMonthSummaryQuery } from "@/features/dashboard/services/queries/dashboard-queries";
+import { getDashboardStatsQuery } from "@/features/dashboard/services/queries/dashboard-stats-queries";
+import { MonthOverview } from "@/features/dashboard/components/month-overview";
+import { DashboardWidgets } from "@/features/dashboard/components/dashboard-widgets";
+import { getActiveCompanyPublicId } from "@/shared/lib/company/helpers";
+import { getCompaniesQuery } from "@/shared/lib/company/queries";
 
 interface DashboardPageProps {
   searchParams: Promise<{ year?: string; month?: string }>;
 }
 
-export default async function DashboardPage({ searchParams }: DashboardPageProps) {
+export default async function DashboardPage({
+  searchParams,
+}: DashboardPageProps) {
   const params = await searchParams;
   const now = new Date();
   const parsedYear = params.year ? parseInt(params.year, 10) : NaN;
   const parsedMonth = params.month ? parseInt(params.month, 10) : NaN;
   const year = Number.isNaN(parsedYear) ? now.getFullYear() : parsedYear;
-  const month = Number.isNaN(parsedMonth) || parsedMonth < 1 || parsedMonth > 12
-    ? now.getMonth() + 1
-    : parsedMonth;
+  const month =
+    Number.isNaN(parsedMonth) || parsedMonth < 1 || parsedMonth > 12
+      ? now.getMonth() + 1
+      : parsedMonth;
 
-  const [summary, activeCompanyPublicId, companies] = await Promise.all([
+  const [summary, stats, activeCompanyPublicId, companies] = await Promise.all([
     getMonthSummaryQuery(year, month),
+    getDashboardStatsQuery(),
     getActiveCompanyPublicId(),
     getCompaniesQuery(),
   ]);
-  const monthLabel = format(new Date(year, month - 1), 'LLLL yyyy', { locale: pl });
+  const monthLabel = format(new Date(year, month - 1), "LLLL yyyy", {
+    locale: pl,
+  });
   const companyName = activeCompanyPublicId
-    ? companies.find((c) => c.id === activeCompanyPublicId)?.name ?? null
+    ? (companies.find((c) => c.id === activeCompanyPublicId)?.name ?? null)
     : null;
 
   return (
@@ -50,7 +58,13 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </div>
       </div>
 
-      <MonthOverview summary={summary} monthLabel={monthLabel} companyName={companyName} />
+      <DashboardWidgets stats={stats} />
+
+      <MonthOverview
+        summary={summary}
+        monthLabel={monthLabel}
+        companyName={companyName}
+      />
     </div>
   );
 }

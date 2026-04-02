@@ -186,6 +186,8 @@ model Transaction {
   employeeId           Int?            @map("employee_id")
   customerId           Int?            @map("customer_id")
   projectId            Int?            @map("project_id")
+  isPaid               Boolean         @default(false) @map("is_paid")
+  invoiceSent          Boolean         @default(false) @map("invoice_sent")
   userId               String          @map("user_id")
   invoiceFileId        Int?            @map("receipt_id")
   createdAt            DateTime        @default(now()) @map("created_at")

@@ -72,6 +72,42 @@ export async function createProjectCommand(
   }
 }
 
+const quickCreateProjectSchema = z.object({
+  name: z.string().min(1, "Nazwa jest wymagana"),
+});
+
+export async function quickCreateProjectCommand(
+  input: z.infer<typeof quickCreateProjectSchema>,
+): Promise<OperationResult<{ id: string; name: string }>> {
+  try {
+    const user = await requireUser();
+    const validated = quickCreateProjectSchema.parse(input);
+
+    const existing = await prisma.project.findFirst({
+      where: { name: validated.name, userId: user.id },
+    });
+
+    if (existing) {
+      return { success: false, error: "Projekt o tej nazwie już istnieje" };
+    }
+
+    const project = await prisma.project.create({
+      data: {
+        name: validated.name,
+        userId: user.id,
+      },
+      select: { publicId: true, name: true },
+    });
+
+    return {
+      success: true,
+      data: { id: project.publicId, name: project.name },
+    };
+  } catch (error) {
+    return handleCommandError(error, "Nie udało się dodać projektu");
+  }
+}
+
 export async function updateProjectCommand(
   input: z.infer<typeof updateProjectSchema>,
 ): Promise<OperationResult> {

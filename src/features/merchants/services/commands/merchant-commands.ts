@@ -40,6 +40,44 @@ export async function createMerchantCommand(
   }
 }
 
+const quickCreateMerchantSchema = z.object({
+  name: z.string().min(1, "Nazwa jest wymagana"),
+  nip: z.string().optional(),
+});
+
+export async function quickCreateMerchantCommand(
+  input: z.infer<typeof quickCreateMerchantSchema>,
+): Promise<OperationResult<{ id: string; name: string }>> {
+  try {
+    const user = await requireUser();
+    const validated = quickCreateMerchantSchema.parse(input);
+
+    const existing = await prisma.merchant.findFirst({
+      where: { name: validated.name, userId: user.id },
+    });
+
+    if (existing) {
+      return { success: false, error: "Dostawca o tej nazwie już istnieje" };
+    }
+
+    const merchant = await prisma.merchant.create({
+      data: {
+        name: validated.name,
+        nip: validated.nip || null,
+        userId: user.id,
+      },
+      select: { publicId: true, name: true },
+    });
+
+    return {
+      success: true,
+      data: { id: merchant.publicId, name: merchant.name },
+    };
+  } catch (error) {
+    return handleCommandError(error, "Nie udało się dodać dostawcy");
+  }
+}
+
 const updateMerchantSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1, "Nazwa jest wymagana"),

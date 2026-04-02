@@ -42,6 +42,8 @@ export interface TransactionWithDetails {
   projectName: string | null;
   invoiceNumber: string | null;
   invoiceDueDate: Date | null;
+  isPaid: boolean;
+  invoiceSent: boolean;
   lineItems: TransactionLineItemDetail[];
   createdAt: Date;
 }
@@ -53,6 +55,8 @@ export interface TransactionFilters {
   subcategoryId?: string;
   type?: "INCOME" | "EXPENSE";
   transactionType?: TransactionType;
+  isPaid?: string;
+  invoiceSent?: string;
 }
 
 export interface DailySummary {

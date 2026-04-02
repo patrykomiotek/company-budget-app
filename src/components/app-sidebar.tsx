@@ -16,6 +16,7 @@ import {
   Building2,
   FolderKanban,
   PackageOpen,
+  BarChart3,
   ChevronUp,
   Settings,
   User,
@@ -39,12 +40,13 @@ import { useCompany } from "@/shared/context/company-context";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/transactions", label: "Transakcje", icon: Receipt },
-  { href: "/categories", label: "Kategorie", icon: Tags },
   { href: "/customers", label: "Klienci", icon: Briefcase },
   { href: "/projects", label: "Projekty", icon: FolderKanban },
   { href: "/products", label: "Usługi", icon: PackageOpen },
   { href: "/merchants", label: "Dostawcy", icon: Store },
   { href: "/employees", label: "Współpracownicy", icon: Users },
+  { href: "/reports", label: "Raporty", icon: BarChart3 },
+  { href: "/categories", label: "Kategorie", icon: Tags },
 ];
 
 interface SidebarContextType {

@@ -40,6 +40,17 @@ export async function getTransactionsQuery(
       category: { publicId: filters.categoryId },
     };
   }
+  if (filters?.isPaid === "true") {
+    where.isPaid = true;
+  } else if (filters?.isPaid === "false") {
+    where.isPaid = false;
+  }
+  if (filters?.invoiceSent === "true") {
+    where.invoiceSent = true;
+  } else if (filters?.invoiceSent === "false") {
+    where.invoiceSent = false;
+  }
+
   if (filters?.transactionType) {
     where.type = filters.transactionType;
   } else if (filters?.type) {
@@ -108,6 +119,8 @@ export async function getTransactionsQuery(
       projectName: t.project?.name ?? null,
       invoiceNumber: t.invoiceNumber,
       invoiceDueDate: t.invoiceDueDate,
+      isPaid: t.isPaid,
+      invoiceSent: t.invoiceSent,
       lineItems: t.lineItems.map((li) => ({
         id: li.publicId,
         name: li.name,
@@ -191,6 +204,8 @@ export async function getTransactionByIdQuery(
     projectName: t.project?.name ?? null,
     invoiceNumber: t.invoiceNumber,
     invoiceDueDate: t.invoiceDueDate,
+    isPaid: t.isPaid,
+    invoiceSent: t.invoiceSent,
     lineItems: t.lineItems.map((li) => ({
       id: li.publicId,
       name: li.name,

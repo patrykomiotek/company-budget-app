@@ -23,6 +23,9 @@ import { ProjectCombobox } from "@/features/projects/components/project-combobox
 import { InvoiceFields } from "@/features/invoices/components/invoice-fields";
 import { LineItemsForm } from "@/features/invoices/components/line-items-form";
 import { QuickCreateCategoryDialog } from "@/features/categories/components/quick-create-category-dialog";
+import { QuickCreateCustomerDialog } from "@/features/customers/components/quick-create-customer-dialog";
+import { QuickCreateMerchantDialog } from "@/features/merchants/components/quick-create-merchant-dialog";
+import { QuickCreateProjectDialog } from "@/features/projects/components/quick-create-project-dialog";
 import { SubscriptionDialog } from "./subscription-dialog";
 import { InvoicePickerDialog } from "@/features/fakturownia/components/invoice-picker-dialog";
 import { createTransactionCommand } from "../services/commands/transaction-commands";
@@ -46,6 +49,8 @@ const isIncomeType = (type: TransactionType) =>
 
 const isExpenseType = (type: TransactionType) =>
   type === "EXPENSE" || type === "FORECAST_EXPENSE";
+const isForecastType = (type: TransactionType) =>
+  type === "FORECAST_INCOME" || type === "FORECAST_EXPENSE";
 const getCategoryFilterType = (type: TransactionType) =>
   type === "INCOME" || type === "FORECAST_INCOME" ? "INCOME" : "EXPENSE";
 
@@ -79,8 +84,16 @@ export function TransactionForm({
   const [showInvoice, setShowInvoice] = useState(false);
   const [showLineItems, setShowLineItems] = useState(false);
   const [localCategories, setLocalCategories] = useState(initialCategories);
+  const [localMerchants, setLocalMerchants] = useState(merchants);
+  const [localCustomers, setLocalCustomers] = useState(customers);
+  const [localProjects, setLocalProjects] = useState(projects);
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
+  const [showMerchantDialog, setShowMerchantDialog] = useState(false);
+  const [showCustomerDialog, setShowCustomerDialog] = useState(false);
+  const [showProjectDialog, setShowProjectDialog] = useState(false);
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
+  const [isPaid, setIsPaid] = useState(false);
+  const [invoiceSent, setInvoiceSent] = useState(false);
   const [showFakturowniaDialog, setShowFakturowniaDialog] = useState(false);
   const [fakturowniaInvoiceId, setFakturowniaInvoiceId] = useState<
     number | undefined
@@ -177,6 +190,11 @@ export function TransactionForm({
         invoiceDueDate: invoiceDueDate || undefined,
         fakturowniaInvoiceId: fakturowniaInvoiceId || undefined,
         projectName: projectName || undefined,
+        isPaid: !isForecastType(type) ? isPaid : undefined,
+        invoiceSent:
+          !isForecastType(type) && isExpenseType(type)
+            ? invoiceSent
+            : undefined,
         lineItems:
           lineItems.length > 0
             ? lineItems
@@ -207,6 +225,8 @@ export function TransactionForm({
         setLineItems([]);
         setShowInvoice(false);
         setShowLineItems(false);
+        setIsPaid(false);
+        setInvoiceSent(false);
         setFakturowniaInvoiceId(undefined);
       } else {
         toast.error(result.error);
@@ -415,20 +435,44 @@ export function TransactionForm({
 
           {isExpenseType(type) ? (
             <div className="space-y-2">
-              <Label>Dostawca (opcjonalnie)</Label>
+              <div className="flex items-center justify-between">
+                <Label>Dostawca (opcjonalnie)</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto py-0 px-1 text-xs text-muted-foreground"
+                  onClick={() => setShowMerchantDialog(true)}
+                >
+                  <PlusCircle className="h-3 w-3 mr-1" />
+                  Dodaj dostawcę
+                </Button>
+              </div>
               <MerchantCombobox
                 value={merchantName}
                 onChange={setMerchantName}
-                merchants={merchants}
+                merchants={localMerchants}
               />
             </div>
           ) : (
             <div className="space-y-2">
-              <Label>Klient (opcjonalnie)</Label>
+              <div className="flex items-center justify-between">
+                <Label>Klient (opcjonalnie)</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto py-0 px-1 text-xs text-muted-foreground"
+                  onClick={() => setShowCustomerDialog(true)}
+                >
+                  <PlusCircle className="h-3 w-3 mr-1" />
+                  Dodaj klienta
+                </Button>
+              </div>
               <CustomerCombobox
                 value={customerName}
                 onChange={setCustomerName}
-                customers={customers}
+                customers={localCustomers}
               />
             </div>
           )}
@@ -445,13 +489,50 @@ export function TransactionForm({
           )}
 
           <div className="space-y-2">
-            <Label>Projekt (opcjonalnie)</Label>
+            <div className="flex items-center justify-between">
+              <Label>Projekt (opcjonalnie)</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-auto py-0 px-1 text-xs text-muted-foreground"
+                onClick={() => setShowProjectDialog(true)}
+              >
+                <PlusCircle className="h-3 w-3 mr-1" />
+                Dodaj projekt
+              </Button>
+            </div>
             <ProjectCombobox
               value={projectName}
               onChange={setProjectName}
-              projects={projects}
+              projects={localProjects}
             />
           </div>
+
+          {!isForecastType(type) && (
+            <div className="flex flex-wrap gap-6">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isPaid}
+                  onChange={(e) => setIsPaid(e.target.checked)}
+                  className="h-4 w-4 rounded border-input"
+                />
+                <span className="text-sm">Opłacone</span>
+              </label>
+              {isExpenseType(type) && (
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={invoiceSent}
+                    onChange={(e) => setInvoiceSent(e.target.checked)}
+                    className="h-4 w-4 rounded border-input"
+                  />
+                  <span className="text-sm">Faktura wysłana</span>
+                </label>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="description">Opis (opcjonalnie)</Label>
@@ -463,53 +544,57 @@ export function TransactionForm({
             />
           </div>
 
-          {/* Collapsible invoice section */}
-          <div className="border rounded-md">
-            <button
-              type="button"
-              className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium hover:bg-muted/50"
-              onClick={() => setShowInvoice(!showInvoice)}
-            >
-              <span>Faktura (opcjonalnie)</span>
-              <ChevronDown
-                className={`h-4 w-4 transition-transform ${showInvoice ? "rotate-180" : ""}`}
-              />
-            </button>
-            {showInvoice && (
-              <div className="px-4 pb-4">
-                <InvoiceFields
-                  invoiceNumber={invoiceNumber}
-                  invoiceDueDate={invoiceDueDate}
-                  onInvoiceNumberChange={setInvoiceNumber}
-                  onInvoiceDueDateChange={setInvoiceDueDate}
-                />
+          {!isForecastType(type) && (
+            <>
+              {/* Collapsible invoice section */}
+              <div className="border rounded-md">
+                <button
+                  type="button"
+                  className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium hover:bg-muted/50"
+                  onClick={() => setShowInvoice(!showInvoice)}
+                >
+                  <span>Faktura (opcjonalnie)</span>
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${showInvoice ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {showInvoice && (
+                  <div className="px-4 pb-4">
+                    <InvoiceFields
+                      invoiceNumber={invoiceNumber}
+                      invoiceDueDate={invoiceDueDate}
+                      onInvoiceNumberChange={setInvoiceNumber}
+                      onInvoiceDueDateChange={setInvoiceDueDate}
+                    />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Collapsible line items section */}
-          <div className="border rounded-md">
-            <button
-              type="button"
-              className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium hover:bg-muted/50"
-              onClick={() => setShowLineItems(!showLineItems)}
-            >
-              <span>Pozycje faktury (opcjonalnie)</span>
-              <ChevronDown
-                className={`h-4 w-4 transition-transform ${showLineItems ? "rotate-180" : ""}`}
-              />
-            </button>
-            {showLineItems && (
-              <div className="px-4 pb-4">
-                <LineItemsForm
-                  items={lineItems}
-                  onChange={setLineItems}
-                  products={products}
-                  projects={projects}
-                />
+              {/* Collapsible line items section */}
+              <div className="border rounded-md">
+                <button
+                  type="button"
+                  className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium hover:bg-muted/50"
+                  onClick={() => setShowLineItems(!showLineItems)}
+                >
+                  <span>Pozycje faktury (opcjonalnie)</span>
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${showLineItems ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {showLineItems && (
+                  <div className="px-4 pb-4">
+                    <LineItemsForm
+                      items={lineItems}
+                      onChange={setLineItems}
+                      products={products}
+                      projects={projects}
+                    />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </>
+          )}
 
           <div className="flex gap-2">
             <Button type="submit" disabled={loading || !subcategoryId}>
@@ -534,6 +619,33 @@ export function TransactionForm({
           setLocalCategories((prev) => [...prev, newCategory]);
           setCategoryId(newCategory.id);
           setSubcategoryId("");
+        }}
+      />
+
+      <QuickCreateMerchantDialog
+        open={showMerchantDialog}
+        onOpenChange={setShowMerchantDialog}
+        onCreated={(newMerchant) => {
+          setLocalMerchants((prev) => [...prev, newMerchant]);
+          setMerchantName(newMerchant.name);
+        }}
+      />
+
+      <QuickCreateCustomerDialog
+        open={showCustomerDialog}
+        onOpenChange={setShowCustomerDialog}
+        onCreated={(newCustomer) => {
+          setLocalCustomers((prev) => [...prev, newCustomer]);
+          setCustomerName(newCustomer.name);
+        }}
+      />
+
+      <QuickCreateProjectDialog
+        open={showProjectDialog}
+        onOpenChange={setShowProjectDialog}
+        onCreated={(newProject) => {
+          setLocalProjects((prev) => [...prev, newProject]);
+          setProjectName(newProject.name);
         }}
       />
 

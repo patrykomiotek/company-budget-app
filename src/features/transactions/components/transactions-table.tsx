@@ -4,11 +4,21 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { Pencil, Trash2 } from "lucide-react";
+import { ArrowRightLeft, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatAmount } from "@/shared/utils/format";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Table,
   TableBody,
@@ -18,7 +28,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { EditTransactionDialog } from "./edit-transaction-dialog";
-import { deleteTransactionCommand } from "../services/commands/transaction-commands";
+import {
+  deleteTransactionCommand,
+  convertForecastToActualCommand,
+} from "../services/commands/transaction-commands";
 import type {
   TransactionWithDetails,
   TransactionType,
@@ -52,6 +65,14 @@ function isIncomeType(type: TransactionType) {
   return type === "INCOME" || type === "FORECAST_INCOME";
 }
 
+function isForecastType(type: TransactionType) {
+  return type === "FORECAST_INCOME" || type === "FORECAST_EXPENSE";
+}
+
+function isExpenseType(type: TransactionType) {
+  return type === "EXPENSE" || type === "FORECAST_EXPENSE";
+}
+
 export function TransactionsTable({
   transactions,
   categories,
@@ -63,14 +84,25 @@ export function TransactionsTable({
 }: TransactionsTableProps) {
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [editingTransaction, setEditingTransaction] =
     useState<TransactionWithDetails | null>(null);
 
-  async function handleDelete(id: string) {
-    if (!confirm("Czy na pewno chcesz usunąć tę transakcję?")) {
-      return;
+  async function handleConvertForecast(id: string) {
+    try {
+      const result = await convertForecastToActualCommand(id);
+      if (result.success) {
+        toast.success("Prognoza zamieniona na transakcję");
+        router.refresh();
+      } else {
+        toast.error(result.error);
+      }
+    } catch {
+      toast.error("Nie udało się zamienić prognozy");
     }
+  }
 
+  async function handleDelete(id: string) {
     setDeletingId(id);
     try {
       const result = await deleteTransactionCommand(id);
@@ -108,8 +140,9 @@ export function TransactionsTable({
               <TableHead className="w-[100px]">Osoba</TableHead>
               <TableHead className="w-[160px]">Opis</TableHead>
               <TableHead className="w-[110px]">Nr faktury</TableHead>
+              <TableHead className="w-[90px]">Status</TableHead>
               <TableHead className="w-[130px] text-right">Kwota</TableHead>
-              <TableHead className="w-[80px]"></TableHead>
+              <TableHead className="w-[110px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -157,6 +190,26 @@ export function TransactionsTable({
                   <TableCell className="text-xs truncate">
                     {t.invoiceNumber || "—"}
                   </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-0.5">
+                      {!isForecastType(t.type) && (
+                        <>
+                          <span
+                            className={`text-xs ${t.isPaid ? "text-green-600" : "text-muted-foreground"}`}
+                          >
+                            {t.isPaid ? "Opłacone" : "Nieopłacone"}
+                          </span>
+                          {isExpenseType(t.type) && (
+                            <span
+                              className={`text-xs ${t.invoiceSent ? "text-green-600" : "text-muted-foreground"}`}
+                            >
+                              {t.invoiceSent ? "FV wysłana" : "FV niewysłana"}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell
                     className={`text-right font-mono whitespace-nowrap ${
                       income ? "text-green-600" : "text-red-600"
@@ -174,6 +227,17 @@ export function TransactionsTable({
                   </TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-1">
+                      {isForecastType(t.type) && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleConvertForecast(t.id)}
+                          aria-label="Zamień prognozę na transakcję"
+                          title="Zamień na rzeczywistą"
+                        >
+                          <ArrowRightLeft className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
@@ -185,7 +249,7 @@ export function TransactionsTable({
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDelete(t.id)}
+                        onClick={() => setConfirmDeleteId(t.id)}
                         disabled={deletingId === t.id}
                         aria-label="Usuń transakcję"
                       >
@@ -199,6 +263,38 @@ export function TransactionsTable({
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog
+        open={!!confirmDeleteId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setConfirmDeleteId(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Usunąć transakcję?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tej operacji nie można cofnąć. Transakcja zostanie trwale
+              usunięta.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmDeleteId) {
+                  handleDelete(confirmDeleteId);
+                  setConfirmDeleteId(null);
+                }
+              }}
+            >
+              Usuń
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <EditTransactionDialog
         transaction={editingTransaction}

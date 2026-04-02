@@ -1,22 +1,22 @@
-import type { Metadata } from 'next';
-import { Geist, Geist_Mono, Inter } from 'next/font/google';
-import './globals.css';
+import type { Metadata } from "next";
+import { Geist, Geist_Mono, Inter } from "next/font/google";
+import "./globals.css";
 
 const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
 });
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Budżet domowy',
-  description: 'Aplikacja do zarządzania budżetem domowym',
+  title: "Dashboard finansowy",
+  description: "Aplikacja do zarządzania budżetem domowym",
 };
 
 export default function RootLayout({
@@ -27,7 +27,6 @@ export default function RootLayout({
   return (
     <html lang="pl" className={`${inter.className} antialiased`}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-
         {children}
       </body>
     </html>

@@ -67,82 +67,104 @@ export function LineItemsForm({
 
   return (
     <div className="space-y-3">
-      <div
-        className={`grid gap-2 text-xs font-medium text-muted-foreground ${showProjects ? "grid-cols-[1fr_1fr_80px_100px_70px_90px_90px_32px]" : "grid-cols-[1fr_80px_100px_70px_90px_90px_32px]"}`}
-      >
-        <span>Usługa</span>
-        {showProjects && <span>Projekt</span>}
-        <span>Ilość</span>
-        <span>Cena jedn.</span>
-        <span>VAT %</span>
-        <span>Netto</span>
-        <span>Brutto</span>
-        <span />
-      </div>
-
       {items.map((item, index) => (
-        <div
-          key={item.key}
-          className={`grid gap-2 items-center ${showProjects ? "grid-cols-[1fr_1fr_80px_100px_70px_90px_90px_32px]" : "grid-cols-[1fr_80px_100px_70px_90px_90px_32px]"}`}
-        >
-          <ProductCombobox
-            value={item.name}
-            onChange={(name) => updateItem(index, { name })}
-            products={products}
-          />
-          {showProjects && (
-            <ProjectCombobox
-              value={item.projectName || ""}
-              onChange={(projectName) => updateItem(index, { projectName })}
-              projects={projects}
-            />
-          )}
-          <Input
-            type="number"
-            min={0}
-            step="0.001"
-            value={item.quantity ?? ""}
-            onChange={(e) =>
-              updateItem(index, { quantity: parseFloat(e.target.value) || 0 })
-            }
-            className="h-8 text-sm"
-          />
-          <Input
-            type="number"
-            min={0}
-            step="0.01"
-            value={item.unitPrice ?? ""}
-            onChange={(e) =>
-              updateItem(index, { unitPrice: parseFloat(e.target.value) || 0 })
-            }
-            className="h-8 text-sm"
-          />
-          <Input
-            type="number"
-            min={0}
-            max={100}
-            step="1"
-            value={item.vatRate}
-            onChange={(e) =>
-              updateItem(index, { vatRate: parseFloat(e.target.value) || 0 })
-            }
-            className="h-8 text-sm"
-          />
-          <span className="text-sm text-right tabular-nums">
-            {formatPLN(item.netAmount)}
-          </span>
-          <span className="text-sm text-right tabular-nums">
-            {formatPLN(item.grossAmount)}
-          </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => removeItem(index)}
+        <div key={item.key} className="space-y-2 rounded-md border p-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">
+              Pozycja {index + 1}
+            </span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => removeItem(index)}
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
+          <div
+            className={`grid gap-2 ${showProjects ? "grid-cols-2" : "grid-cols-1"}`}
           >
-            <Trash2 className="h-3 w-3" />
-          </Button>
+            <div className="space-y-1">
+              <span className="text-xs text-muted-foreground">Usługa</span>
+              <ProductCombobox
+                value={item.name}
+                onChange={(name) => updateItem(index, { name })}
+                products={products}
+              />
+            </div>
+            {showProjects && (
+              <div className="space-y-1">
+                <span className="text-xs text-muted-foreground">Projekt</span>
+                <ProjectCombobox
+                  value={item.projectName || ""}
+                  onChange={(projectName) => updateItem(index, { projectName })}
+                  projects={projects}
+                />
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-5 gap-2 items-end">
+            <div className="space-y-1">
+              <span className="text-xs text-muted-foreground">Ilość</span>
+              <Input
+                type="number"
+                min={0}
+                step="0.001"
+                value={item.quantity ?? ""}
+                onChange={(e) =>
+                  updateItem(index, {
+                    quantity: parseFloat(e.target.value) || 0,
+                  })
+                }
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <span className="text-xs text-muted-foreground">Cena jedn.</span>
+              <Input
+                type="number"
+                min={0}
+                step="0.01"
+                value={item.unitPrice ?? ""}
+                onChange={(e) =>
+                  updateItem(index, {
+                    unitPrice: parseFloat(e.target.value) || 0,
+                  })
+                }
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <span className="text-xs text-muted-foreground">VAT %</span>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                step="1"
+                value={item.vatRate}
+                onChange={(e) =>
+                  updateItem(index, {
+                    vatRate: parseFloat(e.target.value) || 0,
+                  })
+                }
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-1 text-right">
+              <span className="text-xs text-muted-foreground">Netto</span>
+              <p className="text-sm tabular-nums leading-8">
+                {formatPLN(item.netAmount)}
+              </p>
+            </div>
+            <div className="space-y-1 text-right">
+              <span className="text-xs text-muted-foreground">Brutto</span>
+              <p className="text-sm tabular-nums leading-8">
+                {formatPLN(item.grossAmount)}
+              </p>
+            </div>
+          </div>
         </div>
       ))}
 

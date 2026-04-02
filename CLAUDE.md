@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Tech Stack
 
-Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, Prisma 7 (PostgreSQL via `@prisma/adapter-pg`), better-auth for authentication, shadcn/ui components (base-ui), Zod for validation, react-hook-form.
+Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, Prisma 7 (PostgreSQL via `@prisma/adapter-pg`), better-auth for authentication, shadcn/ui components (base-ui), Zod for validation, react-hook-form, chart.js + react-chartjs-2 for charts.
 
 ## Architecture
 
@@ -27,17 +27,20 @@ Each feature contains:
 - `services/commands/` — server actions for mutations (`'use server'`), validated with Zod
 - `services/queries/` — server actions for data fetching (`'use server'`)
 
-Features: `transactions`, `merchants`, `customers`, `categories`, `employees`, `products`, `invoices`, `dashboard`, `auth`, `fakturownia`.
+Features: `transactions`, `merchants`, `customers`, `categories`, `employees`, `products`, `invoices`, `dashboard`, `reports`, `auth`, `fakturownia`.
 
 ### Routing (`src/app/`)
 
 - `(app)/` — authenticated routes (layout checks session, redirects to `/sign-in`)
-  - `/dashboard` — P&L overview with actual vs forecast
-  - `/transactions` — transaction list with filters
+  - `/dashboard` — P&L overview with actual vs forecast, entity count widgets (customers, projects, products, merchants, employees), payment status alerts (unpaid income/expenses, unsent invoices)
+  - `/transactions` — transaction list with filters (type, category, date, isPaid, invoiceSent)
   - `/transactions/new` — create transaction (with inline category, subscription, invoice support)
   - `/customers` — B2B customer CRUD (who pays you)
   - `/merchants` — merchant/vendor CRUD (who you pay)
   - `/employees` — współpracownicy (collaborators) CRUD
+  - `/projects` — project CRUD with customer association
+  - `/products` — product/service CRUD
+  - `/reports` — financial reports with chart.js bar charts, filterable by type/date/grouping/company/amount mode (netto/brutto/VAT)
   - `/categories` — expense/income category management
 - `(auth)/` — sign-in/sign-up pages
 - `api/auth/[...all]/` — better-auth API route handler
@@ -60,7 +63,8 @@ Features: `transactions`, `merchants`, `customers`, `categories`, `employees`, `
 ## Key Patterns
 
 - **Company context**: Two companies (Anna PRO, Web Amigos). Active company stored in cookie, read by server components/actions via `getActiveCompanyFilter()`. "Wszystko" = no filter. Sidebar has workspace switcher.
-- **Transaction types**: `INCOME`, `EXPENSE`, `FORECAST_INCOME`, `FORECAST_EXPENSE`. Type determines which fields show in the form (merchant vs customer, employee assignment).
+- **Transaction types**: `INCOME`, `EXPENSE`, `FORECAST_INCOME`, `FORECAST_EXPENSE`. Type determines which fields show in the form (merchant vs customer, employee assignment). Forecasts can be converted to actual transactions via `convertForecastToActualCommand`.
+- **Transaction flags**: `isPaid` (default false) on INCOME/EXPENSE — tracks payment status. `invoiceSent` (default false) on EXPENSE only — tracks whether invoice has been sent. Both are filterable in the transactions list.
 - **Merchant vs Customer**: Expenses → Merchant (Sprzedawca). Income → Customer (Klient). Both support inline creation via combobox.
 - **Multi-currency**: PLN (primary), EUR, USD. Foreign amounts store `exchangeRate` to PLN. Dashboard aggregates in PLN.
 - **Public IDs**: DB uses autoincrement `id` internally; external-facing code uses `publicId` (UUID). Commands receive `publicId`, resolve to internal `id` before DB operations.

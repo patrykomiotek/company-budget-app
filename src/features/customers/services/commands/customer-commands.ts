@@ -107,6 +107,44 @@ export async function updateCustomerCommand(
   }
 }
 
+const quickCreateCustomerSchema = z.object({
+  name: z.string().min(1, "Nazwa jest wymagana"),
+  nip: z.string().optional(),
+});
+
+export async function quickCreateCustomerCommand(
+  input: z.infer<typeof quickCreateCustomerSchema>,
+): Promise<OperationResult<{ id: string; name: string; nip: string | null }>> {
+  try {
+    const user = await requireUser();
+    const validated = quickCreateCustomerSchema.parse(input);
+
+    const existing = await prisma.customer.findFirst({
+      where: { name: validated.name, userId: user.id },
+    });
+
+    if (existing) {
+      return { success: false, error: "Klient o tej nazwie już istnieje" };
+    }
+
+    const customer = await prisma.customer.create({
+      data: {
+        name: validated.name,
+        nip: validated.nip || null,
+        userId: user.id,
+      },
+      select: { publicId: true, name: true, nip: true },
+    });
+
+    return {
+      success: true,
+      data: { id: customer.publicId, name: customer.name, nip: customer.nip },
+    };
+  } catch (error) {
+    return handleCommandError(error, "Nie udało się dodać klienta");
+  }
+}
+
 export async function deleteCustomerCommand(
   publicId: string,
 ): Promise<OperationResult> {

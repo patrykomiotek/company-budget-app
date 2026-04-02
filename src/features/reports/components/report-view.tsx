@@ -1,0 +1,111 @@
+"use client";
+
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ReportFilters } from "./report-filters";
+import { ReportChart } from "./report-chart";
+import { ReportTable } from "./report-table";
+import { getReportDataQuery } from "../services/queries/report-queries";
+import { useCompany } from "@/shared/context/company-context";
+import type {
+  ReportFilters as ReportFiltersType,
+  ReportData,
+} from "../contracts/report.types";
+
+function getDefaultFilters(companyId?: string | null): ReportFiltersType {
+  const now = new Date();
+  const year = now.getFullYear();
+  const dateFrom = `${year}-01-01`;
+  const dateTo = `${year}-12-31`;
+
+  return {
+    reportType: "income_expenses",
+    dateFrom,
+    dateTo,
+    grouping: "month",
+    amountMode: "netto",
+    companyId: companyId ?? undefined,
+  };
+}
+
+export function ReportView() {
+  const { activeCompanyId } = useCompany();
+  const [filters, setFilters] = useState<ReportFiltersType>(() =>
+    getDefaultFilters(activeCompanyId),
+  );
+  const prevCompanyId = useRef(activeCompanyId);
+
+  // Sync companyId filter when the sidebar company selector changes
+  useEffect(() => {
+    if (prevCompanyId.current !== activeCompanyId) {
+      prevCompanyId.current = activeCompanyId;
+      setFilters((prev) => ({
+        ...prev,
+        companyId: activeCompanyId ?? undefined,
+      }));
+    }
+  }, [activeCompanyId]);
+  const [data, setData] = useState<ReportData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = useCallback(async (f: ReportFiltersType) => {
+    setLoading(true);
+    try {
+      const result = await getReportDataQuery(f);
+      setData(result);
+    } catch (error) {
+      console.error("Failed to fetch report data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData(filters);
+  }, [filters, fetchData]);
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Filtry</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ReportFilters filters={filters} onChange={setFilters} />
+        </CardContent>
+      </Card>
+
+      {loading ? (
+        <Card>
+          <CardContent className="py-12 text-center text-muted-foreground">
+            Ładowanie raportu...
+          </CardContent>
+        </Card>
+      ) : data && data.rows.length > 0 ? (
+        <>
+          <Card>
+            <CardContent className="pt-6">
+              <ReportChart
+                data={data}
+                reportType={filters.reportType}
+                amountMode={filters.amountMode}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="py-0">
+            <CardContent className="p-0">
+              <ReportTable data={data} grouping={filters.grouping} />
+            </CardContent>
+          </Card>
+        </>
+      ) : (
+        <Card>
+          <CardContent className="py-12 text-center text-muted-foreground">
+            Brak danych dla wybranych filtrów
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}

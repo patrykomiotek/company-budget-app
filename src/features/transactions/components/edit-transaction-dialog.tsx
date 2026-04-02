@@ -55,6 +55,8 @@ const isExpenseType = (type: TransactionType) =>
   type === "EXPENSE" || type === "FORECAST_EXPENSE";
 const isIncomeType = (type: TransactionType) =>
   type === "INCOME" || type === "FORECAST_INCOME";
+const isForecastType = (type: TransactionType) =>
+  type === "FORECAST_INCOME" || type === "FORECAST_EXPENSE";
 const getCategoryFilterType = (type: TransactionType) =>
   type === "INCOME" || type === "FORECAST_INCOME" ? "INCOME" : "EXPENSE";
 
@@ -88,6 +90,8 @@ export function EditTransactionDialog({
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [invoiceDueDate, setInvoiceDueDate] = useState("");
   const [lineItems, setLineItems] = useState<LineItemRow[]>([]);
+  const [isPaid, setIsPaid] = useState(false);
+  const [invoiceSent, setInvoiceSent] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [showLineItems, setShowLineItems] = useState(false);
 
@@ -112,6 +116,8 @@ export function EditTransactionDialog({
           ? new Date(transaction.invoiceDueDate).toISOString().split("T")[0]
           : "",
       );
+      setIsPaid(transaction.isPaid);
+      setInvoiceSent(transaction.invoiceSent);
       setLineItems(
         transaction.lineItems.map((li) => ({
           key: li.id,
@@ -181,6 +187,11 @@ export function EditTransactionDialog({
         employeeName:
           isExpenseType(type) && employeeName ? employeeName : undefined,
         projectName: projectName || undefined,
+        isPaid: !isForecastType(type) ? isPaid : undefined,
+        invoiceSent:
+          !isForecastType(type) && isExpenseType(type)
+            ? invoiceSent
+            : undefined,
         invoiceNumber: invoiceNumber || undefined,
         invoiceDueDate: invoiceDueDate || undefined,
         lineItems:
@@ -402,6 +413,31 @@ export function EditTransactionDialog({
               projects={projects}
             />
           </div>
+
+          {!isForecastType(type) && (
+            <div className="flex flex-wrap gap-6">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isPaid}
+                  onChange={(e) => setIsPaid(e.target.checked)}
+                  className="h-4 w-4 rounded border-input"
+                />
+                <span className="text-sm">Opłacone</span>
+              </label>
+              {isExpenseType(type) && (
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={invoiceSent}
+                    onChange={(e) => setInvoiceSent(e.target.checked)}
+                    className="h-4 w-4 rounded border-input"
+                  />
+                  <span className="text-sm">Faktura wysłana</span>
+                </label>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="edit-description">Opis (opcjonalnie)</Label>
