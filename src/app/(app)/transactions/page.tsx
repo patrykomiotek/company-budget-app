@@ -85,19 +85,15 @@ export default async function TransactionsPage({
         </CardContent>
       </Card>
 
-      <Card className="py-0">
-        <CardContent className="p-0">
-          <TransactionsTable
-            transactions={result.items}
-            categories={categories}
-            merchants={merchants}
-            customers={customers}
-            employees={employees}
-            products={products}
-            projects={projects}
-          />
-        </CardContent>
-      </Card>
+      <TransactionsTable
+        transactions={result.items}
+        categories={categories}
+        merchants={merchants}
+        customers={customers}
+        employees={employees}
+        products={products}
+        projects={projects}
+      />
 
       {result.totalPages > 1 && (
         <div className="flex justify-center gap-2">

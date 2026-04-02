@@ -54,7 +54,7 @@ export function ReportFilters({ filters, onChange }: ReportFiltersProps) {
 
   return (
     <div className="flex flex-wrap gap-4 items-end">
-      <div className="space-y-1">
+      <div className="grid grid-rows-[16px_32px] gap-1 content-end">
         <Label className="text-xs">Rodzaj raportu</Label>
         <Select
           value={filters.reportType}
@@ -73,27 +73,27 @@ export function ReportFilters({ filters, onChange }: ReportFiltersProps) {
         </Select>
       </div>
 
-      <div className="space-y-1">
+      <div className="grid grid-rows-[16px_32px] gap-1 content-end">
         <Label className="text-xs">Data od</Label>
         <Input
           type="date"
           value={filters.dateFrom}
           onChange={(e) => update({ dateFrom: e.target.value })}
-          className="w-[160px] h-8"
+          className="w-[160px]"
         />
       </div>
 
-      <div className="space-y-1">
+      <div className="grid grid-rows-[16px_32px] gap-1 content-end">
         <Label className="text-xs">Data do</Label>
         <Input
           type="date"
           value={filters.dateTo}
           onChange={(e) => update({ dateTo: e.target.value })}
-          className="w-[160px] h-8"
+          className="w-[160px]"
         />
       </div>
 
-      <div className="space-y-1">
+      <div className="grid grid-rows-[16px_32px] gap-1 content-end">
         <Label className="text-xs">Grupowanie</Label>
         <Select
           value={filters.grouping}
@@ -112,7 +112,7 @@ export function ReportFilters({ filters, onChange }: ReportFiltersProps) {
         </Select>
       </div>
 
-      <div className="space-y-1">
+      <div className="grid grid-rows-[16px_32px] gap-1 content-end">
         <Label className="text-xs">Dział / oddział firmy</Label>
         <Select
           value={filters.companyId ?? "all"}
@@ -134,7 +134,7 @@ export function ReportFilters({ filters, onChange }: ReportFiltersProps) {
         </Select>
       </div>
 
-      <div className="space-y-1">
+      <div className="grid grid-rows-[16px_32px] gap-1 content-end">
         <Label className="text-xs">Kwoty</Label>
         <Select
           value={filters.amountMode}

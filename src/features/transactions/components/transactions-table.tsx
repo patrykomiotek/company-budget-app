@@ -4,7 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { ArrowRightLeft, Pencil, Trash2 } from "lucide-react";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  flexRender,
+  createColumnHelper,
+  type SortingState,
+  type VisibilityState,
+} from "@tanstack/react-table";
+import { ArrowRightLeft, Columns3, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatAmount } from "@/shared/utils/format";
 import { Button } from "@/components/ui/button";
@@ -27,11 +36,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { SortIcon } from "@/components/sort-icon";
 import { EditTransactionDialog } from "./edit-transaction-dialog";
 import {
   deleteTransactionCommand,
   convertForecastToActualCommand,
 } from "../services/commands/transaction-commands";
+import { cn } from "@/lib/utils";
 import type {
   TransactionWithDetails,
   TransactionType,
@@ -69,9 +86,7 @@ function isForecastType(type: TransactionType) {
   return type === "FORECAST_INCOME" || type === "FORECAST_EXPENSE";
 }
 
-function isExpenseType(type: TransactionType) {
-  return type === "EXPENSE" || type === "FORECAST_EXPENSE";
-}
+const columnHelper = createColumnHelper<TransactionWithDetails>();
 
 export function TransactionsTable({
   transactions,
@@ -87,6 +102,8 @@ export function TransactionsTable({
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [editingTransaction, setEditingTransaction] =
     useState<TransactionWithDetails | null>(null);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
   async function handleConvertForecast(id: string) {
     try {
@@ -119,6 +136,182 @@ export function TransactionsTable({
     }
   }
 
+  const columns = [
+    columnHelper.accessor("type", {
+      header: "Typ",
+      cell: (info) => {
+        const badge = typeBadgeConfig[info.getValue()];
+        return (
+          <Badge variant={badge.variant} className="text-xs whitespace-nowrap">
+            {badge.label}
+          </Badge>
+        );
+      },
+      size: 90,
+      enableHiding: false,
+    }),
+    columnHelper.accessor("date", {
+      header: "Data",
+      cell: (info) => (
+        <span className="whitespace-nowrap">
+          {format(new Date(info.getValue()), "d MMM yyyy", { locale: pl })}
+        </span>
+      ),
+      sortingFn: "datetime",
+      size: 110,
+      enableHiding: false,
+    }),
+    columnHelper.accessor("categoryName", {
+      header: "Kategoria",
+      cell: (info) => (
+        <div>
+          <div className="text-xs text-muted-foreground">{info.getValue()}</div>
+          <div>{info.row.original.subcategoryName}</div>
+        </div>
+      ),
+      size: 140,
+    }),
+    columnHelper.accessor((row) => row.customerName || row.merchantName || "", {
+      id: "counterparty",
+      header: "Kontrahent",
+      cell: (info) => (
+        <span className="truncate block" title={info.getValue() || undefined}>
+          {info.getValue() || "—"}
+        </span>
+      ),
+      size: 180,
+    }),
+    columnHelper.accessor("employeeName", {
+      header: "Osoba",
+      cell: (info) => (
+        <span className="truncate block">{info.getValue() || "—"}</span>
+      ),
+      size: 100,
+    }),
+    columnHelper.accessor("description", {
+      header: "Opis",
+      cell: (info) => (
+        <span
+          className="text-muted-foreground truncate block"
+          title={info.getValue() || undefined}
+        >
+          {info.getValue() || "—"}
+        </span>
+      ),
+      size: 160,
+    }),
+    columnHelper.accessor("invoiceNumber", {
+      header: "Nr faktury",
+      cell: (info) => (
+        <span className="text-xs truncate block">{info.getValue() || "—"}</span>
+      ),
+      size: 110,
+    }),
+    columnHelper.accessor("isPaid", {
+      header: "Status",
+      cell: (info) => {
+        const t = info.row.original;
+        if (isForecastType(t.type)) {
+          return null;
+        }
+        return (
+          <div className="flex flex-col gap-0.5">
+            <span
+              className={`text-xs ${t.isPaid ? "text-green-600" : "text-muted-foreground"}`}
+            >
+              {t.isPaid ? "Opłacone" : "Nieopłacone"}
+            </span>
+            {isIncomeType(t.type) && (
+              <span
+                className={`text-xs ${t.invoiceSent ? "text-green-600" : "text-muted-foreground"}`}
+              >
+                {t.invoiceSent ? "FV wysłana" : "FV niewysłana"}
+              </span>
+            )}
+          </div>
+        );
+      },
+      size: 90,
+    }),
+    columnHelper.accessor("amountPln", {
+      header: "Kwota",
+      enableHiding: false,
+      cell: (info) => {
+        const t = info.row.original;
+        const income = isIncomeType(t.type);
+        return (
+          <div
+            className={`text-right font-mono whitespace-nowrap ${income ? "text-green-600" : "text-red-600"}`}
+          >
+            <div>
+              {income ? "+" : "-"}
+              {formatAmount(t.amount)} {t.currency}
+            </div>
+            {t.currency !== "PLN" && t.amountPln && (
+              <div className="text-xs text-muted-foreground">
+                ≈ {formatAmount(t.amountPln)} PLN
+              </div>
+            )}
+          </div>
+        );
+      },
+      meta: { align: "right" },
+      size: 130,
+    }),
+    columnHelper.display({
+      id: "actions",
+      header: "",
+      cell: (info) => {
+        const t = info.row.original;
+        return (
+          <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+            {isForecastType(t.type) && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleConvertForecast(t.id)}
+                aria-label="Zamień prognozę na transakcję"
+                title="Zamień na rzeczywistą"
+              >
+                <ArrowRightLeft className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setEditingTransaction(t)}
+              aria-label="Edytuj transakcję"
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setConfirmDeleteId(t.id)}
+              disabled={deletingId === t.id}
+              aria-label="Usuń transakcję"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+      enableSorting: false,
+      enableHiding: false,
+      size: 110,
+    }),
+  ];
+
+  const table = useReactTable({
+    data: transactions,
+    columns,
+    state: { sorting, columnVisibility },
+    onSortingChange: setSorting,
+    onColumnVisibilityChange: setColumnVisibility,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
   if (transactions.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
@@ -127,141 +320,121 @@ export function TransactionsTable({
     );
   }
 
+  const columnLabels: Record<string, string> = {
+    categoryName: "Kategoria",
+    counterparty: "Kontrahent",
+    employeeName: "Osoba",
+    description: "Opis",
+    invoiceNumber: "Nr faktury",
+    isPaid: "Status",
+  };
+
   return (
     <>
-      <div className="w-full overflow-x-auto">
-        <Table className="table-fixed w-full">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[90px]">Typ</TableHead>
-              <TableHead className="w-[110px]">Data</TableHead>
-              <TableHead className="w-[140px]">Kategoria</TableHead>
-              <TableHead className="w-[180px]">Kontrahent</TableHead>
-              <TableHead className="w-[100px]">Osoba</TableHead>
-              <TableHead className="w-[160px]">Opis</TableHead>
-              <TableHead className="w-[110px]">Nr faktury</TableHead>
-              <TableHead className="w-[90px]">Status</TableHead>
-              <TableHead className="w-[130px] text-right">Kwota</TableHead>
-              <TableHead className="w-[110px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {transactions.map((t) => {
-              const badge = typeBadgeConfig[t.type];
-              const income = isIncomeType(t.type);
-              return (
-                <TableRow
-                  key={t.id}
-                  className="cursor-pointer"
-                  onClick={() => router.push(`/transactions/${t.id}`)}
-                >
-                  <TableCell>
-                    <Badge
-                      variant={badge.variant}
-                      className="text-xs whitespace-nowrap"
-                    >
-                      {badge.label}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    {format(new Date(t.date), "d MMM yyyy", { locale: pl })}
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-xs text-muted-foreground">
-                      {t.categoryName}
-                    </div>
-                    <div>{t.subcategoryName}</div>
-                  </TableCell>
-                  <TableCell
-                    className="truncate"
-                    title={t.customerName || t.merchantName || undefined}
+      <div>
+        <div className="flex justify-end mb-2">
+          <Popover>
+            <PopoverTrigger
+              render={
+                <Button variant="outline" size="sm" className="h-8">
+                  <Columns3 className="h-3.5 w-3.5 mr-1.5" />
+                  Kolumny
+                </Button>
+              }
+            />
+            <PopoverContent align="end" className="w-48 p-2">
+              {table
+                .getAllColumns()
+                .filter((col) => col.getCanHide())
+                .map((col) => (
+                  <label
+                    key={col.id}
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted cursor-pointer text-sm"
                   >
-                    {t.customerName || t.merchantName || "—"}
-                  </TableCell>
-                  <TableCell className="truncate">
-                    {t.employeeName || "—"}
-                  </TableCell>
-                  <TableCell
-                    className="text-muted-foreground truncate"
-                    title={t.description || undefined}
-                  >
-                    {t.description || "—"}
-                  </TableCell>
-                  <TableCell className="text-xs truncate">
-                    {t.invoiceNumber || "—"}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-0.5">
-                      {!isForecastType(t.type) && (
-                        <>
-                          <span
-                            className={`text-xs ${t.isPaid ? "text-green-600" : "text-muted-foreground"}`}
+                    <input
+                      type="checkbox"
+                      checked={col.getIsVisible()}
+                      onChange={col.getToggleVisibilityHandler()}
+                      className="h-4 w-4 rounded border-input"
+                    />
+                    {columnLabels[col.id] || col.id}
+                  </label>
+                ))}
+            </PopoverContent>
+          </Popover>
+        </div>
+        <Card className="py-0">
+          <CardContent className="p-0">
+            <div className="w-full overflow-x-auto">
+              <Table className="table-fixed w-full">
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => {
+                        const align =
+                          (header.column.columnDef.meta as { align?: string })
+                            ?.align === "right"
+                            ? "text-right"
+                            : "";
+                        const canSort = header.column.getCanSort();
+                        return (
+                          <TableHead
+                            key={header.id}
+                            className={cn(
+                              align,
+                              canSort && "cursor-pointer select-none",
+                            )}
+                            style={{ width: header.getSize() }}
+                            onClick={header.column.getToggleSortingHandler()}
                           >
-                            {t.isPaid ? "Opłacone" : "Nieopłacone"}
-                          </span>
-                          {isExpenseType(t.type) && (
-                            <span
-                              className={`text-xs ${t.invoiceSent ? "text-green-600" : "text-muted-foreground"}`}
-                            >
-                              {t.invoiceSent ? "FV wysłana" : "FV niewysłana"}
+                            <span className="inline-flex items-center gap-1">
+                              {flexRender(
+                                header.column.columnDef.header,
+                                header.getContext(),
+                              )}
+                              {canSort && (
+                                <SortIcon
+                                  sorted={header.column.getIsSorted()}
+                                />
+                              )}
                             </span>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell
-                    className={`text-right font-mono whitespace-nowrap ${
-                      income ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
-                    <div>
-                      {income ? "+" : "-"}
-                      {formatAmount(t.amount)} {t.currency}
-                    </div>
-                    {t.currency !== "PLN" && t.amountPln && (
-                      <div className="text-xs text-muted-foreground">
-                        ≈ {formatAmount(t.amountPln)} PLN
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
-                    <div className="flex gap-1">
-                      {isForecastType(t.type) && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleConvertForecast(t.id)}
-                          aria-label="Zamień prognozę na transakcję"
-                          title="Zamień na rzeczywistą"
-                        >
-                          <ArrowRightLeft className="h-4 w-4" />
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setEditingTransaction(t)}
-                        aria-label="Edytuj transakcję"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setConfirmDeleteId(t.id)}
-                        disabled={deletingId === t.id}
-                        aria-label="Usuń transakcję"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                          </TableHead>
+                        );
+                      })}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      className="cursor-pointer"
+                      onClick={() =>
+                        router.push(`/transactions/${row.original.id}`)
+                      }
+                    >
+                      {row.getVisibleCells().map((cell) => {
+                        const align =
+                          (cell.column.columnDef.meta as { align?: string })
+                            ?.align === "right"
+                            ? "text-right"
+                            : "";
+                        return (
+                          <TableCell key={cell.id} className={align}>
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <AlertDialog

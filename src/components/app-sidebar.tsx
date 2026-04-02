@@ -42,7 +42,7 @@ const navItems = [
   { href: "/transactions", label: "Transakcje", icon: Receipt },
   { href: "/customers", label: "Klienci", icon: Briefcase },
   { href: "/projects", label: "Projekty", icon: FolderKanban },
-  { href: "/products", label: "Usługi", icon: PackageOpen },
+  { href: "/products", label: "Produkty i usługi", icon: PackageOpen },
   { href: "/merchants", label: "Dostawcy", icon: Store },
   { href: "/employees", label: "Współpracownicy", icon: Users },
   { href: "/reports", label: "Raporty", icon: BarChart3 },

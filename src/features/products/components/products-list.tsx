@@ -3,6 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  flexRender,
+  createColumnHelper,
+  type SortingState,
+} from "@tanstack/react-table";
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -15,6 +23,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+import { SortIcon } from "@/components/sort-icon";
 import { deleteProductCommand } from "../services/commands/product-commands";
 import type { ProductItem } from "../contracts/product.types";
 import { PRODUCT_TYPE_LABELS } from "../contracts/product.types";
@@ -23,9 +33,12 @@ interface ProductsListProps {
   products: ProductItem[];
 }
 
+const columnHelper = createColumnHelper<ProductItem>();
+
 export function ProductsList({ products }: ProductsListProps) {
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   async function handleDelete(id: string) {
     if (
@@ -52,6 +65,67 @@ export function ProductsList({ products }: ProductsListProps) {
     }
   }
 
+  const columns = [
+    columnHelper.accessor("name", {
+      header: "Nazwa",
+      cell: (info) => (
+        <Link
+          href={`/products/${info.row.original.id}`}
+          className="hover:underline font-medium"
+        >
+          {info.getValue()}
+        </Link>
+      ),
+    }),
+    columnHelper.accessor("type", {
+      header: "Typ",
+      cell: (info) => (
+        <Badge
+          variant={info.getValue() === "SERVICE" ? "default" : "secondary"}
+        >
+          {PRODUCT_TYPE_LABELS[info.getValue()] || info.getValue()}
+        </Badge>
+      ),
+    }),
+    columnHelper.accessor("lineItemCount", {
+      header: "Pozycje faktur",
+      meta: { align: "right" },
+    }),
+    columnHelper.display({
+      id: "actions",
+      header: "",
+      cell: (info) => (
+        <div className="flex gap-1">
+          <Link href={`/products/${info.row.original.id}/edit`}>
+            <Button variant="ghost" size="icon" aria-label="Edytuj usługę">
+              <Pencil className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleDelete(info.row.original.id)}
+            disabled={deletingId === info.row.original.id}
+            aria-label="Usuń usługę"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+      enableSorting: false,
+      size: 80,
+    }),
+  ];
+
+  const table = useReactTable({
+    data: products,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
   if (products.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
@@ -64,49 +138,56 @@ export function ProductsList({ products }: ProductsListProps) {
   return (
     <Table>
       <TableHeader>
-        <TableRow>
-          <TableHead>Nazwa</TableHead>
-          <TableHead>Typ</TableHead>
-          <TableHead className="text-right">Pozycje faktur</TableHead>
-          <TableHead className="w-20"></TableHead>
-        </TableRow>
+        {table.getHeaderGroups().map((headerGroup) => (
+          <TableRow key={headerGroup.id}>
+            {headerGroup.headers.map((header) => {
+              const align =
+                (header.column.columnDef.meta as { align?: string })?.align ===
+                "right"
+                  ? "text-right"
+                  : "";
+              const canSort = header.column.getCanSort();
+              return (
+                <TableHead
+                  key={header.id}
+                  className={cn(align, canSort && "cursor-pointer select-none")}
+                  style={
+                    header.getSize() !== 150
+                      ? { width: header.getSize() }
+                      : undefined
+                  }
+                  onClick={header.column.getToggleSortingHandler()}
+                >
+                  <span className="inline-flex items-center gap-1">
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )}
+                    {canSort && (
+                      <SortIcon sorted={header.column.getIsSorted()} />
+                    )}
+                  </span>
+                </TableHead>
+              );
+            })}
+          </TableRow>
+        ))}
       </TableHeader>
       <TableBody>
-        {products.map((p) => (
-          <TableRow key={p.id}>
-            <TableCell className="font-medium">
-              <Link href={`/products/${p.id}`} className="hover:underline">
-                {p.name}
-              </Link>
-            </TableCell>
-            <TableCell>
-              <Badge variant={p.type === "SERVICE" ? "default" : "secondary"}>
-                {PRODUCT_TYPE_LABELS[p.type] || p.type}
-              </Badge>
-            </TableCell>
-            <TableCell className="text-right">{p.lineItemCount}</TableCell>
-            <TableCell>
-              <div className="flex gap-1">
-                <Link href={`/products/${p.id}/edit`}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Edytuj usługę"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(p.id)}
-                  disabled={deletingId === p.id}
-                  aria-label="Usuń usługę"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </TableCell>
+        {table.getRowModel().rows.map((row) => (
+          <TableRow key={row.id}>
+            {row.getVisibleCells().map((cell) => {
+              const align =
+                (cell.column.columnDef.meta as { align?: string })?.align ===
+                "right"
+                  ? "text-right"
+                  : "";
+              return (
+                <TableCell key={cell.id} className={align}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              );
+            })}
           </TableRow>
         ))}
       </TableBody>
