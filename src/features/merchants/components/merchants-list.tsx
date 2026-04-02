@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Pencil, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -13,10 +13,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { deleteMerchantCommand } from '../services/commands/merchant-commands';
-import type { MerchantItem } from '../contracts/merchant.types';
+} from "@/components/ui/table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { deleteMerchantCommand } from "../services/commands/merchant-commands";
+import type { MerchantItem } from "../contracts/merchant.types";
 
 interface MerchantsListProps {
   merchants: MerchantItem[];
@@ -27,19 +27,25 @@ export function MerchantsList({ merchants }: MerchantsListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function handleDelete(id: string) {
-    if (!confirm('Czy na pewno chcesz usunąć tego sprzedawcę? Transakcje zostaną odłączone.')) {return;}
+    if (
+      !confirm(
+        "Czy na pewno chcesz usunąć tego dostawcę? Transakcje zostaną odłączone.",
+      )
+    ) {
+      return;
+    }
 
     setDeletingId(id);
     try {
       const result = await deleteMerchantCommand({ id });
       if (result.success) {
-        toast.success('Sprzedawca usunięty');
+        toast.success("Dostawca usunięty");
         router.refresh();
       } else {
         toast.error(result.error);
       }
     } catch {
-      toast.error('Nie udało się usunąć sprzedawcy');
+      toast.error("Nie udało się usunąć dostawcy");
     } finally {
       setDeletingId(null);
     }
@@ -48,7 +54,7 @@ export function MerchantsList({ merchants }: MerchantsListProps) {
   if (merchants.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        Brak sprzedawców. Dodaj sprzedawcę podczas tworzenia transakcji.
+        Brak dostawców. Dodaj dostawcę podczas tworzenia transakcji.
       </div>
     );
   }
@@ -76,12 +82,18 @@ export function MerchantsList({ merchants }: MerchantsListProps) {
               </Avatar>
             </TableCell>
             <TableCell className="font-medium">{m.name}</TableCell>
-            <TableCell className="text-muted-foreground text-sm">{m.nip || '—'}</TableCell>
+            <TableCell className="text-muted-foreground text-sm">
+              {m.nip || "—"}
+            </TableCell>
             <TableCell className="text-right">{m.transactionCount}</TableCell>
             <TableCell>
               <div className="flex gap-1">
                 <Link href={`/merchants/${m.id}/edit`}>
-                  <Button variant="ghost" size="icon" aria-label="Edytuj sprzedawcę">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Edytuj dostawcę"
+                  >
                     <Pencil className="h-4 w-4" />
                   </Button>
                 </Link>
@@ -90,7 +102,7 @@ export function MerchantsList({ merchants }: MerchantsListProps) {
                   size="icon"
                   onClick={() => handleDelete(m.id)}
                   disabled={deletingId === m.id}
-                  aria-label="Usuń sprzedawcę"
+                  aria-label="Usuń dostawcę"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

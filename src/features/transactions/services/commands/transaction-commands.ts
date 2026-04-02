@@ -8,6 +8,7 @@ import { getActiveCompanyId } from "@/shared/lib/company/helpers";
 import { findOrCreateEmployee } from "@/features/employees/services/commands/employee-commands";
 import { findOrCreateProduct } from "@/features/products/services/commands/product-commands";
 import { findOrCreateCustomer } from "@/features/customers/services/commands/customer-commands";
+import { findOrCreateProject } from "@/features/projects/services/commands/project-commands";
 import type { OperationResult } from "@/shared/types/common";
 import {
   TransactionType as PrismaTransactionType,
@@ -19,6 +20,7 @@ const lineItemInputSchema = z.object({
   quantity: z.number().positive("Ilość musi być większa od 0"),
   unitPrice: z.number().min(0, "Cena nie może być ujemna"),
   vatRate: z.number().min(0).max(100),
+  projectName: z.string().optional(),
 });
 
 const createTransactionSchema = z.object({
@@ -36,6 +38,8 @@ const createTransactionSchema = z.object({
   invoiceNumber: z.string().optional(),
   invoiceDueDate: z.string().optional(),
   lineItems: z.array(lineItemInputSchema).optional(),
+  fakturowniaInvoiceId: z.number().int().positive().optional(),
+  projectName: z.string().optional(),
 });
 
 const updateTransactionSchema = createTransactionSchema.extend({
@@ -119,6 +123,11 @@ export async function createTransactionCommand(
       customerId = await findOrCreateCustomer(validated.customerName, user.id);
     }
 
+    let projectId: number | null = null;
+    if (validated.projectName) {
+      projectId = await findOrCreateProject(validated.projectName, user.id);
+    }
+
     await prisma.$transaction(async (tx) => {
       const transaction = await tx.transaction.create({
         data: {
@@ -136,10 +145,12 @@ export async function createTransactionCommand(
           companyId,
           employeeId,
           customerId,
+          projectId,
           invoiceNumber: validated.invoiceNumber || null,
           invoiceDueDate: validated.invoiceDueDate
             ? new Date(validated.invoiceDueDate)
             : null,
+          fakturowniaInvoiceId: validated.fakturowniaInvoiceId ?? null,
           userId: user.id,
         },
       });
@@ -152,6 +163,14 @@ export async function createTransactionCommand(
           const grossAmount =
             Math.round(netAmount * (1 + item.vatRate / 100) * 100) / 100;
 
+          let lineItemProjectId: number | null = null;
+          if (item.projectName) {
+            lineItemProjectId = await findOrCreateProject(
+              item.projectName,
+              user.id,
+            );
+          }
+
           await tx.transactionLineItem.create({
             data: {
               name: item.name,
@@ -162,6 +181,7 @@ export async function createTransactionCommand(
               grossAmount,
               transactionId: transaction.id,
               productId,
+              projectId: lineItemProjectId,
             },
           });
         }
@@ -218,6 +238,11 @@ export async function updateTransactionCommand(
       customerId = await findOrCreateCustomer(validated.customerName, user.id);
     }
 
+    let projectId: number | null = null;
+    if (validated.projectName) {
+      projectId = await findOrCreateProject(validated.projectName, user.id);
+    }
+
     await prisma.$transaction(async (tx) => {
       await tx.transaction.update({
         where: { id: transaction.id },
@@ -236,6 +261,7 @@ export async function updateTransactionCommand(
           companyId,
           employeeId,
           customerId,
+          projectId,
           invoiceNumber: validated.invoiceNumber || null,
           invoiceDueDate: validated.invoiceDueDate
             ? new Date(validated.invoiceDueDate)
@@ -256,6 +282,14 @@ export async function updateTransactionCommand(
           const grossAmount =
             Math.round(netAmount * (1 + item.vatRate / 100) * 100) / 100;
 
+          let lineItemProjectId: number | null = null;
+          if (item.projectName) {
+            lineItemProjectId = await findOrCreateProject(
+              item.projectName,
+              user.id,
+            );
+          }
+
           await tx.transactionLineItem.create({
             data: {
               name: item.name,
@@ -266,6 +300,7 @@ export async function updateTransactionCommand(
               grossAmount,
               transactionId: transaction.id,
               productId,
+              projectId: lineItemProjectId,
             },
           });
         }

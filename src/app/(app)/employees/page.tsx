@@ -1,8 +1,8 @@
-import { Card, CardContent } from '@/components/ui/card';
-import { getEmployeesListQuery } from '@/features/employees/services/queries/employee-queries';
-import { getCompaniesQuery } from '@/shared/lib/company/queries';
-import { EmployeesList } from '@/features/employees/components/employees-list';
-import { CreateEmployeeButton } from '@/features/employees/components/create-employee-dialog';
+import { Card, CardContent } from "@/components/ui/card";
+import { getEmployeesListQuery } from "@/features/employees/services/queries/employee-queries";
+import { getCompaniesQuery } from "@/shared/lib/company/queries";
+import { EmployeesList } from "@/features/employees/components/employees-list";
+import { CreateEmployeeButton } from "@/features/employees/components/create-employee-dialog";
 
 export default async function EmployeesPage() {
   const [employees, companies] = await Promise.all([
@@ -17,7 +17,7 @@ export default async function EmployeesPage() {
         <CreateEmployeeButton companies={companies} />
       </div>
 
-      <Card>
+      <Card className="py-0">
         <CardContent className="p-0">
           <EmployeesList employees={employees} />
         </CardContent>

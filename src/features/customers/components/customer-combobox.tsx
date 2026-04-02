@@ -16,6 +16,7 @@ import {
 interface CustomerOption {
   id: string;
   name: string;
+  displayName?: string | null;
   nip?: string | null;
 }
 
@@ -52,9 +53,13 @@ export function CustomerCombobox({
   }, [open]);
 
   const filtered = inputValue
-    ? customers.filter((c) =>
-        c.name.toLowerCase().includes(inputValue.toLowerCase()),
-      )
+    ? customers.filter((c) => {
+        const search = inputValue.toLowerCase();
+        return (
+          c.name.toLowerCase().includes(search) ||
+          (c.displayName && c.displayName.toLowerCase().includes(search))
+        );
+      })
     : customers;
 
   const showCreateOption =
@@ -133,7 +138,7 @@ export function CustomerCombobox({
                         value === customer.name ? "opacity-100" : "opacity-0",
                       )}
                     />
-                    <span>{customer.name}</span>
+                    <span>{customer.displayName || customer.name}</span>
                     {customer.nip && (
                       <span className="ml-auto text-xs text-muted-foreground">
                         NIP: {customer.nip}

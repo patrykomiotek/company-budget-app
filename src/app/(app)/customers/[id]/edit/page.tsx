@@ -1,12 +1,15 @@
-import { notFound } from 'next/navigation';
-import { getCustomerByIdQuery } from '@/features/customers/services/queries/customer-queries';
-import { CustomerEditForm } from '@/features/customers/components/customer-edit-form';
+import { notFound } from "next/navigation";
+import { getCustomerByIdQuery } from "@/features/customers/services/queries/customer-queries";
+import { CustomerEditForm } from "@/features/customers/components/customer-edit-form";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 interface EditCustomerPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function EditCustomerPage({ params }: EditCustomerPageProps) {
+export default async function EditCustomerPage({
+  params,
+}: EditCustomerPageProps) {
   const { id } = await params;
   const customer = await getCustomerByIdQuery(id);
 
@@ -16,6 +19,16 @@ export default async function EditCustomerPage({ params }: EditCustomerPageProps
 
   return (
     <div>
+      <Breadcrumbs
+        items={[
+          { label: "Klienci", href: "/customers" },
+          {
+            label: customer.displayName || customer.name,
+            href: `/customers/${id}`,
+          },
+          { label: "Edycja" },
+        ]}
+      />
       <CustomerEditForm customer={customer} />
     </div>
   );

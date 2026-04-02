@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { MonthSummary } from '@/features/transactions/contracts/transaction.types';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { MonthSummary } from "@/features/transactions/contracts/transaction.types";
 
 interface MonthOverviewProps {
   summary: MonthSummary;
@@ -9,14 +9,20 @@ interface MonthOverviewProps {
   companyName?: string | null;
 }
 
-export function MonthOverview({ summary, monthLabel, companyName }: MonthOverviewProps) {
+import { formatAmount as fmt } from "@/shared/utils/format";
+
+export function MonthOverview({
+  summary,
+  monthLabel,
+  companyName,
+}: MonthOverviewProps) {
   const hasForecast = summary.forecastIncome > 0 || summary.forecastExpense > 0;
   const totalExpenseForBar = summary.totalExpense + summary.forecastExpense;
 
   return (
     <div className="space-y-6">
       {companyName && (
-        <p className="text-sm text-muted-foreground">Firma: {companyName}</p>
+        <p className="text-sm text-muted-foreground">Oddział: {companyName}</p>
       )}
 
       {/* Actual values */}
@@ -29,7 +35,7 @@ export function MonthOverview({ summary, monthLabel, companyName }: MonthOvervie
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-green-600">
-              {summary.totalIncome.toFixed(2)} zł
+              {fmt(summary.totalIncome)} zł
             </p>
           </CardContent>
         </Card>
@@ -42,7 +48,7 @@ export function MonthOverview({ summary, monthLabel, companyName }: MonthOvervie
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-red-600">
-              {summary.totalExpense.toFixed(2)} zł
+              {fmt(summary.totalExpense)} zł
             </p>
           </CardContent>
         </Card>
@@ -54,8 +60,11 @@ export function MonthOverview({ summary, monthLabel, companyName }: MonthOvervie
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className={`text-2xl font-bold ${summary.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {summary.balance >= 0 ? '+' : ''}{summary.balance.toFixed(2)} zł
+            <p
+              className={`text-2xl font-bold ${summary.balance >= 0 ? "text-green-600" : "text-red-600"}`}
+            >
+              {summary.balance >= 0 ? "+" : ""}
+              {fmt(summary.balance)} zł
             </p>
           </CardContent>
         </Card>
@@ -72,7 +81,7 @@ export function MonthOverview({ summary, monthLabel, companyName }: MonthOvervie
             </CardHeader>
             <CardContent>
               <p className="text-xl font-semibold text-green-600/70">
-                {summary.forecastIncome.toFixed(2)} zł
+                {fmt(summary.forecastIncome)} zł
               </p>
             </CardContent>
           </Card>
@@ -85,7 +94,7 @@ export function MonthOverview({ summary, monthLabel, companyName }: MonthOvervie
             </CardHeader>
             <CardContent>
               <p className="text-xl font-semibold text-red-600/70">
-                {summary.forecastExpense.toFixed(2)} zł
+                {fmt(summary.forecastExpense)} zł
               </p>
             </CardContent>
           </Card>
@@ -98,10 +107,16 @@ export function MonthOverview({ summary, monthLabel, companyName }: MonthOvervie
             </CardHeader>
             <CardContent>
               {(() => {
-                const forecastBalance = (summary.totalIncome + summary.forecastIncome) - (summary.totalExpense + summary.forecastExpense);
+                const forecastBalance =
+                  summary.totalIncome +
+                  summary.forecastIncome -
+                  (summary.totalExpense + summary.forecastExpense);
                 return (
-                  <p className={`text-xl font-semibold ${forecastBalance >= 0 ? 'text-green-600/70' : 'text-red-600/70'}`}>
-                    {forecastBalance >= 0 ? '+' : ''}{forecastBalance.toFixed(2)} zł
+                  <p
+                    className={`text-xl font-semibold ${forecastBalance >= 0 ? "text-green-600/70" : "text-red-600/70"}`}
+                  >
+                    {forecastBalance >= 0 ? "+" : ""}
+                    {fmt(forecastBalance)} zł
                   </p>
                 );
               })()}
@@ -113,7 +128,9 @@ export function MonthOverview({ summary, monthLabel, companyName }: MonthOvervie
       {summary.categorySummaries.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Podsumowanie wg kategorii — {monthLabel}</CardTitle>
+            <CardTitle className="text-lg">
+              Podsumowanie wg kategorii — {monthLabel}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -125,7 +142,7 @@ export function MonthOverview({ summary, monthLabel, companyName }: MonthOvervie
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{cs.categoryName}</span>
                       <span className="font-mono text-sm">
-                        {cs.total.toFixed(2)} zł
+                        {fmt(cs.total)} zł
                       </span>
                     </div>
                     {totalExpenseForBar > 0 && (
@@ -142,9 +159,14 @@ export function MonthOverview({ summary, monthLabel, companyName }: MonthOvervie
                       {cs.subcategories
                         .sort((a, b) => b.total - a.total)
                         .map((sub) => (
-                          <div key={sub.subcategoryId} className="flex justify-between text-sm text-muted-foreground">
+                          <div
+                            key={sub.subcategoryId}
+                            className="flex justify-between text-sm text-muted-foreground"
+                          >
                             <span>{sub.subcategoryName}</span>
-                            <span className="font-mono">{sub.total.toFixed(2)} zł</span>
+                            <span className="font-mono">
+                              {fmt(sub.total)} zł
+                            </span>
                           </div>
                         ))}
                     </div>

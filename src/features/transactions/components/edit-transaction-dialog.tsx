@@ -24,6 +24,7 @@ import { SearchableSelect } from "@/components/searchable-select";
 import { MerchantCombobox } from "@/components/merchant-combobox";
 import { CustomerCombobox } from "@/features/customers/components/customer-combobox";
 import { EmployeeCombobox } from "@/features/employees/components/employee-combobox";
+import { ProjectCombobox } from "@/features/projects/components/project-combobox";
 import { InvoiceFields } from "@/features/invoices/components/invoice-fields";
 import { LineItemsForm } from "@/features/invoices/components/line-items-form";
 import { updateTransactionCommand } from "../services/commands/transaction-commands";
@@ -45,6 +46,7 @@ interface EditTransactionDialogProps {
   customers: { id: string; name: string; nip?: string | null }[];
   employees: { id: string; name: string }[];
   products: { id: string; name: string }[];
+  projects: { id: string; name: string }[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -63,6 +65,7 @@ export function EditTransactionDialog({
   customers,
   employees,
   products,
+  projects,
   open,
   onOpenChange,
 }: EditTransactionDialogProps) {
@@ -80,6 +83,7 @@ export function EditTransactionDialog({
   const [merchantName, setMerchantName] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [employeeName, setEmployeeName] = useState("");
+  const [projectName, setProjectName] = useState("");
   const [companyId, setCompanyId] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [invoiceDueDate, setInvoiceDueDate] = useState("");
@@ -100,6 +104,7 @@ export function EditTransactionDialog({
       setMerchantName(transaction.merchantName || "");
       setCustomerName(transaction.customerName || "");
       setEmployeeName(transaction.employeeName || "");
+      setProjectName(transaction.projectName || "");
       setCompanyId(transaction.companyId || activeCompanyId || "");
       setInvoiceNumber(transaction.invoiceNumber || "");
       setInvoiceDueDate(
@@ -114,6 +119,7 @@ export function EditTransactionDialog({
           quantity: li.quantity,
           unitPrice: li.unitPrice,
           vatRate: li.vatRate,
+          projectName: li.projectName || undefined,
           ...calculateLineItem(li),
         })),
       );
@@ -174,6 +180,7 @@ export function EditTransactionDialog({
         companyPublicId: companyId || undefined,
         employeeName:
           isExpenseType(type) && employeeName ? employeeName : undefined,
+        projectName: projectName || undefined,
         invoiceNumber: invoiceNumber || undefined,
         invoiceDueDate: invoiceDueDate || undefined,
         lineItems:
@@ -185,6 +192,7 @@ export function EditTransactionDialog({
                   quantity: li.quantity,
                   unitPrice: li.unitPrice,
                   vatRate: li.vatRate,
+                  projectName: li.projectName || undefined,
                 }))
             : undefined,
       });
@@ -205,7 +213,7 @@ export function EditTransactionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edytuj transakcję</DialogTitle>
         </DialogHeader>
@@ -254,29 +262,27 @@ export function EditTransactionDialog({
             </div>
           </div>
 
-          {needsCompanySelection && (
-            <div className="space-y-2">
-              <Label>Firma</Label>
-              <Select
-                value={companyId}
-                onValueChange={(v) => setCompanyId(v ?? "")}
-              >
-                <SelectTrigger>
-                  <span>
-                    {companies.find((c) => c.id === companyId)?.name ??
-                      "Wybierz firmę"}
-                  </span>
-                </SelectTrigger>
-                <SelectContent>
-                  {companies.map((company) => (
-                    <SelectItem key={company.id} value={company.id}>
-                      {company.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <div className="space-y-2">
+            <Label>Oddział</Label>
+            <Select
+              value={companyId}
+              onValueChange={(v) => setCompanyId(v ?? "")}
+            >
+              <SelectTrigger>
+                <span>
+                  {companies.find((c) => c.id === companyId)?.name ??
+                    "Wybierz oddział"}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                {companies.map((company) => (
+                  <SelectItem key={company.id} value={company.id}>
+                    {company.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <div className="space-y-2">
             <Label>Kategoria</Label>
@@ -359,7 +365,7 @@ export function EditTransactionDialog({
 
           {isExpenseType(type) ? (
             <div className="space-y-2">
-              <Label>Sprzedawca (opcjonalnie)</Label>
+              <Label>Dostawca (opcjonalnie)</Label>
               <MerchantCombobox
                 value={merchantName}
                 onChange={setMerchantName}
@@ -387,6 +393,15 @@ export function EditTransactionDialog({
               />
             </div>
           )}
+
+          <div className="space-y-2">
+            <Label>Projekt (opcjonalnie)</Label>
+            <ProjectCombobox
+              value={projectName}
+              onChange={setProjectName}
+              projects={projects}
+            />
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="edit-description">Opis (opcjonalnie)</Label>
@@ -438,6 +453,7 @@ export function EditTransactionDialog({
                   items={lineItems}
                   onChange={setLineItems}
                   products={products}
+                  projects={projects}
                 />
               </div>
             )}

@@ -1,5 +1,9 @@
-export type TransactionType = 'INCOME' | 'EXPENSE' | 'FORECAST_INCOME' | 'FORECAST_EXPENSE';
-export type Currency = 'PLN' | 'EUR' | 'USD';
+export type TransactionType =
+  | "INCOME"
+  | "EXPENSE"
+  | "FORECAST_INCOME"
+  | "FORECAST_EXPENSE";
+export type Currency = "PLN" | "EUR" | "USD";
 
 export interface TransactionLineItemDetail {
   id: string;
@@ -9,6 +13,7 @@ export interface TransactionLineItemDetail {
   vatRate: number;
   netAmount: number;
   grossAmount: number;
+  projectName?: string | null;
 }
 
 export interface TransactionWithDetails {
@@ -33,6 +38,8 @@ export interface TransactionWithDetails {
   employeeName: string | null;
   customerId: string | null;
   customerName: string | null;
+  projectId: string | null;
+  projectName: string | null;
   invoiceNumber: string | null;
   invoiceDueDate: Date | null;
   lineItems: TransactionLineItemDetail[];
@@ -44,7 +51,7 @@ export interface TransactionFilters {
   dateTo?: string;
   categoryId?: string;
   subcategoryId?: string;
-  type?: 'INCOME' | 'EXPENSE';
+  type?: "INCOME" | "EXPENSE";
   transactionType?: TransactionType;
 }
 
@@ -75,14 +82,14 @@ export interface MonthSummary {
 }
 
 export const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
-  INCOME: 'Przychód',
-  EXPENSE: 'Wydatek',
-  FORECAST_INCOME: 'Prognoza przychodu',
-  FORECAST_EXPENSE: 'Prognoza wydatku',
+  INCOME: "Przychód",
+  EXPENSE: "Wydatek",
+  FORECAST_INCOME: "Prognoza przychodu",
+  FORECAST_EXPENSE: "Prognoza wydatku",
 };
 
 export const CURRENCY_LABELS: Record<Currency, string> = {
-  PLN: 'PLN',
-  EUR: 'EUR',
-  USD: 'USD',
+  PLN: "PLN",
+  EUR: "EUR",
+  USD: "USD",
 };

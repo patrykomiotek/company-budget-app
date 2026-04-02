@@ -87,7 +87,7 @@ export function SubscriptionDialog({
     }
 
     if (needsCompanySelection && !companyId) {
-      toast.error("Wybierz firmę");
+      toast.error("Wybierz oddział");
       return;
     }
 
@@ -150,7 +150,7 @@ export function SubscriptionDialog({
 
           {needsCompanySelection && (
             <div className="space-y-2">
-              <Label>Firma</Label>
+              <Label>Oddział</Label>
               <Select
                 value={companyId}
                 onValueChange={(v) => setCompanyId(v ?? "")}
@@ -158,7 +158,7 @@ export function SubscriptionDialog({
                 <SelectTrigger>
                   <span>
                     {companies.find((c) => c.id === companyId)?.name ??
-                      "Wybierz firmę"}
+                      "Wybierz oddział"}
                   </span>
                 </SelectTrigger>
                 <SelectContent>

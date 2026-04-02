@@ -1,7 +1,7 @@
-import { Card, CardContent } from '@/components/ui/card';
-import { getCustomersListQuery } from '@/features/customers/services/queries/customer-queries';
-import { CustomersList } from '@/features/customers/components/customers-list';
-import { CreateCustomerButton } from '@/features/customers/components/create-customer-dialog';
+import { Card, CardContent } from "@/components/ui/card";
+import { getCustomersListQuery } from "@/features/customers/services/queries/customer-queries";
+import { CustomersList } from "@/features/customers/components/customers-list";
+import { CreateCustomerButton } from "@/features/customers/components/create-customer-dialog";
 
 export default async function CustomersPage() {
   const customers = await getCustomersListQuery();
@@ -13,7 +13,7 @@ export default async function CustomersPage() {
         <CreateCustomerButton />
       </div>
 
-      <Card>
+      <Card className="py-0">
         <CardContent className="p-0">
           <CustomersList customers={customers} />
         </CardContent>

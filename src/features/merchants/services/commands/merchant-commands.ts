@@ -1,18 +1,18 @@
-'use server';
+"use server";
 
-import { z } from 'zod';
-import { prisma } from '@/shared/lib/prisma';
-import { requireUser } from '@/shared/lib/auth/helpers';
-import { handleCommandError } from '@/shared/utils/error-handling';
-import type { OperationResult } from '@/shared/types/common';
+import { z } from "zod";
+import { prisma } from "@/shared/lib/prisma";
+import { requireUser } from "@/shared/lib/auth/helpers";
+import { handleCommandError } from "@/shared/utils/error-handling";
+import type { OperationResult } from "@/shared/types/common";
 
 const createMerchantSchema = z.object({
-  name: z.string().min(1, 'Nazwa jest wymagana'),
+  name: z.string().min(1, "Nazwa jest wymagana"),
   nip: z.string().optional(),
 });
 
 export async function createMerchantCommand(
-  input: z.infer<typeof createMerchantSchema>
+  input: z.infer<typeof createMerchantSchema>,
 ): Promise<OperationResult> {
   try {
     const user = await requireUser();
@@ -23,24 +23,28 @@ export async function createMerchantCommand(
     });
 
     if (existing) {
-      return { success: false, error: 'Sprzedawca o tej nazwie już istnieje' };
+      return { success: false, error: "Dostawca o tej nazwie już istnieje" };
     }
 
     await prisma.merchant.create({
-      data: { name: validated.name, nip: validated.nip || null, userId: user.id },
+      data: {
+        name: validated.name,
+        nip: validated.nip || null,
+        userId: user.id,
+      },
     });
 
     return { success: true };
   } catch (error) {
-    return handleCommandError(error, 'Nie udało się dodać sprzedawcy');
+    return handleCommandError(error, "Nie udało się dodać dostawcy");
   }
 }
 
 const updateMerchantSchema = z.object({
   id: z.string().min(1),
-  name: z.string().min(1, 'Nazwa jest wymagana'),
+  name: z.string().min(1, "Nazwa jest wymagana"),
   nip: z.string().optional(),
-  logoUrl: z.string().url('Niepoprawny URL').optional().or(z.literal('')),
+  logoUrl: z.string().url("Niepoprawny URL").optional().or(z.literal("")),
 });
 
 const deleteMerchantSchema = z.object({
@@ -48,7 +52,7 @@ const deleteMerchantSchema = z.object({
 });
 
 export async function updateMerchantCommand(
-  input: z.infer<typeof updateMerchantSchema>
+  input: z.infer<typeof updateMerchantSchema>,
 ): Promise<OperationResult> {
   try {
     const user = await requireUser();
@@ -59,7 +63,7 @@ export async function updateMerchantCommand(
     });
 
     if (!merchant) {
-      return { success: false, error: 'Sprzedawca nie został znaleziony' };
+      return { success: false, error: "Dostawca nie został znaleziony" };
     }
 
     await prisma.merchant.update({
@@ -73,12 +77,12 @@ export async function updateMerchantCommand(
 
     return { success: true };
   } catch (error) {
-    return handleCommandError(error, 'Nie udało się zaktualizować sprzedawcy');
+    return handleCommandError(error, "Nie udało się zaktualizować dostawcy");
   }
 }
 
 export async function deleteMerchantCommand(
-  input: z.infer<typeof deleteMerchantSchema>
+  input: z.infer<typeof deleteMerchantSchema>,
 ): Promise<OperationResult> {
   try {
     const user = await requireUser();
@@ -89,7 +93,7 @@ export async function deleteMerchantCommand(
     });
 
     if (!merchant) {
-      return { success: false, error: 'Sprzedawca nie został znaleziony' };
+      return { success: false, error: "Dostawca nie został znaleziony" };
     }
 
     await prisma.transaction.updateMany({
@@ -103,6 +107,6 @@ export async function deleteMerchantCommand(
 
     return { success: true };
   } catch (error) {
-    return handleCommandError(error, 'Nie udało się usunąć sprzedawcy');
+    return handleCommandError(error, "Nie udało się usunąć dostawcy");
   }
 }

@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { updateMerchantCommand } from '../services/commands/merchant-commands';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { updateMerchantCommand } from "../services/commands/merchant-commands";
 
 interface MerchantEditFormProps {
   merchant: {
@@ -23,8 +23,8 @@ export function MerchantEditForm({ merchant }: MerchantEditFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState(merchant.name);
-  const [nip, setNip] = useState(merchant.nip || '');
-  const [logoUrl, setLogoUrl] = useState(merchant.logoUrl || '');
+  const [nip, setNip] = useState(merchant.nip || "");
+  const [logoUrl, setLogoUrl] = useState(merchant.logoUrl || "");
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,14 +39,14 @@ export function MerchantEditForm({ merchant }: MerchantEditFormProps) {
       });
 
       if (result.success) {
-        toast.success('Sprzedawca zaktualizowany');
-        router.push('/merchants');
+        toast.success("Dostawca zaktualizowany");
+        router.push("/merchants");
         router.refresh();
       } else {
         toast.error(result.error);
       }
     } catch {
-      toast.error('Wystąpił błąd. Spróbuj ponownie.');
+      toast.error("Wystąpił błąd. Spróbuj ponownie.");
     } finally {
       setLoading(false);
     }
@@ -55,7 +55,7 @@ export function MerchantEditForm({ merchant }: MerchantEditFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Edytuj sprzedawcę</CardTitle>
+        <CardTitle>Edytuj dostawcę</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4">
@@ -66,9 +66,7 @@ export function MerchantEditForm({ merchant }: MerchantEditFormProps) {
                 {name.substring(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <div className="text-sm text-muted-foreground">
-              Podgląd logo
-            </div>
+            <div className="text-sm text-muted-foreground">Podgląd logo</div>
           </div>
 
           <div className="space-y-2">
@@ -104,9 +102,13 @@ export function MerchantEditForm({ merchant }: MerchantEditFormProps) {
 
           <div className="flex gap-2">
             <Button type="submit" disabled={loading || !name.trim()}>
-              {loading ? 'Zapisywanie...' : 'Zapisz'}
+              {loading ? "Zapisywanie..." : "Zapisz"}
             </Button>
-            <Button type="button" variant="outline" onClick={() => router.back()}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+            >
               Anuluj
             </Button>
           </div>

@@ -1,18 +1,19 @@
-'use server';
+"use server";
 
-import { z } from 'zod';
-import { prisma } from '@/shared/lib/prisma';
-import { requireUser } from '@/shared/lib/auth/helpers';
-import { handleCommandError } from '@/shared/utils/error-handling';
-import type { OperationResult } from '@/shared/types/common';
+import { z } from "zod";
+import { prisma } from "@/shared/lib/prisma";
+import { requireUser } from "@/shared/lib/auth/helpers";
+import { handleCommandError } from "@/shared/utils/error-handling";
+import type { OperationResult } from "@/shared/types/common";
 
 const createCustomerSchema = z.object({
-  name: z.string().min(1, 'Nazwa jest wymagana'),
+  name: z.string().min(1, "Nazwa jest wymagana"),
+  displayName: z.string().optional(),
   nip: z.string().optional(),
   street: z.string().optional(),
   postalCode: z.string().optional(),
   city: z.string().optional(),
-  email: z.string().email('Niepoprawny email').optional().or(z.literal('')),
+  email: z.string().email("Niepoprawny email").optional().or(z.literal("")),
   phone: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -23,7 +24,7 @@ const updateCustomerSchema = createCustomerSchema.extend({
 
 export async function findOrCreateCustomer(
   name: string,
-  userId: string
+  userId: string,
 ): Promise<number> {
   const customer = await prisma.customer.upsert({
     where: { name_userId: { name, userId } },
@@ -35,7 +36,7 @@ export async function findOrCreateCustomer(
 }
 
 export async function createCustomerCommand(
-  input: z.infer<typeof createCustomerSchema>
+  input: z.infer<typeof createCustomerSchema>,
 ): Promise<OperationResult> {
   try {
     const user = await requireUser();
@@ -46,12 +47,13 @@ export async function createCustomerCommand(
     });
 
     if (existing) {
-      return { success: false, error: 'Klient o tej nazwie już istnieje' };
+      return { success: false, error: "Klient o tej nazwie już istnieje" };
     }
 
     await prisma.customer.create({
       data: {
         name: validated.name,
+        displayName: validated.displayName || null,
         nip: validated.nip || null,
         street: validated.street || null,
         postalCode: validated.postalCode || null,
@@ -65,12 +67,12 @@ export async function createCustomerCommand(
 
     return { success: true };
   } catch (error) {
-    return handleCommandError(error, 'Nie udało się dodać klienta');
+    return handleCommandError(error, "Nie udało się dodać klienta");
   }
 }
 
 export async function updateCustomerCommand(
-  input: z.infer<typeof updateCustomerSchema>
+  input: z.infer<typeof updateCustomerSchema>,
 ): Promise<OperationResult> {
   try {
     const user = await requireUser();
@@ -81,13 +83,14 @@ export async function updateCustomerCommand(
     });
 
     if (!customer) {
-      return { success: false, error: 'Klient nie został znaleziony' };
+      return { success: false, error: "Klient nie został znaleziony" };
     }
 
     await prisma.customer.update({
       where: { id: customer.id },
       data: {
         name: validated.name,
+        displayName: validated.displayName || null,
         nip: validated.nip || null,
         street: validated.street || null,
         postalCode: validated.postalCode || null,
@@ -100,12 +103,12 @@ export async function updateCustomerCommand(
 
     return { success: true };
   } catch (error) {
-    return handleCommandError(error, 'Nie udało się zaktualizować klienta');
+    return handleCommandError(error, "Nie udało się zaktualizować klienta");
   }
 }
 
 export async function deleteCustomerCommand(
-  publicId: string
+  publicId: string,
 ): Promise<OperationResult> {
   try {
     const user = await requireUser();
@@ -115,7 +118,7 @@ export async function deleteCustomerCommand(
     });
 
     if (!customer) {
-      return { success: false, error: 'Klient nie został znaleziony' };
+      return { success: false, error: "Klient nie został znaleziony" };
     }
 
     await prisma.transaction.updateMany({
@@ -129,6 +132,6 @@ export async function deleteCustomerCommand(
 
     return { success: true };
   } catch (error) {
-    return handleCommandError(error, 'Nie udało się usunąć klienta');
+    return handleCommandError(error, "Nie udało się usunąć klienta");
   }
 }

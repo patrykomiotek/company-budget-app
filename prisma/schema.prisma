@@ -24,6 +24,7 @@ model User {
   employees     Employee[]
   products      Product[]
   customers     Customer[]
+  projects      Project[]
 
   @@map("users")
 }
@@ -97,6 +98,12 @@ enum ProductType {
   SERVICE
 }
 
+enum ProjectStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
 model Category {
   id        Int          @id @default(autoincrement())
   publicId  String       @unique @default(uuid()) @map("public_id") @db.Uuid
@@ -162,31 +169,34 @@ model Merchant {
 }
 
 model Transaction {
-  id             Int             @id @default(autoincrement())
-  publicId       String          @unique @default(uuid()) @map("public_id") @db.Uuid
-  type           TransactionType @default(EXPENSE)
-  amount         Decimal         @db.Decimal(10, 2)
-  currency       Currency        @default(PLN)
-  exchangeRate   Decimal?        @map("exchange_rate") @db.Decimal(10, 4)
-  date           DateTime        @db.Date
-  description    String?
-  invoiceNumber  String?         @map("invoice_number")
-  invoiceDueDate DateTime?       @map("invoice_due_date") @db.Date
-  merchantId     Int?            @map("merchant_id")
-  subcategoryId  Int             @map("subcategory_id")
-  companyId      Int?            @map("company_id")
-  employeeId     Int?            @map("employee_id")
-  customerId     Int?            @map("customer_id")
-  userId         String          @map("user_id")
-  invoiceFileId  Int?            @map("receipt_id")
-  createdAt      DateTime        @default(now()) @map("created_at")
-  updatedAt      DateTime        @updatedAt @map("updated_at")
+  id                   Int             @id @default(autoincrement())
+  publicId             String          @unique @default(uuid()) @map("public_id") @db.Uuid
+  type                 TransactionType @default(EXPENSE)
+  amount               Decimal         @db.Decimal(10, 2)
+  currency             Currency        @default(PLN)
+  exchangeRate         Decimal?        @map("exchange_rate") @db.Decimal(10, 4)
+  date                 DateTime        @db.Date
+  description          String?
+  invoiceNumber        String?         @map("invoice_number")
+  invoiceDueDate       DateTime?       @map("invoice_due_date") @db.Date
+  fakturowniaInvoiceId Int?            @unique @map("fakturownia_invoice_id")
+  merchantId           Int?            @map("merchant_id")
+  subcategoryId        Int             @map("subcategory_id")
+  companyId            Int?            @map("company_id")
+  employeeId           Int?            @map("employee_id")
+  customerId           Int?            @map("customer_id")
+  projectId            Int?            @map("project_id")
+  userId               String          @map("user_id")
+  invoiceFileId        Int?            @map("receipt_id")
+  createdAt            DateTime        @default(now()) @map("created_at")
+  updatedAt            DateTime        @updatedAt @map("updated_at")
 
   merchant    Merchant?             @relation(fields: [merchantId], references: [id])
   subcategory Subcategory           @relation(fields: [subcategoryId], references: [id])
   company     Company?              @relation(fields: [companyId], references: [id])
   employee    Employee?             @relation(fields: [employeeId], references: [id])
   customer    Customer?             @relation(fields: [customerId], references: [id])
+  project     Project?              @relation(fields: [projectId], references: [id], onDelete: SetNull)
   user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   invoiceFile InvoiceFile?          @relation(fields: [invoiceFileId], references: [id])
   lineItems   TransactionLineItem[]
@@ -197,6 +207,7 @@ model Transaction {
   @@index([companyId])
   @@index([employeeId])
   @@index([customerId])
+  @@index([projectId])
   @@index([type])
   @@map("transactions")
 }
@@ -219,35 +230,58 @@ model Employee {
 }
 
 model Customer {
-  id         Int      @id @default(autoincrement())
-  publicId   String   @unique @default(uuid()) @map("public_id") @db.Uuid
-  name       String
-  nip        String?
-  street     String?
-  postalCode String?  @map("postal_code")
-  city       String?
-  email      String?
-  phone      String?
-  notes      String?
-  userId     String   @map("user_id")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  id                  Int      @id @default(autoincrement())
+  publicId            String   @unique @default(uuid()) @map("public_id") @db.Uuid
+  name                String
+  displayName         String?  @map("display_name")
+  nip                 String?
+  street              String?
+  postalCode          String?  @map("postal_code")
+  city                String?
+  email               String?
+  phone               String?
+  notes               String?
+  fakturowniaClientId Int?     @unique @map("fakturownia_client_id")
+  userId              String   @map("user_id")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
+  projects     Project[]
 
   @@unique([name, userId])
   @@map("customers")
 }
 
+model Project {
+  id         Int           @id @default(autoincrement())
+  publicId   String        @unique @default(uuid()) @map("public_id") @db.Uuid
+  name       String
+  status     ProjectStatus @default(ACTIVE)
+  customerId Int?          @map("customer_id")
+  userId     String        @map("user_id")
+  createdAt  DateTime      @default(now()) @map("created_at")
+  updatedAt  DateTime      @updatedAt @map("updated_at")
+
+  customer     Customer?              @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  lineItems    TransactionLineItem[]
+
+  @@unique([name, userId])
+  @@map("projects")
+}
+
 model Product {
-  id        Int         @id @default(autoincrement())
-  publicId  String      @unique @default(uuid()) @map("public_id") @db.Uuid
-  name      String
-  type      ProductType @default(SERVICE)
-  userId    String      @map("user_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id                   Int         @id @default(autoincrement())
+  publicId             String      @unique @default(uuid()) @map("public_id") @db.Uuid
+  name                 String
+  type                 ProductType @default(SERVICE)
+  fakturowniaProductId Int?        @unique @map("fakturownia_product_id")
+  userId               String      @map("user_id")
+  createdAt            DateTime    @default(now()) @map("created_at")
+  updatedAt            DateTime    @updatedAt @map("updated_at")
 
   user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   lineItems TransactionLineItem[]
@@ -267,13 +301,16 @@ model TransactionLineItem {
   grossAmount   Decimal  @map("gross_amount") @db.Decimal(10, 2)
   transactionId Int      @map("transaction_id")
   productId     Int?     @map("product_id")
+  projectId     Int?     @map("project_id")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
   product     Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+  project     Project?    @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
   @@index([transactionId])
+  @@index([projectId])
   @@map("transaction_line_items")
 }
 

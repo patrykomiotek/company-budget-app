@@ -1,24 +1,50 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useState } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Receipt, PlusCircle, Store, Briefcase, Tags, User, Users, LogOut, PanelLeftClose, PanelLeft, Building2 } from 'lucide-react';
-import { authClient } from '@/shared/lib/auth/client';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
-import { useCompany } from '@/shared/context/company-context';
+import { createContext, useContext, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  LayoutDashboard,
+  Receipt,
+  Store,
+  Briefcase,
+  Tags,
+  Users,
+  LogOut,
+  PanelLeftClose,
+  PanelLeft,
+  Building2,
+  FolderKanban,
+  PackageOpen,
+  ChevronUp,
+  Settings,
+  User,
+} from "lucide-react";
+import { authClient } from "@/shared/lib/auth/client";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { useCompany } from "@/shared/context/company-context";
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/transactions', label: 'Transakcje', icon: Receipt },
-  { href: '/transactions/new', label: 'Dodaj', icon: PlusCircle },
-  { href: '/categories', label: 'Kategorie', icon: Tags },
-  { href: '/customers', label: 'Klienci', icon: Briefcase },
-  { href: '/merchants', label: 'Sprzedawcy', icon: Store },
-  { href: '/employees', label: 'Współpracownicy', icon: Users },
-  { href: '/account', label: 'Konto', icon: User },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/transactions", label: "Transakcje", icon: Receipt },
+  { href: "/categories", label: "Kategorie", icon: Tags },
+  { href: "/customers", label: "Klienci", icon: Briefcase },
+  { href: "/projects", label: "Projekty", icon: FolderKanban },
+  { href: "/products", label: "Usługi", icon: PackageOpen },
+  { href: "/merchants", label: "Dostawcy", icon: Store },
+  { href: "/employees", label: "Współpracownicy", icon: Users },
 ];
 
 interface SidebarContextType {
@@ -48,25 +74,41 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { collapsed, setCollapsed } = useSidebar();
-  const { companies, activeCompanyId, switchCompany, isSwitching } = useCompany();
+  const { companies, activeCompanyId, switchCompany, isSwitching } =
+    useCompany();
+  const { data: session } = authClient.useSession();
+
+  const userName = session?.user?.name || "Użytkownik";
+  const userEmail = session?.user?.email || "";
+  const initials = userName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   async function handleLogout() {
     try {
       await authClient.signOut();
-      router.push('/sign-in');
+      router.push("/sign-in");
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error("Logout failed:", error);
     }
   }
 
   return (
     <aside
       className={cn(
-        'border-r bg-card min-h-screen p-4 flex flex-col transition-all duration-200',
-        collapsed ? 'w-16' : 'w-64'
+        "border-r bg-card min-h-screen p-4 flex flex-col transition-all duration-200",
+        collapsed ? "w-16" : "w-64",
       )}
     >
-      <div className={cn('mb-4 flex items-center', collapsed ? 'justify-center' : 'justify-between')}>
+      <div
+        className={cn(
+          "mb-4 flex items-center",
+          collapsed ? "justify-center" : "justify-between",
+        )}
+      >
         {!collapsed && (
           <div>
             <h1 className="text-xl font-bold">Budżet</h1>
@@ -77,9 +119,13 @@ export function AppSidebar() {
           variant="ghost"
           size="icon"
           onClick={() => setCollapsed(!collapsed)}
-          aria-label={collapsed ? 'Rozwiń menu' : 'Zwiń menu'}
+          aria-label={collapsed ? "Rozwiń menu" : "Zwiń menu"}
         >
-          {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+          {collapsed ? (
+            <PanelLeft className="h-4 w-4" />
+          ) : (
+            <PanelLeftClose className="h-4 w-4" />
+          )}
         </Button>
       </div>
 
@@ -90,30 +136,36 @@ export function AppSidebar() {
           className="mb-4"
           title={
             activeCompanyId
-              ? companies.find((c) => c.id === activeCompanyId)?.name ?? 'Wszystko'
-              : 'Wszystko'
+              ? (companies.find((c) => c.id === activeCompanyId)?.name ??
+                "Wszystko")
+              : "Wszystko"
           }
           onClick={() => {
             const currentIndex = activeCompanyId
               ? companies.findIndex((c) => c.id === activeCompanyId)
               : -1;
             const nextIndex = (currentIndex + 1) % (companies.length + 1);
-            switchCompany(nextIndex < companies.length ? companies[nextIndex].id : null);
+            switchCompany(
+              nextIndex < companies.length ? companies[nextIndex].id : null,
+            );
           }}
         >
           <Building2 className="h-4 w-4" />
         </Button>
       ) : (
         <Select
-          value={activeCompanyId ?? 'all'}
-          onValueChange={(value) => switchCompany(value === 'all' ? null : value)}
+          value={activeCompanyId ?? "all"}
+          onValueChange={(value) =>
+            switchCompany(value === "all" ? null : value)
+          }
           disabled={isSwitching}
         >
           <SelectTrigger className="mb-4">
             <span>
               {activeCompanyId
-                ? companies.find((c) => c.id === activeCompanyId)?.name ?? 'Wybierz firmę'
-                : 'Wszystko'}
+                ? (companies.find((c) => c.id === activeCompanyId)?.name ??
+                  "Wybierz firmę")
+                : "Wszystko"}
             </span>
           </SelectTrigger>
           <SelectContent>
@@ -134,11 +186,11 @@ export function AppSidebar() {
             href={item.href}
             title={collapsed ? item.label : undefined}
             className={cn(
-              'flex items-center rounded-md text-sm transition-colors',
-              collapsed ? 'justify-center px-2 py-2' : 'gap-3 px-3 py-2',
+              "flex items-center rounded-md text-sm transition-colors",
+              collapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
               pathname === item.href
-                ? 'bg-primary text-primary-foreground'
-                : 'hover:bg-muted'
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted",
             )}
           >
             <item.icon className="h-4 w-4 shrink-0" />
@@ -147,17 +199,52 @@ export function AppSidebar() {
         ))}
       </nav>
 
-      <Button
-        variant="ghost"
-        className={cn(
-          collapsed ? 'justify-center px-2' : 'justify-start gap-3'
-        )}
-        title={collapsed ? 'Wyloguj' : undefined}
-        onClick={handleLogout}
-      >
-        <LogOut className="h-4 w-4 shrink-0" />
-        {!collapsed && 'Wyloguj'}
-      </Button>
+      <Popover>
+        <PopoverTrigger
+          className={cn(
+            "flex items-center rounded-md text-sm transition-colors hover:bg-muted w-full",
+            collapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
+          )}
+          title={collapsed ? userName : undefined}
+        >
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-medium shrink-0">
+            {initials}
+          </span>
+          {!collapsed && (
+            <>
+              <span className="flex-1 text-left min-w-0">
+                <span className="block text-sm font-medium truncate">
+                  {userName}
+                </span>
+              </span>
+              <ChevronUp className="h-4 w-4 shrink-0 opacity-50" />
+            </>
+          )}
+        </PopoverTrigger>
+        <PopoverContent side="top" align="start" className="w-56 p-1">
+          {userEmail && (
+            <div className="px-3 py-2 text-xs text-muted-foreground truncate">
+              {userEmail}
+            </div>
+          )}
+          <div className="h-px bg-border my-1" />
+          <Link
+            href="/account"
+            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted transition-colors"
+          >
+            <Settings className="h-4 w-4" />
+            Konto
+          </Link>
+          <div className="h-px bg-border my-1" />
+          <button
+            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted transition-colors w-full text-left text-destructive"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4" />
+            Wyloguj
+          </button>
+        </PopoverContent>
+      </Popover>
     </aside>
   );
 }

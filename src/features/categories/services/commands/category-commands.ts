@@ -1,36 +1,36 @@
-'use server';
+"use server";
 
-import { z } from 'zod';
-import { prisma } from '@/shared/lib/prisma';
-import { requireUser } from '@/shared/lib/auth/helpers';
-import { handleCommandError } from '@/shared/utils/error-handling';
-import type { OperationResult } from '@/shared/types/common';
-import type { CategoryType } from '@/lib/generated/prisma/client';
-import type { CategoryWithSubcategories } from '../../contracts/category.types';
+import { z } from "zod";
+import { prisma } from "@/shared/lib/prisma";
+import { requireUser } from "@/shared/lib/auth/helpers";
+import { handleCommandError } from "@/shared/utils/error-handling";
+import type { OperationResult } from "@/shared/types/common";
+import type { CategoryType } from "@/lib/generated/prisma/client";
+import type { CategoryWithSubcategories } from "../../contracts/category.types";
 
 const subcategorySchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(1, 'Nazwa podkategorii jest wymagana'),
+  name: z.string().min(1, "Nazwa podkategorii jest wymagana"),
   sortOrder: z.number().int().min(0),
 });
 
 const createCategorySchema = z.object({
-  name: z.string().min(1, 'Nazwa jest wymagana'),
-  type: z.enum(['INCOME', 'EXPENSE']),
+  name: z.string().min(1, "Nazwa jest wymagana"),
+  type: z.enum(["INCOME", "EXPENSE"]),
   sortOrder: z.number().int().min(0).optional(),
   subcategories: z.array(subcategorySchema).optional(),
 });
 
 const updateCategorySchema = z.object({
   id: z.string().min(1),
-  name: z.string().min(1, 'Nazwa jest wymagana'),
-  type: z.enum(['INCOME', 'EXPENSE']),
+  name: z.string().min(1, "Nazwa jest wymagana"),
+  type: z.enum(["INCOME", "EXPENSE"]),
   sortOrder: z.number().int().min(0).optional(),
   subcategories: z.array(subcategorySchema).optional(),
 });
 
 export async function createCategoryCommand(
-  input: z.infer<typeof createCategorySchema>
+  input: z.infer<typeof createCategorySchema>,
 ): Promise<OperationResult> {
   try {
     await requireUser();
@@ -54,12 +54,12 @@ export async function createCategoryCommand(
 
     return { success: true };
   } catch (error) {
-    return handleCommandError(error, 'Nie udało się utworzyć kategorii');
+    return handleCommandError(error, "Nie udało się utworzyć kategorii");
   }
 }
 
 export async function updateCategoryCommand(
-  input: z.infer<typeof updateCategorySchema>
+  input: z.infer<typeof updateCategorySchema>,
 ): Promise<OperationResult> {
   try {
     await requireUser();
@@ -71,7 +71,7 @@ export async function updateCategoryCommand(
     });
 
     if (!category) {
-      return { success: false, error: 'Kategoria nie została znaleziona' };
+      return { success: false, error: "Kategoria nie została znaleziona" };
     }
 
     const skippedDeletions: string[] = [];
@@ -95,7 +95,9 @@ export async function updateCategoryCommand(
         // Delete removed subcategories (only those without transactions)
         const toDelete = existingIds.filter((id) => !incomingIds.includes(id));
         for (const publicId of toDelete) {
-          const sub = category.subcategories.find((s) => s.publicId === publicId)!;
+          const sub = category.subcategories.find(
+            (s) => s.publicId === publicId,
+          )!;
           const txCount = await tx.transaction.count({
             where: { subcategoryId: sub.id },
           });
@@ -110,7 +112,7 @@ export async function updateCategoryCommand(
         for (const sub of validated.subcategories) {
           if (sub.id) {
             const existing = category.subcategories.find(
-              (s) => s.publicId === sub.id
+              (s) => s.publicId === sub.id,
             );
             if (existing) {
               await tx.subcategory.update({
@@ -134,35 +136,86 @@ export async function updateCategoryCommand(
     if (skippedDeletions.length > 0) {
       return {
         success: true,
-        error: `Nie usunięto podkategorii z transakcjami: ${skippedDeletions.join(', ')}`,
+        error: `Nie usunięto podkategorii z transakcjami: ${skippedDeletions.join(", ")}`,
       };
     }
 
     return { success: true };
   } catch (error) {
-    return handleCommandError(error, 'Nie udało się zaktualizować kategorii');
+    return handleCommandError(error, "Nie udało się zaktualizować kategorii");
+  }
+}
+
+export async function deleteCategoryCommand(
+  publicId: string,
+): Promise<OperationResult> {
+  try {
+    await requireUser();
+
+    const category = await prisma.category.findUnique({
+      where: { publicId },
+      include: {
+        subcategories: {
+          include: { _count: { select: { transactions: true } } },
+        },
+      },
+    });
+
+    if (!category) {
+      return { success: false, error: "Kategoria nie została znaleziona" };
+    }
+
+    const hasTransactions = category.subcategories.some(
+      (s) => s._count.transactions > 0,
+    );
+
+    if (hasTransactions) {
+      return {
+        success: false,
+        error:
+          "Nie można usunąć kategorii, ponieważ posiada podkategorie z przypisanymi transakcjami",
+      };
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.subcategory.deleteMany({
+        where: { categoryId: category.id },
+      });
+      await tx.category.delete({
+        where: { id: category.id },
+      });
+    });
+
+    return { success: true };
+  } catch (error) {
+    return handleCommandError(error, "Nie udało się usunąć kategorii");
   }
 }
 
 const quickCreateCategorySchema = z.object({
-  name: z.string().min(1, 'Nazwa jest wymagana'),
-  type: z.enum(['INCOME', 'EXPENSE']),
-  subcategoryNames: z.array(z.string().min(1)).min(1, 'Dodaj przynajmniej jedną podkategorię'),
+  name: z.string().min(1, "Nazwa jest wymagana"),
+  type: z.enum(["INCOME", "EXPENSE"]),
+  subcategoryNames: z.array(z.string().min(1)).optional(),
 });
 
 export async function quickCreateCategoryCommand(
-  input: z.infer<typeof quickCreateCategorySchema>
+  input: z.infer<typeof quickCreateCategorySchema>,
 ): Promise<OperationResult<CategoryWithSubcategories>> {
   try {
     await requireUser();
     const validated = quickCreateCategorySchema.parse(input);
+
+    const subcategoryNames =
+      validated.subcategoryNames && validated.subcategoryNames.length > 0
+        ? validated.subcategoryNames
+        : [validated.name];
 
     const category = await prisma.category.create({
       data: {
         name: validated.name,
         type: validated.type as CategoryType,
         subcategories: {
-          create: validated.subcategoryNames.map((name, i) => ({
+          create: subcategoryNames.map((name, i) => ({
             name,
             sortOrder: i,
           })),
@@ -187,6 +240,6 @@ export async function quickCreateCategoryCommand(
       },
     };
   } catch (error) {
-    return handleCommandError(error, 'Nie udało się utworzyć kategorii');
+    return handleCommandError(error, "Nie udało się utworzyć kategorii");
   }
 }

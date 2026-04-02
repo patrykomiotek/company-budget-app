@@ -36,7 +36,7 @@ export function CreateMerchantButton() {
         nip: nip.trim() || undefined,
       });
       if (result.success) {
-        toast.success("Sprzedawca dodany");
+        toast.success("Dostawca dodany");
         setName("");
         setNip("");
         setOpen(false);
@@ -70,7 +70,7 @@ export function CreateMerchantButton() {
       >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Nowy sprzedawca</DialogTitle>
+            <DialogTitle>Nowy dostawca</DialogTitle>
           </DialogHeader>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">

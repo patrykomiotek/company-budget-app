@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useRef, useState } from 'react';
-import { Check, ChevronsUpDown, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { useRef, useState } from "react";
+import { Check, ChevronsUpDown, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -11,7 +11,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command';
+} from "@/components/ui/command";
 
 interface MerchantOption {
   id: string;
@@ -24,18 +24,24 @@ interface MerchantComboboxProps {
   merchants: MerchantOption[];
 }
 
-export function MerchantCombobox({ value, onChange, merchants }: MerchantComboboxProps) {
+export function MerchantCombobox({
+  value,
+  onChange,
+  merchants,
+}: MerchantComboboxProps) {
   const [open, setOpen] = useState(false);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
   const filtered = inputValue
-    ? merchants.filter((m) => m.name.toLowerCase().includes(inputValue.toLowerCase()))
+    ? merchants.filter((m) =>
+        m.name.toLowerCase().includes(inputValue.toLowerCase()),
+      )
     : merchants;
 
-  const showCreateOption = inputValue && !merchants.some(
-    (m) => m.name.toLowerCase() === inputValue.toLowerCase()
-  );
+  const showCreateOption =
+    inputValue &&
+    !merchants.some((m) => m.name.toLowerCase() === inputValue.toLowerCase());
 
   return (
     <div ref={containerRef} className="relative">
@@ -48,7 +54,7 @@ export function MerchantCombobox({ value, onChange, merchants }: MerchantCombobo
         onClick={() => setOpen(!open)}
       >
         <span className="truncate">
-          {value || 'Wybierz lub wpisz sprzedawcę...'}
+          {value || "Wybierz lub wpisz dostawcę..."}
         </span>
         <div className="flex items-center gap-1 ml-2">
           {value && (
@@ -56,7 +62,7 @@ export function MerchantCombobox({ value, onChange, merchants }: MerchantCombobo
               className="h-4 w-4 shrink-0 opacity-50 hover:opacity-100"
               onClick={(e) => {
                 e.stopPropagation();
-                onChange('');
+                onChange("");
               }}
             />
           )}
@@ -68,13 +74,13 @@ export function MerchantCombobox({ value, onChange, merchants }: MerchantCombobo
         <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-md">
           <Command shouldFilter={false}>
             <CommandInput
-              placeholder="Szukaj sprzedawcy..."
+              placeholder="Szukaj dostawcy..."
               value={inputValue}
               onValueChange={setInputValue}
             />
             <CommandList>
               <CommandEmpty>
-                {inputValue ? 'Brak wyników' : 'Wpisz nazwę sprzedawcy'}
+                {inputValue ? "Brak wyników" : "Wpisz nazwę dostawcy"}
               </CommandEmpty>
               <CommandGroup>
                 {showCreateOption && (
@@ -83,10 +89,12 @@ export function MerchantCombobox({ value, onChange, merchants }: MerchantCombobo
                     onSelect={() => {
                       onChange(inputValue);
                       setOpen(false);
-                      setInputValue('');
+                      setInputValue("");
                     }}
                   >
-                    <span>Dodaj: <strong>{inputValue}</strong></span>
+                    <span>
+                      Dodaj: <strong>{inputValue}</strong>
+                    </span>
                   </CommandItem>
                 )}
                 {filtered.map((merchant) => (
@@ -94,15 +102,15 @@ export function MerchantCombobox({ value, onChange, merchants }: MerchantCombobo
                     key={merchant.id}
                     value={merchant.name}
                     onSelect={() => {
-                      onChange(merchant.name === value ? '' : merchant.name);
+                      onChange(merchant.name === value ? "" : merchant.name);
                       setOpen(false);
-                      setInputValue('');
+                      setInputValue("");
                     }}
                   >
                     <Check
                       className={cn(
-                        'mr-2 h-4 w-4',
-                        value === merchant.name ? 'opacity-100' : 'opacity-0'
+                        "mr-2 h-4 w-4",
+                        value === merchant.name ? "opacity-100" : "opacity-0",
                       )}
                     />
                     {merchant.name}

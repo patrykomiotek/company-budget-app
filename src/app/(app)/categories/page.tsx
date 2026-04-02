@@ -1,9 +1,9 @@
-import Link from 'next/link';
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { getCategoriesQuery } from '@/features/categories/services/queries/category-queries';
-import { CategoriesList } from '@/features/categories/components/categories-list';
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { getCategoriesQuery } from "@/features/categories/services/queries/category-queries";
+import { CategoriesList } from "@/features/categories/components/categories-list";
 
 export default async function CategoriesPage() {
   const categories = await getCategoriesQuery();
@@ -20,7 +20,7 @@ export default async function CategoriesPage() {
         </Link>
       </div>
 
-      <Card>
+      <Card className="py-0">
         <CardContent className="p-0">
           <CategoriesList categories={categories} />
         </CardContent>

@@ -22,6 +22,7 @@ export function CreateCustomerButton() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [nip, setNip] = useState("");
   const [street, setStreet] = useState("");
   const [postalCode, setPostalCode] = useState("");
@@ -32,6 +33,7 @@ export function CreateCustomerButton() {
 
   function reset() {
     setName("");
+    setDisplayName("");
     setNip("");
     setStreet("");
     setPostalCode("");
@@ -51,6 +53,7 @@ export function CreateCustomerButton() {
     try {
       const result = await createCustomerCommand({
         name: name.trim(),
+        displayName: displayName.trim() || undefined,
         nip: nip.trim() || undefined,
         street: street.trim() || undefined,
         postalCode: postalCode.trim() || undefined,
@@ -105,6 +108,17 @@ export function CreateCustomerButton() {
                   placeholder="np. Altkom Akademia"
                   autoFocus
                   required
+                />
+              </div>
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="cust-display">
+                  Nazwa wyświetlana (opcjonalnie)
+                </Label>
+                <Input
+                  id="cust-display"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="np. Altkom"
                 />
               </div>
               <div className="space-y-2">

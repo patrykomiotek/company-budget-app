@@ -31,16 +31,13 @@ export function QuickCreateCategoryDialog({
 }: QuickCreateCategoryDialogProps) {
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
-  const [subcategoryInputs, setSubcategoryInputs] = useState([""]);
+  const [subcategoryInputs, setSubcategoryInputs] = useState<string[]>([]);
 
   function addSubcategory() {
     setSubcategoryInputs([...subcategoryInputs, ""]);
   }
 
   function removeSubcategory(index: number) {
-    if (subcategoryInputs.length <= 1) {
-      return;
-    }
     setSubcategoryInputs(subcategoryInputs.filter((_, i) => i !== index));
   }
 
@@ -52,7 +49,7 @@ export function QuickCreateCategoryDialog({
 
   function reset() {
     setName("");
-    setSubcategoryInputs([""]);
+    setSubcategoryInputs([]);
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -65,17 +62,14 @@ export function QuickCreateCategoryDialog({
       toast.error("Podaj nazwę kategorii");
       return;
     }
-    if (subcategoryNames.length === 0) {
-      toast.error("Dodaj przynajmniej jedną podkategorię");
-      return;
-    }
 
     setLoading(true);
     try {
       const result = await quickCreateCategoryCommand({
         name: name.trim(),
         type,
-        subcategoryNames,
+        subcategoryNames:
+          subcategoryNames.length > 0 ? subcategoryNames : undefined,
       });
 
       if (result.success && result.data) {
@@ -122,16 +116,16 @@ export function QuickCreateCategoryDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Podkategorie</Label>
-            <div className="space-y-2">
-              {subcategoryInputs.map((sub, i) => (
-                <div key={i} className="flex gap-2">
-                  <Input
-                    value={sub}
-                    onChange={(e) => updateSubcategory(i, e.target.value)}
-                    placeholder={`Podkategoria ${i + 1}`}
-                  />
-                  {subcategoryInputs.length > 1 && (
+            <Label>Podkategorie (opcjonalnie)</Label>
+            {subcategoryInputs.length > 0 && (
+              <div className="space-y-2">
+                {subcategoryInputs.map((sub, i) => (
+                  <div key={i} className="flex gap-2">
+                    <Input
+                      value={sub}
+                      onChange={(e) => updateSubcategory(i, e.target.value)}
+                      placeholder={`Podkategoria ${i + 1}`}
+                    />
                     <Button
                       type="button"
                       variant="ghost"
@@ -140,10 +134,10 @@ export function QuickCreateCategoryDialog({
                     >
                       <X className="h-4 w-4" />
                     </Button>
-                  )}
-                </div>
-              ))}
-            </div>
+                  </div>
+                ))}
+              </div>
+            )}
             <Button
               type="button"
               variant="outline"
@@ -153,6 +147,11 @@ export function QuickCreateCategoryDialog({
               <Plus className="h-3 w-3 mr-1" />
               Dodaj podkategorię
             </Button>
+            {subcategoryInputs.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                Bez podkategorii zostanie utworzona domyślna o nazwie kategorii
+              </p>
+            )}
           </div>
 
           <DialogFooter>

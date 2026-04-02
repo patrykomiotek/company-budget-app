@@ -6,7 +6,11 @@
       "Bash(npx prisma:*)",
       "Bash(ls:*)",
       "Bash(npm run:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "WebFetch(domain:app.fakturownia.pl)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")"
     ]
   }
 }

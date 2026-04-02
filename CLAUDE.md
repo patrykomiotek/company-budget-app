@@ -21,12 +21,13 @@ Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, Prisma 7 (Postgr
 ### Feature-based organization (`src/features/<feature>/`)
 
 Each feature contains:
+
 - `components/` — React components specific to the feature
 - `contracts/` — TypeScript types/interfaces (e.g., `transaction.types.ts`)
 - `services/commands/` — server actions for mutations (`'use server'`), validated with Zod
 - `services/queries/` — server actions for data fetching (`'use server'`)
 
-Features: `transactions`, `merchants`, `customers`, `categories`, `employees`, `products`, `invoices`, `dashboard`, `auth`.
+Features: `transactions`, `merchants`, `customers`, `categories`, `employees`, `products`, `invoices`, `dashboard`, `auth`, `fakturownia`.
 
 ### Routing (`src/app/`)
 
@@ -70,6 +71,7 @@ Features: `transactions`, `merchants`, `customers`, `categories`, `employees`, `
 - **Polish language**: User-facing error messages and form labels are in Polish.
 - **Prisma schema conventions**: Models use `@@map("snake_case_table")`, fields use `@map("snake_case_column")` for DB column names while keeping camelCase in code. When renaming models, keep `@@map` pointing to original table name to avoid migrations.
 - **Inline creation**: Categories, merchants, customers, employees, products can all be created inline from the transaction form via combobox "Dodaj: ..." pattern or dialog.
+- **Fakturownia integration**: Pull-on-demand import of invoices from Fakturownia.pl API. User clicks "Importuj z Fakturowni" in transaction form → picks invoice from dialog → form fields auto-populate. Department-to-company mapping: Web Amigos (dept 1493345), Anna PRO (dept 1891309). Customer matching by NIP then name. Linking fields: `fakturowniaInvoiceId` on Transaction, `fakturowniaClientId` on Customer, `fakturowniaProductId` on Product. Config via env vars `FAKTUROWNIA_API_TOKEN` and `FAKTUROWNIA_ACCOUNT_NAME`.
 
 ## Deployment
 
@@ -83,3 +85,80 @@ Features: `transactions`, `merchants`, `customers`, `categories`, `employees`, `
 - ESLint requires curly braces on all `if`/`else` statements (curly rule)
 - Prettier for formatting
 - Conventional commits enforced: `feat:`, `fix:`, `chore:`, `docs:`, etc.
+
+## Testing Requirements
+
+All new code must include tests. Use Vitest + React Testing Library (`jsdom` environment). Test files live next to the code they test in `__tests__/` directories.
+
+**Required tests by file type:**
+
+| File type                          | Tests required                                 | Example                                                                 |
+| ---------------------------------- | ---------------------------------------------- | ----------------------------------------------------------------------- |
+| **Utility functions** (pure JS/TS) | Unit tests                                     | `src/app/lib/utils/__tests__/fileValidation.test.ts`                    |
+| **Redux slices**                   | Unit tests for all reducers                    | `src/store/__tests__/threadsSlice.test.ts`                              |
+| **Zod schemas / validators**       | Unit tests for valid/invalid inputs            | `src/features/messages/contracts/__tests__/message.types.test.ts`       |
+| **React components**               | Integration tests (render, interaction, state) | `src/app/components/__tests__/KnowledgeBasePickerDialog.test.tsx`       |
+| **Complex components**             | Unit tests for logic + integration for UI      | `src/app/components/Assistant/PromptForm/__tests__/PromptForm.test.tsx` |
+| **New screens / pages**            | At minimum E2E smoke test (Playwright)         | `npm run test:e2e`                                                      |
+
+**Unit test conventions (Vitest):**
+
+- Wrap components with `<NextIntlClientProvider messages={...} locale="en">` for i18n
+- Mock server actions (`vi.mock`) — never call real APIs in tests
+- Mock external modules (Stripe, Prisma, logger) that would fail in jsdom
+- Use `vi.hoisted()` for mock functions referenced inside `vi.mock()` factories
+- Add `ResizeObserver` polyfill when testing cmdk/Radix components
+- Use `@testing-library/user-event` for realistic user interactions
+- Use `waitFor` for async state changes
+- Follow existing patterns in `src/store/__tests__/`, `src/app/lib/utils/__tests__/`
+
+### E2E Tests (Playwright)
+
+E2E tests live in `e2e/` and run against a seeded local database.
+
+**Structure:**
+
+- `e2e/helpers.ts` — `ROUTES`, `LABELS`, `login()`, URL builders, Polish label constants
+- `e2e/fixtures.ts` — Test data constants (course titles, quiz questions, event data)
+- `e2e/seed-fixtures.ts` — Seeds test courses, lessons, quizzes, events, evaluations
+- `e2e/global-setup.ts` — Resets DB, runs main seed + fixture seed
+- `e2e/auth.setup.ts` — Stores authenticated sessions to `.auth/admin.json` and `.auth/user.json`
+
+**Naming:** Files use `{priority}-{name}.spec.ts` format:
+
+- `p0-*` — Critical flows: auth, enrollment, learning, quizzes, certificates
+- `p1-*` — Important flows: course management, events, evaluations, CRUD
+- `p2-*` — Admin/auxiliary: users, companies, events CRUD
+- `smoke-*` — Quick navigation and page-load checks
+
+**Playwright projects** (in `playwright.config.ts`):
+
+- `setup` — Auth setup (runs first)
+- `p0-no-auth` — P0 auth tests (no stored auth)
+- `p0-user` — P0 user flows (stored user auth)
+- `p0-approval` — P0 enrollment approval (multi-role, own auth)
+- `p1-user` — P1 user flows (stored user auth)
+- `p1-admin` — P1 admin flows (stored admin auth)
+- `p2-admin` — P2 admin flows (stored admin auth)
+- `smoke` — Smoke tests (stored admin auth)
+
+**Conventions:**
+
+- All routes use `/pl` locale prefix (Polish UI text in assertions)
+- Import `ROUTES` and `LABELS` from `e2e/helpers.ts`, test data from `e2e/fixtures.ts`
+- Use semantic selectors: `getByRole()`, `getByText()`, Polish labels — no `data-testid` unless already present
+- Serial tests (`test.describe.serial`) for multi-step flows (enrollment → learning → quiz)
+- Timeouts: 10s for visibility checks, 15s for navigation/login, 30s for hard navigations
+- Multi-role tests use separate browser contexts with `login()` helper
+
+### Manual Regression Checklist
+
+A prioritized manual regression checklist is maintained at `docs/regression-checklist.md`. It covers ~120 test cases across P0 (critical), P1 (high), P2 (medium), and P3 (low/admin) scenarios for auth, course enrollment, learning, quizzes, certificates, events, evaluations, company/startup management, file uploads, i18n, and email notifications. Use it before releases to verify core functionality.
+
+## Post-Task Workflow
+
+After completing any coding task that modifies or creates files:
+
+1. **Write tests first** — Add unit/integration tests for all new code before proceeding to review. Follow the testing conventions in the "Testing Requirements" section above.
+2. **Run tests** — Execute `npx vitest run` to verify all tests pass.
+3. **Run code review** — Run `/coderabbit:review` to review the changes before reporting completion to the user.

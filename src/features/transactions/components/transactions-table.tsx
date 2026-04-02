@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { formatAmount } from "@/shared/utils/format";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -31,6 +32,7 @@ interface TransactionsTableProps {
   customers: { id: string; name: string; nip?: string | null }[];
   employees: { id: string; name: string }[];
   products: { id: string; name: string }[];
+  projects: { id: string; name: string }[];
 }
 
 const typeBadgeConfig: Record<
@@ -57,6 +59,7 @@ export function TransactionsTable({
   customers,
   employees,
   products,
+  projects,
 }: TransactionsTableProps) {
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -94,92 +97,108 @@ export function TransactionsTable({
 
   return (
     <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Typ</TableHead>
-            <TableHead>Data</TableHead>
-            <TableHead>Kategoria</TableHead>
-            <TableHead>Kontrahent</TableHead>
-            <TableHead>Osoba</TableHead>
-            <TableHead>Opis</TableHead>
-            <TableHead>Nr faktury</TableHead>
-            <TableHead className="text-right">Kwota</TableHead>
-            <TableHead className="w-20"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {transactions.map((t) => {
-            const badge = typeBadgeConfig[t.type];
-            const income = isIncomeType(t.type);
-            return (
-              <TableRow key={t.id}>
-                <TableCell>
-                  <Badge
-                    variant={badge.variant}
-                    className="text-xs whitespace-nowrap"
-                  >
-                    {badge.label}
-                  </Badge>
-                </TableCell>
-                <TableCell className="whitespace-nowrap">
-                  {format(new Date(t.date), "d MMM yyyy", { locale: pl })}
-                </TableCell>
-                <TableCell>
-                  <div className="text-xs text-muted-foreground">
-                    {t.categoryName}
-                  </div>
-                  <div>{t.subcategoryName}</div>
-                </TableCell>
-                <TableCell>{t.customerName || t.merchantName || "—"}</TableCell>
-                <TableCell>{t.employeeName || "—"}</TableCell>
-                <TableCell className="text-muted-foreground max-w-[200px] truncate">
-                  {t.description || "—"}
-                </TableCell>
-                <TableCell className="text-xs">
-                  {t.invoiceNumber || "—"}
-                </TableCell>
-                <TableCell
-                  className={`text-right font-mono whitespace-nowrap ${
-                    income ? "text-green-600" : "text-red-600"
-                  }`}
+      <div className="w-full overflow-x-auto">
+        <Table className="table-fixed w-full">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[90px]">Typ</TableHead>
+              <TableHead className="w-[110px]">Data</TableHead>
+              <TableHead className="w-[140px]">Kategoria</TableHead>
+              <TableHead className="w-[180px]">Kontrahent</TableHead>
+              <TableHead className="w-[100px]">Osoba</TableHead>
+              <TableHead className="w-[160px]">Opis</TableHead>
+              <TableHead className="w-[110px]">Nr faktury</TableHead>
+              <TableHead className="w-[130px] text-right">Kwota</TableHead>
+              <TableHead className="w-[80px]"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {transactions.map((t) => {
+              const badge = typeBadgeConfig[t.type];
+              const income = isIncomeType(t.type);
+              return (
+                <TableRow
+                  key={t.id}
+                  className="cursor-pointer"
+                  onClick={() => router.push(`/transactions/${t.id}`)}
                 >
-                  <div>
-                    {income ? "+" : "-"}
-                    {t.amount.toFixed(2)} {t.currency}
-                  </div>
-                  {t.currency !== "PLN" && t.amountPln && (
+                  <TableCell>
+                    <Badge
+                      variant={badge.variant}
+                      className="text-xs whitespace-nowrap"
+                    >
+                      {badge.label}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {format(new Date(t.date), "d MMM yyyy", { locale: pl })}
+                  </TableCell>
+                  <TableCell>
                     <div className="text-xs text-muted-foreground">
-                      ≈ {t.amountPln.toFixed(2)} PLN
+                      {t.categoryName}
                     </div>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setEditingTransaction(t)}
-                      aria-label="Edytuj transakcję"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(t.id)}
-                      disabled={deletingId === t.id}
-                      aria-label="Usuń transakcję"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+                    <div>{t.subcategoryName}</div>
+                  </TableCell>
+                  <TableCell
+                    className="truncate"
+                    title={t.customerName || t.merchantName || undefined}
+                  >
+                    {t.customerName || t.merchantName || "—"}
+                  </TableCell>
+                  <TableCell className="truncate">
+                    {t.employeeName || "—"}
+                  </TableCell>
+                  <TableCell
+                    className="text-muted-foreground truncate"
+                    title={t.description || undefined}
+                  >
+                    {t.description || "—"}
+                  </TableCell>
+                  <TableCell className="text-xs truncate">
+                    {t.invoiceNumber || "—"}
+                  </TableCell>
+                  <TableCell
+                    className={`text-right font-mono whitespace-nowrap ${
+                      income ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    <div>
+                      {income ? "+" : "-"}
+                      {formatAmount(t.amount)} {t.currency}
+                    </div>
+                    {t.currency !== "PLN" && t.amountPln && (
+                      <div className="text-xs text-muted-foreground">
+                        ≈ {formatAmount(t.amountPln)} PLN
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setEditingTransaction(t)}
+                        aria-label="Edytuj transakcję"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(t.id)}
+                        disabled={deletingId === t.id}
+                        aria-label="Usuń transakcję"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
 
       <EditTransactionDialog
         transaction={editingTransaction}
@@ -188,6 +207,7 @@ export function TransactionsTable({
         customers={customers}
         employees={employees}
         products={products}
+        projects={projects}
         open={!!editingTransaction}
         onOpenChange={(open) => {
           if (!open) {
