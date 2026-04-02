@@ -46,13 +46,13 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
 # Install Prisma CLI + deps needed for migrations (dotenv, tsx for prisma.config.ts)
-RUN npm install --prefix /tmp prisma@latest @prisma/engines@latest dotenv tsx typescript && \
-    cp -r /tmp/node_modules/prisma ./node_modules/prisma && \
-    cp -r /tmp/node_modules/@prisma ./node_modules/@prisma && \
-    cp -r /tmp/node_modules/dotenv ./node_modules/dotenv && \
-    cp -r /tmp/node_modules/tsx ./node_modules/tsx && \
-    cp -r /tmp/node_modules/typescript ./node_modules/typescript && \
-    rm -rf /tmp/node_modules
+RUN cd /tmp && npm init -y > /dev/null 2>&1 \
+    && npm install prisma@7.4.2 dotenv tsx typescript > /dev/null 2>&1 \
+    && cp -rP /tmp/node_modules/* /app/node_modules/ \
+    && mkdir -p /app/node_modules/.bin \
+    && ln -sf ../prisma/build/index.js /app/node_modules/.bin/prisma \
+    && rm -rf /tmp/node_modules /tmp/package.json /tmp/package-lock.json \
+    && chown -R nextjs:nodejs /app/node_modules
 
 # Also copy the generated Prisma client (needed for seed if run)
 COPY --from=builder /app/src/lib/generated ./src/lib/generated
