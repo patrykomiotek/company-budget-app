@@ -188,9 +188,11 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
   const categoryLabel =
     filteredCategories.find((c) => c.id === categoryId)?.name ?? "Wszystkie";
 
+  const filterItem = "grid grid-rows-[16px_32px] gap-1 content-end";
+
   return (
-    <div className="flex flex-wrap gap-4 items-end">
-      <div className="space-y-1">
+    <div className="flex flex-wrap gap-x-4 gap-y-3 items-end">
+      <div className={filterItem}>
         <Label className="text-xs">Typ</Label>
         <Select
           value={activeType || "all"}
@@ -224,7 +226,7 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
         </Select>
       </div>
 
-      <div className="space-y-1">
+      <div className={filterItem}>
         <Label className="text-xs">Kategoria</Label>
         <Select
           value={categoryId || "all"}
@@ -244,7 +246,7 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
         </Select>
       </div>
 
-      <div className="space-y-1">
+      <div className={filterItem}>
         <Label className="text-xs">Okres</Label>
         <Select
           value={activeInterval}
@@ -263,33 +265,33 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
         </Select>
       </div>
 
-      <div className="space-y-1">
+      <div className={filterItem}>
         <Label className="text-xs">Od</Label>
         <Input
           type="date"
           value={dateFrom}
           onChange={(e) => updateFilter("dateFrom", e.target.value)}
-          className="w-[160px] h-8"
+          className="w-[150px]"
         />
       </div>
 
-      <div className="space-y-1">
+      <div className={filterItem}>
         <Label className="text-xs">Do</Label>
         <Input
           type="date"
           value={dateTo}
           onChange={(e) => updateFilter("dateTo", e.target.value)}
-          className="w-[160px] h-8"
+          className="w-[150px]"
         />
       </div>
 
-      <div className="space-y-1">
+      <div className={filterItem}>
         <Label className="text-xs">Opłacone</Label>
         <Select
           value={isPaid || "all"}
           onValueChange={(v) => updateFilter("isPaid", v ?? "")}
         >
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[120px]">
             <span>
               {isPaid === "true"
                 ? "Tak"
@@ -306,13 +308,13 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
         </Select>
       </div>
 
-      <div className="space-y-1">
+      <div className={filterItem}>
         <Label className="text-xs">Faktura wysłana</Label>
         <Select
           value={invoiceSent || "all"}
           onValueChange={(v) => updateFilter("invoiceSent", v ?? "")}
         >
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="w-[140px]">
             <span>
               {invoiceSent === "true"
                 ? "Tak"
