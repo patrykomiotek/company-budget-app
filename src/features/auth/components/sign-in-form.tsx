@@ -1,24 +1,29 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { authClient } from '@/shared/lib/auth/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { authClient } from "@/shared/lib/auth/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export function SignInForm() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
@@ -28,13 +33,13 @@ export function SignInForm() {
       });
 
       if (result.error) {
-        setError(result.error.message ?? 'Nie udało się zalogować');
+        setError(result.error.message ?? "Nie udało się zalogować");
         return;
       }
 
-      router.push('/dashboard');
+      router.push("/dashboard");
     } catch {
-      setError('Wystąpił błąd połączenia. Spróbuj ponownie.');
+      setError("Wystąpił błąd połączenia. Spróbuj ponownie.");
     } finally {
       setLoading(false);
     }
@@ -74,14 +79,8 @@ export function SignInForm() {
             />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Logowanie...' : 'Zaloguj się'}
+            {loading ? "Logowanie..." : "Zaloguj się"}
           </Button>
-          <p className="text-sm text-center text-muted-foreground">
-            Nie masz konta?{' '}
-            <Link href="/sign-up" className="text-primary underline">
-              Zarejestruj się
-            </Link>
-          </p>
         </form>
       </CardContent>
     </Card>

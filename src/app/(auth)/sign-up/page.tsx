@@ -1,9 +1,5 @@
-import { SignUpForm } from '@/features/auth/components/sign-up-form';
+import { redirect } from "next/navigation";
 
 export default function SignUpPage() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <SignUpForm />
-    </div>
-  );
+  redirect("/sign-in");
 }
