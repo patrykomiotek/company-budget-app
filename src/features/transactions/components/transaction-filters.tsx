@@ -141,7 +141,16 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
       return;
     }
 
-    // Try restoring date range from localStorage
+    // Try restoring date range from localStorage (clean old format if needed)
+    try {
+      const raw = localStorage.getItem(FILTERS_STORAGE_KEY);
+      if (raw && !raw.startsWith("{")) {
+        // Old format was a query string — clear it
+        localStorage.removeItem(FILTERS_STORAGE_KEY);
+      }
+    } catch {
+      // ignore
+    }
     try {
       const saved = localStorage.getItem(FILTERS_STORAGE_KEY);
       if (saved) {
