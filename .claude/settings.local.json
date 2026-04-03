@@ -10,7 +10,9 @@
       "WebFetch(domain:app.fakturownia.pl)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")"
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "Bash(npx vitest:*)",
+      "Skill(coderabbit:review)"
     ]
   }
 }
