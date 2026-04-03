@@ -16,6 +16,16 @@ interface DashboardWidgetsProps {
   stats: DashboardStats;
 }
 
+function gridColsClass(count: number): string {
+  if (count === 1) {
+    return "grid-cols-1";
+  }
+  if (count === 2) {
+    return "grid-cols-2";
+  }
+  return "grid-cols-3";
+}
+
 export function DashboardWidgets({ stats }: DashboardWidgetsProps) {
   const alerts = [
     stats.unpaidIncomeCount > 0 && {
@@ -89,9 +99,7 @@ export function DashboardWidgets({ stats }: DashboardWidgetsProps) {
     <div className="space-y-4">
       {/* Alerts row */}
       {alerts.length > 0 && (
-        <div
-          className={`grid gap-3 ${alerts.length === 1 ? "grid-cols-1" : alerts.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}
-        >
+        <div className={`grid gap-3 ${gridColsClass(alerts.length)}`}>
           {alerts.map((alert) => (
             <Link key={alert.href} href={alert.href}>
               <Card

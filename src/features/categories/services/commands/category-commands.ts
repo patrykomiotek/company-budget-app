@@ -192,6 +192,56 @@ export async function deleteCategoryCommand(
   }
 }
 
+const reorderSchema = z.object({
+  categories: z.array(
+    z.object({
+      id: z.string(),
+      sortOrder: z.number().int().min(0),
+    }),
+  ),
+  subcategories: z
+    .array(
+      z.object({
+        id: z.string(),
+        sortOrder: z.number().int().min(0),
+      }),
+    )
+    .optional(),
+});
+
+export async function reorderCategoriesCommand(
+  input: z.infer<typeof reorderSchema>,
+): Promise<OperationResult> {
+  try {
+    await requireUser();
+    const validated = reorderSchema.parse(input);
+
+    await prisma.$transaction(async (tx) => {
+      for (const cat of validated.categories) {
+        await tx.category.update({
+          where: { publicId: cat.id },
+          data: { sortOrder: cat.sortOrder },
+        });
+      }
+      if (validated.subcategories) {
+        for (const sub of validated.subcategories) {
+          await tx.subcategory.update({
+            where: { publicId: sub.id },
+            data: { sortOrder: sub.sortOrder },
+          });
+        }
+      }
+    });
+
+    return { success: true };
+  } catch (error) {
+    return handleCommandError(
+      error,
+      "Nie udało się zmienić kolejności kategorii",
+    );
+  }
+}
+
 const quickCreateCategorySchema = z.object({
   name: z.string().min(1, "Nazwa jest wymagana"),
   type: z.enum(["INCOME", "EXPENSE"]),

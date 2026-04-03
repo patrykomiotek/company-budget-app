@@ -243,6 +243,7 @@ model Customer {
   email               String?
   phone               String?
   notes               String?
+  isVip               Boolean  @default(false) @map("is_vip")
   fakturowniaClientId Int?     @unique @map("fakturownia_client_id")
   userId              String   @map("user_id")
   createdAt           DateTime @default(now()) @map("created_at")

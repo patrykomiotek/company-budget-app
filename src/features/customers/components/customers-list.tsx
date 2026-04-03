@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -11,7 +11,7 @@ import {
   createColumnHelper,
   type SortingState,
 } from "@tanstack/react-table";
-import { Pencil, Trash2, Crown } from "lucide-react";
+import { Crown, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,17 +58,6 @@ export function CustomersList({ customers }: CustomersListProps) {
     { id: "lastTransactionDate", desc: true },
   ]);
 
-  const vipThreshold = useMemo(() => {
-    if (customers.length === 0) {
-      return 0;
-    }
-    const sorted = [...customers]
-      .map((c) => c.totalRevenue)
-      .sort((a, b) => b - a);
-    const topIndex = Math.max(0, Math.ceil(sorted.length * 0.2) - 1);
-    return sorted[topIndex] > 0 ? sorted[topIndex] : Infinity;
-  }, [customers]);
-
   async function handleDelete(id: string) {
     if (
       !confirm(
@@ -100,7 +89,6 @@ export function CustomersList({ customers }: CustomersListProps) {
       header: "Nazwa",
       cell: (info) => {
         const c = info.row.original;
-        const isVip = c.totalRevenue >= vipThreshold && c.totalRevenue > 0;
         return (
           <div>
             <div className="flex items-center gap-2">
@@ -110,9 +98,10 @@ export function CustomersList({ customers }: CustomersListProps) {
               >
                 {c.displayName || c.name}
               </Link>
-              {isVip && (
-                <span title="VIP — top 20% przychodu">
-                  <Crown className="h-4 w-4 text-amber-500" />
+              {c.isVip && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                  <Crown className="h-3 w-3" />
+                  VIP
                 </span>
               )}
             </div>

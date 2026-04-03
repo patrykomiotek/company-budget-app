@@ -70,6 +70,7 @@ export async function getCustomersListQuery(): Promise<CustomerItem[]> {
         nip: c.nip,
         city: c.city,
         email: c.email,
+        isVip: c.isVip,
         transactionCount: c.transactions.length,
         totalRevenue: Math.round(totalRevenue * 100) / 100,
         lastTransactionDate: lastDate
@@ -113,6 +114,7 @@ export async function getCustomerByIdQuery(publicId: string) {
     email: customer.email,
     phone: customer.phone,
     notes: customer.notes,
+    isVip: customer.isVip,
   };
 }
 

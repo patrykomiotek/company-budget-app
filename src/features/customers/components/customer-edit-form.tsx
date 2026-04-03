@@ -22,6 +22,7 @@ interface CustomerEditFormProps {
     email: string | null;
     phone: string | null;
     notes: string | null;
+    isVip: boolean;
   };
 }
 
@@ -37,6 +38,7 @@ export function CustomerEditForm({ customer }: CustomerEditFormProps) {
   const [email, setEmail] = useState(customer.email || "");
   const [phone, setPhone] = useState(customer.phone || "");
   const [notes, setNotes] = useState(customer.notes || "");
+  const [isVip, setIsVip] = useState(customer.isVip);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,6 +55,7 @@ export function CustomerEditForm({ customer }: CustomerEditFormProps) {
         email: email || undefined,
         phone: phone || undefined,
         notes: notes || undefined,
+        isVip,
       });
       if (result.success) {
         toast.success("Klient zaktualizowany");
@@ -144,6 +147,17 @@ export function CustomerEditForm({ customer }: CustomerEditFormProps) {
                 value={postalCode}
                 onChange={(e) => setPostalCode(e.target.value)}
               />
+            </div>
+            <div className="col-span-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isVip}
+                  onChange={(e) => setIsVip(e.target.checked)}
+                  className="h-4 w-4 rounded border-input"
+                />
+                <span className="text-sm font-medium">Klient VIP</span>
+              </label>
             </div>
             <div className="space-y-2 col-span-2">
               <Label htmlFor="notes">Notatki</Label>

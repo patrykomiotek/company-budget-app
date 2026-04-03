@@ -16,6 +16,7 @@ const createCustomerSchema = z.object({
   email: z.string().email("Niepoprawny email").optional().or(z.literal("")),
   phone: z.string().optional(),
   notes: z.string().optional(),
+  isVip: z.boolean().optional(),
 });
 
 const updateCustomerSchema = createCustomerSchema.extend({
@@ -61,6 +62,7 @@ export async function createCustomerCommand(
         email: validated.email || null,
         phone: validated.phone || null,
         notes: validated.notes || null,
+        isVip: validated.isVip ?? false,
         userId: user.id,
       },
     });
@@ -98,6 +100,7 @@ export async function updateCustomerCommand(
         email: validated.email || null,
         phone: validated.phone || null,
         notes: validated.notes || null,
+        isVip: validated.isVip ?? false,
       },
     });
 

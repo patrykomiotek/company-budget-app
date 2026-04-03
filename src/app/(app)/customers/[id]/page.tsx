@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Pencil } from "lucide-react";
+import { Crown, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -63,9 +63,17 @@ export default async function CustomerDetailPage({
         ]}
       />
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">
-          {customer.displayName || customer.name}
-        </h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold">
+            {customer.displayName || customer.name}
+          </h1>
+          {customer.isVip && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800">
+              <Crown className="h-3.5 w-3.5" />
+              VIP
+            </span>
+          )}
+        </div>
         <Link href={`/customers/${id}/edit`}>
           <Button variant="outline" size="sm">
             <Pencil className="h-3.5 w-3.5 mr-1.5" />

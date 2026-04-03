@@ -135,12 +135,15 @@ function computeAmount(
   },
   mode: AmountMode,
 ): number {
-  const toNum = (v: { toNumber?: () => number } | number): number =>
-    typeof v === "number"
-      ? v
-      : typeof v.toNumber === "function"
-        ? v.toNumber()
-        : Number(v);
+  const toNum = (v: { toNumber?: () => number } | number): number => {
+    if (typeof v === "number") {
+      return v;
+    }
+    if (typeof v.toNumber === "function") {
+      return v.toNumber();
+    }
+    return Number(v);
+  };
 
   const nettoTotal = toNum(t.amount);
 

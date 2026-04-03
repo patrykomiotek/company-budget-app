@@ -1,26 +1,44 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Plus, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-} from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   createCategoryCommand,
   updateCategoryCommand,
-} from '../services/commands/category-commands';
-import type { CategoryWithSubcategories } from '../contracts/category.types';
+} from "../services/commands/category-commands";
+import type { CategoryWithSubcategories } from "../contracts/category.types";
 
 interface SubcategoryInput {
+  key: string;
   id?: string;
   name: string;
   sortOrder: number;
@@ -30,27 +48,90 @@ interface CategoryFormProps {
   category?: CategoryWithSubcategories;
 }
 
+function SortableSubcategoryRow({
+  sub,
+  index,
+  onNameChange,
+  onRemove,
+}: {
+  sub: SubcategoryInput;
+  index: number;
+  onNameChange: (index: number, value: string) => void;
+  onRemove: (index: number) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: sub.key });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex gap-2 items-center">
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground touch-none shrink-0"
+        aria-label="Przeciągnij aby zmienić kolejność"
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <Input
+        value={sub.name}
+        onChange={(e) => onNameChange(index, e.target.value)}
+        placeholder="Nazwa podkategorii"
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={() => onRemove(index)}
+        className="shrink-0"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
 export function CategoryForm({ category }: CategoryFormProps) {
   const router = useRouter();
   const isEditing = !!category;
 
   const [loading, setLoading] = useState(false);
-  const [name, setName] = useState(category?.name ?? '');
-  const [type, setType] = useState<'INCOME' | 'EXPENSE'>(
-    (category?.type as 'INCOME' | 'EXPENSE') ?? 'EXPENSE'
+  const [name, setName] = useState(category?.name ?? "");
+  const [type, setType] = useState<"INCOME" | "EXPENSE">(
+    (category?.type as "INCOME" | "EXPENSE") ?? "EXPENSE",
   );
   const [subcategories, setSubcategories] = useState<SubcategoryInput[]>(
     category?.subcategories.map((s) => ({
+      key: s.id,
       id: s.id,
       name: s.name,
       sortOrder: s.sortOrder,
-    })) ?? []
+    })) ?? [],
+  );
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
 
   function addSubcategory() {
     setSubcategories((prev) => [
       ...prev,
-      { name: '', sortOrder: prev.length },
+      { key: crypto.randomUUID(), name: "", sortOrder: prev.length },
     ]);
   }
 
@@ -63,8 +144,21 @@ export function CategoryForm({ category }: CategoryFormProps) {
 
   function updateSubcategoryName(index: number, value: string) {
     setSubcategories((prev) =>
-      prev.map((s, i) => (i === index ? { ...s, name: value } : s))
+      prev.map((s, i) => (i === index ? { ...s, name: value } : s)),
     );
+  }
+
+  function handleSubcategoryDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) {
+      return;
+    }
+    setSubcategories((prev) => {
+      const oldIndex = prev.findIndex((s) => s.key === active.id);
+      const newIndex = prev.findIndex((s) => s.key === over.id);
+      const reordered = arrayMove(prev, oldIndex, newIndex);
+      return reordered.map((s, i) => ({ ...s, sortOrder: i }));
+    });
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -75,7 +169,13 @@ export function CategoryForm({ category }: CategoryFormProps) {
       const payload = {
         name,
         type,
-        subcategories: subcategories.filter((s) => s.name.trim()),
+        subcategories: subcategories
+          .filter((s) => s.name.trim())
+          .map((s) => ({
+            id: s.id,
+            name: s.name,
+            sortOrder: s.sortOrder,
+          })),
       };
 
       const result = isEditing
@@ -84,15 +184,15 @@ export function CategoryForm({ category }: CategoryFormProps) {
 
       if (result.success) {
         toast.success(
-          isEditing ? 'Kategoria zaktualizowana' : 'Kategoria utworzona'
+          isEditing ? "Kategoria zaktualizowana" : "Kategoria utworzona",
         );
-        router.push('/categories');
+        router.push("/categories");
         router.refresh();
       } else {
         toast.error(result.error);
       }
     } catch {
-      toast.error('Wystąpił błąd. Spróbuj ponownie.');
+      toast.error("Wystąpił błąd. Spróbuj ponownie.");
     } finally {
       setLoading(false);
     }
@@ -102,7 +202,7 @@ export function CategoryForm({ category }: CategoryFormProps) {
     <Card>
       <CardHeader>
         <CardTitle>
-          {isEditing ? 'Edytuj kategorię' : 'Nowa kategoria'}
+          {isEditing ? "Edytuj kategorię" : "Nowa kategoria"}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -121,19 +221,15 @@ export function CategoryForm({ category }: CategoryFormProps) {
               <Label>Typ</Label>
               <Select
                 value={type}
-                onValueChange={(v) => setType(v as 'INCOME' | 'EXPENSE')}
+                onValueChange={(v) => setType(v as "INCOME" | "EXPENSE")}
                 disabled={isEditing}
               >
                 <SelectTrigger>
-                  <span>{type === 'INCOME' ? 'Przychód' : 'Wydatek'}</span>
+                  <span>{type === "INCOME" ? "Przychód" : "Wydatek"}</span>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="EXPENSE">
-                    Wydatek
-                  </SelectItem>
-                  <SelectItem value="INCOME">
-                    Przychód
-                  </SelectItem>
+                  <SelectItem value="EXPENSE">Wydatek</SelectItem>
+                  <SelectItem value="INCOME">Przychód</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -152,39 +248,40 @@ export function CategoryForm({ category }: CategoryFormProps) {
                 Dodaj
               </Button>
             </div>
-            <div className="space-y-2">
-              {subcategories.map((sub, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input
-                    value={sub.name}
-                    onChange={(e) => updateSubcategoryName(index, e.target.value)}
-                    placeholder="Nazwa podkategorii"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeSubcategory(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleSubcategoryDragEnd}
+            >
+              <SortableContext
+                items={subcategories.map((s) => s.key)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-2">
+                  {subcategories.map((sub, index) => (
+                    <SortableSubcategoryRow
+                      key={sub.key}
+                      sub={sub}
+                      index={index}
+                      onNameChange={updateSubcategoryName}
+                      onRemove={removeSubcategory}
+                    />
+                  ))}
                 </div>
-              ))}
-              {subcategories.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  Brak podkategorii. Kliknij &quot;Dodaj&quot; aby dodać.
-                </p>
-              )}
-            </div>
+              </SortableContext>
+            </DndContext>
+            {subcategories.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Brak podkategorii. Kliknij &quot;Dodaj&quot; aby dodać.
+              </p>
+            )}
           </div>
 
           <div className="flex gap-2">
             <Button type="submit" disabled={loading || !name.trim()}>
-              {loading
-                ? 'Zapisywanie...'
-                : isEditing
-                  ? 'Zapisz'
-                  : 'Utwórz'}
+              {loading && "Zapisywanie..."}
+              {!loading && isEditing && "Zapisz"}
+              {!loading && !isEditing && "Utwórz"}
             </Button>
             <Button
               type="button"

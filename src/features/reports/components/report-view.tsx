@@ -75,13 +75,15 @@ export function ReportView() {
         </CardContent>
       </Card>
 
-      {loading ? (
+      {loading && (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
             Ładowanie raportu...
           </CardContent>
         </Card>
-      ) : data && data.rows.length > 0 ? (
+      )}
+
+      {!loading && data && data.rows.length > 0 && (
         <>
           <Card>
             <CardContent className="pt-6">
@@ -99,7 +101,9 @@ export function ReportView() {
             </CardContent>
           </Card>
         </>
-      ) : (
+      )}
+
+      {!loading && (!data || data.rows.length === 0) && (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
             Brak danych dla wybranych filtrów

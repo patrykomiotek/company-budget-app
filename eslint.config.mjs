@@ -8,6 +8,7 @@ const eslintConfig = defineConfig([
   {
     rules: {
       curly: "error",
+      "no-nested-ternary": "error",
     },
   },
   // Override default ignores of eslint-config-next.

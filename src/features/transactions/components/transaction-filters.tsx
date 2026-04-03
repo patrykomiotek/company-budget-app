@@ -95,6 +95,18 @@ function detectInterval(dateFrom: string, dateTo: string): string {
   return "custom";
 }
 
+function boolFilterLabel(value: string): string {
+  if (value === "true") {
+    return "Tak";
+  }
+  if (value === "false") {
+    return "Nie";
+  }
+  return "Wszystkie";
+}
+
+const isPaidLabel = boolFilterLabel;
+
 export function TransactionFilters({ categories }: TransactionFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -292,13 +304,7 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
           onValueChange={(v) => updateFilter("isPaid", v ?? "")}
         >
           <SelectTrigger className="w-[120px]">
-            <span>
-              {isPaid === "true"
-                ? "Tak"
-                : isPaid === "false"
-                  ? "Nie"
-                  : "Wszystkie"}
-            </span>
+            <span>{isPaidLabel(isPaid)}</span>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Wszystkie</SelectItem>
@@ -315,13 +321,7 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
           onValueChange={(v) => updateFilter("invoiceSent", v ?? "")}
         >
           <SelectTrigger className="w-[140px]">
-            <span>
-              {invoiceSent === "true"
-                ? "Tak"
-                : invoiceSent === "false"
-                  ? "Nie"
-                  : "Wszystkie"}
-            </span>
+            <span>{boolFilterLabel(invoiceSent)}</span>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Wszystkie</SelectItem>

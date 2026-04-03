@@ -12,6 +12,7 @@ export interface CustomerItem {
   nip: string | null;
   city: string | null;
   email: string | null;
+  isVip: boolean;
   transactionCount: number;
   totalRevenue: number;
   lastTransactionDate: string | null;
