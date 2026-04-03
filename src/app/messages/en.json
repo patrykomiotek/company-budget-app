@@ -1,0 +1,61 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "create": "Create",
+    "search": "Search",
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "all": "All",
+    "yes": "Yes",
+    "no": "No",
+    "clear-filters": "Clear filters",
+    "columns": "Columns",
+    "global": "Global"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "transactions": "Transactions",
+    "customers": "Customers",
+    "projects": "Projects",
+    "products": "Products & Services",
+    "merchants": "Suppliers",
+    "employees": "Collaborators",
+    "reports": "Reports",
+    "import": "Import",
+    "departments": "Departments",
+    "categories": "Categories"
+  },
+  "sidebar": {
+    "title": "Budget",
+    "subtitle": "Financial dashboard",
+    "all-departments": "All",
+    "select-department": "Select department",
+    "account": "Account",
+    "logout": "Log out",
+    "collapse": "Collapse menu",
+    "expand": "Expand menu",
+    "language": "Language"
+  },
+  "auth": {
+    "sign-in": "Sign in",
+    "signing-in": "Signing in...",
+    "email": "Email",
+    "password": "Password",
+    "sign-in-title": "Sign in",
+    "sign-in-description": "Enter your credentials",
+    "error-connection": "Connection error. Please try again.",
+    "initial-setup": "Initial setup",
+    "create-admin": "Create admin account",
+    "name": "Full name",
+    "confirm-password": "Confirm password",
+    "creating-account": "Creating account...",
+    "create-account": "Create account",
+    "passwords-mismatch": "Passwords do not match",
+    "password-min-length": "Password must be at least 8 characters",
+    "admin-created": "Admin account created"
+  }
+}

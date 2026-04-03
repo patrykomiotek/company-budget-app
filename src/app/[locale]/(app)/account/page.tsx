@@ -1,5 +1,5 @@
-import { requireUser } from '@/shared/lib/auth/helpers';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { requireUser } from "@/shared/lib/auth/helpers";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function AccountPage() {
   const user = await requireUser();
@@ -15,7 +15,7 @@ export default async function AccountPage() {
         <CardContent className="space-y-4">
           <div>
             <p className="text-sm text-muted-foreground">Imię</p>
-            <p className="font-medium">{user.name ?? '—'}</p>
+            <p className="font-medium">{user.name ?? "—"}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Email</p>

@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useDepartment } from "@/shared/context/department-context";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -240,6 +241,7 @@ export function AppSidebar() {
             <Settings className="h-4 w-4" />
             Konto
           </Link>
+          <LanguageSwitcher />
           <div className="h-px bg-border my-1" />
           <button
             className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted transition-colors w-full text-left text-destructive"

@@ -1,0 +1,61 @@
+{
+  "common": {
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "delete": "Usuń",
+    "edit": "Edytuj",
+    "add": "Dodaj",
+    "create": "Utwórz",
+    "search": "Szukaj",
+    "loading": "Ładowanie...",
+    "saving": "Zapisywanie...",
+    "all": "Wszystko",
+    "yes": "Tak",
+    "no": "Nie",
+    "clear-filters": "Wyczyść filtry",
+    "columns": "Kolumny",
+    "global": "Globalna"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "transactions": "Transakcje",
+    "customers": "Klienci",
+    "projects": "Projekty",
+    "products": "Produkty i usługi",
+    "merchants": "Dostawcy",
+    "employees": "Współpracownicy",
+    "reports": "Raporty",
+    "import": "Import",
+    "departments": "Oddziały",
+    "categories": "Kategorie"
+  },
+  "sidebar": {
+    "title": "Budżet",
+    "subtitle": "Dashboard finansowy",
+    "all-departments": "Wszystko",
+    "select-department": "Wybierz firmę",
+    "account": "Konto",
+    "logout": "Wyloguj",
+    "collapse": "Zwiń menu",
+    "expand": "Rozwiń menu",
+    "language": "Język"
+  },
+  "auth": {
+    "sign-in": "Zaloguj się",
+    "signing-in": "Logowanie...",
+    "email": "Email",
+    "password": "Hasło",
+    "sign-in-title": "Zaloguj się",
+    "sign-in-description": "Wpisz dane logowania",
+    "error-connection": "Wystąpił błąd połączenia. Spróbuj ponownie.",
+    "initial-setup": "Konfiguracja początkowa",
+    "create-admin": "Utwórz konto administratora",
+    "name": "Imię i nazwisko",
+    "confirm-password": "Powtórz hasło",
+    "creating-account": "Tworzenie konta...",
+    "create-account": "Utwórz konto",
+    "passwords-mismatch": "Hasła nie są identyczne",
+    "password-min-length": "Hasło musi mieć co najmniej 8 znaków",
+    "admin-created": "Konto administratora utworzone"
+  }
+}
