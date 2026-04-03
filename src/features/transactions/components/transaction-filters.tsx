@@ -108,6 +108,8 @@ function boolFilterLabel(value: string): string {
 
 const isPaidLabel = boolFilterLabel;
 
+const FILTERS_STORAGE_KEY = "transaction-filters";
+
 export function TransactionFilters({ categories }: TransactionFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -121,23 +123,47 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
   const isPaid = searchParams.get("isPaid") ?? "";
   const invoiceSent = searchParams.get("invoiceSent") ?? "";
 
-  // Default to current month on first load if no date filters set
+  // On first load: restore from localStorage or default to current month
   useEffect(() => {
     if (initialized.current) {
       return;
     }
     initialized.current = true;
 
-    if (!dateFrom && !dateTo) {
-      const dates = getIntervalDates("current_month");
-      if (dates) {
-        const params = new URLSearchParams(searchParams.toString());
-        params.set("dateFrom", dates.start);
-        params.set("dateTo", dates.end);
-        router.replace(`/transactions?${params.toString()}`);
-      }
+    const currentParams = searchParams.toString();
+    if (currentParams) {
+      // URL already has params — save them to localStorage
+      localStorage.setItem(FILTERS_STORAGE_KEY, currentParams);
+      return;
     }
-  }, [dateFrom, dateTo, searchParams, router]);
+
+    // Try restoring from localStorage
+    const saved = localStorage.getItem(FILTERS_STORAGE_KEY);
+    if (saved) {
+      router.replace(`/transactions?${saved}`);
+      return;
+    }
+
+    // No saved state — default to current month
+    const dates = getIntervalDates("current_month");
+    if (dates) {
+      const params = new URLSearchParams();
+      params.set("dateFrom", dates.start);
+      params.set("dateTo", dates.end);
+      router.replace(`/transactions?${params.toString()}`);
+    }
+  }, [searchParams, router]);
+
+  // Save filter changes to localStorage
+  useEffect(() => {
+    if (!initialized.current) {
+      return;
+    }
+    const currentParams = searchParams.toString();
+    if (currentParams) {
+      localStorage.setItem(FILTERS_STORAGE_KEY, currentParams);
+    }
+  }, [searchParams]);
 
   function updateFilter(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -157,6 +183,7 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
   }
 
   function clearFilters() {
+    localStorage.removeItem(FILTERS_STORAGE_KEY);
     router.push("/transactions");
   }
 
