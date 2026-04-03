@@ -128,6 +128,11 @@
   }
 }
 
+/* Remove border radius from cards containing tables */
+[data-slot="card"]:has([data-slot="table-container"]) {
+  border-radius: 0;
+}
+
 /* Sticky table columns */
 .sticky-col {
   position: sticky;

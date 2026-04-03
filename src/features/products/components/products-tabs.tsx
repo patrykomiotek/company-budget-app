@@ -1,6 +1,7 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { ProductsList } from "./products-list";
 import type { ProductItem } from "../contracts/product.types";
 
@@ -15,7 +16,7 @@ export function ProductsTabs({
 }: ProductsTabsProps) {
   return (
     <Tabs defaultValue="income">
-      <TabsList className="mx-4 mt-4">
+      <TabsList>
         <TabsTrigger value="income">
           Przychody ({incomeProducts.length})
         </TabsTrigger>
@@ -24,10 +25,18 @@ export function ProductsTabs({
         </TabsTrigger>
       </TabsList>
       <TabsContent value="income">
-        <ProductsList products={incomeProducts} />
+        <Card className="py-0">
+          <CardContent className="p-0">
+            <ProductsList products={incomeProducts} />
+          </CardContent>
+        </Card>
       </TabsContent>
       <TabsContent value="expense">
-        <ProductsList products={expenseProducts} />
+        <Card className="py-0">
+          <CardContent className="p-0">
+            <ProductsList products={expenseProducts} />
+          </CardContent>
+        </Card>
       </TabsContent>
     </Tabs>
   );

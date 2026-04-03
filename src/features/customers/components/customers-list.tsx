@@ -7,11 +7,13 @@ import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
+  getFilteredRowModel,
   flexRender,
   createColumnHelper,
   type SortingState,
 } from "@tanstack/react-table";
-import { Crown, Pencil, Trash2 } from "lucide-react";
+import { Crown, Pencil, Search, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -57,6 +59,7 @@ export function CustomersList({ customers }: CustomersListProps) {
   const [sorting, setSorting] = useState<SortingState>([
     { id: "lastTransactionDate", desc: true },
   ]);
+  const [globalFilter, setGlobalFilter] = useState("");
 
   async function handleDelete(id: string) {
     if (
@@ -169,10 +172,12 @@ export function CustomersList({ customers }: CustomersListProps) {
   const table = useReactTable({
     data: customers,
     columns,
-    state: { sorting },
+    state: { sorting, globalFilter },
     onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
   });
 
   if (customers.length === 0) {
@@ -185,61 +190,75 @@ export function CustomersList({ customers }: CustomersListProps) {
   }
 
   return (
-    <Table>
-      <TableHeader>
-        {table.getHeaderGroups().map((headerGroup) => (
-          <TableRow key={headerGroup.id}>
-            {headerGroup.headers.map((header) => {
-              const align =
-                (header.column.columnDef.meta as { align?: string })?.align ===
-                "right"
-                  ? "text-right"
-                  : "";
-              const canSort = header.column.getCanSort();
-              return (
-                <TableHead
-                  key={header.id}
-                  className={cn(align, canSort && "cursor-pointer select-none")}
-                  style={
-                    header.getSize() !== 150
-                      ? { width: header.getSize() }
-                      : undefined
-                  }
-                  onClick={header.column.getToggleSortingHandler()}
-                >
-                  <span className="inline-flex items-center gap-1">
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext(),
+    <>
+      <div className="flex items-center gap-2 px-4 py-2">
+        <Search className="h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Szukaj..."
+          value={globalFilter}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          className="h-8 max-w-sm"
+        />
+      </div>
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => {
+                const align =
+                  (header.column.columnDef.meta as { align?: string })
+                    ?.align === "right"
+                    ? "text-right"
+                    : "";
+                const canSort = header.column.getCanSort();
+                return (
+                  <TableHead
+                    key={header.id}
+                    className={cn(
+                      align,
+                      canSort && "cursor-pointer select-none",
                     )}
-                    {canSort && (
-                      <SortIcon sorted={header.column.getIsSorted()} />
-                    )}
-                  </span>
-                </TableHead>
-              );
-            })}
-          </TableRow>
-        ))}
-      </TableHeader>
-      <TableBody>
-        {table.getRowModel().rows.map((row) => (
-          <TableRow key={row.id}>
-            {row.getVisibleCells().map((cell) => {
-              const align =
-                (cell.column.columnDef.meta as { align?: string })?.align ===
-                "right"
-                  ? "text-right"
-                  : "";
-              return (
-                <TableCell key={cell.id} className={align}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              );
-            })}
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+                    style={
+                      header.getSize() !== 150
+                        ? { width: header.getSize() }
+                        : undefined
+                    }
+                    onClick={header.column.getToggleSortingHandler()}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
+                      {canSort && (
+                        <SortIcon sorted={header.column.getIsSorted()} />
+                      )}
+                    </span>
+                  </TableHead>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => (
+            <TableRow key={row.id}>
+              {row.getVisibleCells().map((cell) => {
+                const align =
+                  (cell.column.columnDef.meta as { align?: string })?.align ===
+                  "right"
+                    ? "text-right"
+                    : "";
+                return (
+                  <TableCell key={cell.id} className={align}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </>
   );
 }

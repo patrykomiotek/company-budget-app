@@ -8,12 +8,14 @@ import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
+  getFilteredRowModel,
   flexRender,
   createColumnHelper,
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowRightLeft, Columns3, Pencil, Trash2 } from "lucide-react";
+import { ArrowRightLeft, Columns3, Pencil, Search, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { formatAmount } from "@/shared/utils/format";
 import { Button } from "@/components/ui/button";
@@ -111,6 +113,7 @@ export function TransactionsTable({
   const [editingTransaction, setEditingTransaction] =
     useState<TransactionWithDetails | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = useState("");
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     employeeName: false,
     description: false,
@@ -340,11 +343,13 @@ export function TransactionsTable({
   const table = useReactTable({
     data: transactions,
     columns,
-    state: { sorting, columnVisibility },
+    state: { sorting, columnVisibility, globalFilter },
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
+    onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
   });
 
   if (transactions.length === 0) {
@@ -368,7 +373,16 @@ export function TransactionsTable({
   return (
     <>
       <div>
-        <div className="flex justify-end mb-2">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Szukaj..."
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="h-8 max-w-sm"
+            />
+          </div>
           <Popover>
             <PopoverTrigger
               render={
