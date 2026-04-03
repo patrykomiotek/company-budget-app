@@ -160,6 +160,14 @@ export function ImportTransactionDialog({
           importType === "expense" && counterpartName
             ? counterpartName
             : undefined,
+        merchantNip:
+          importType === "expense" ? invoiceData.customerNip : undefined,
+        merchantStreet:
+          importType === "expense" ? invoiceData.customerStreet : undefined,
+        merchantPostalCode:
+          importType === "expense" ? invoiceData.customerPostalCode : undefined,
+        merchantCity:
+          importType === "expense" ? invoiceData.customerCity : undefined,
         customerName:
           importType === "income" && counterpartName
             ? counterpartName

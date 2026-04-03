@@ -125,6 +125,10 @@ describe("transaction-commands", () => {
           name: "Allegro",
           userId: "user-1",
           departmentId: undefined,
+          nip: null,
+          street: null,
+          postalCode: null,
+          city: null,
         },
       });
       expect(mockPrisma.transaction.create).toHaveBeenCalledWith({

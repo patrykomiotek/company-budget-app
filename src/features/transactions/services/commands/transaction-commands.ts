@@ -33,6 +33,10 @@ const createTransactionSchema = z.object({
   subcategoryId: z.string().min(1, "Wybierz podkategorię"),
   description: z.string().optional(),
   merchantName: z.string().optional(),
+  merchantNip: z.string().optional(),
+  merchantStreet: z.string().optional(),
+  merchantPostalCode: z.string().optional(),
+  merchantCity: z.string().optional(),
   departmentPublicId: z.string().optional(),
   employeeName: z.string().optional(),
   customerName: z.string().optional(),
@@ -58,6 +62,12 @@ async function findOrCreateMerchant(
   name: string,
   userId: string,
   departmentId?: number | null,
+  extra?: {
+    nip?: string;
+    street?: string;
+    postalCode?: string;
+    city?: string;
+  },
 ): Promise<number> {
   const existing = await prisma.merchant.findFirst({
     where: { name, userId },
@@ -67,7 +77,15 @@ async function findOrCreateMerchant(
   }
 
   const created = await prisma.merchant.create({
-    data: { name, userId, departmentId: departmentId ?? undefined },
+    data: {
+      name,
+      userId,
+      departmentId: departmentId ?? undefined,
+      nip: extra?.nip || null,
+      street: extra?.street || null,
+      postalCode: extra?.postalCode || null,
+      city: extra?.city || null,
+    },
   });
   return created.id;
 }
@@ -114,6 +132,12 @@ export async function createTransactionCommand(
         validated.merchantName,
         user.id,
         departmentId,
+        {
+          nip: validated.merchantNip,
+          street: validated.merchantStreet,
+          postalCode: validated.merchantPostalCode,
+          city: validated.merchantCity,
+        },
       );
     }
 
@@ -258,6 +282,12 @@ export async function updateTransactionCommand(
         validated.merchantName,
         user.id,
         departmentId,
+        {
+          nip: validated.merchantNip,
+          street: validated.merchantStreet,
+          postalCode: validated.merchantPostalCode,
+          city: validated.merchantCity,
+        },
       );
     }
 

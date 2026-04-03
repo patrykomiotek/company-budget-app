@@ -163,6 +163,9 @@ model Merchant {
   publicId     String   @unique @default(uuid()) @map("public_id") @db.Uuid
   name         String
   nip          String?
+  street       String?
+  postalCode   String?  @map("postal_code")
+  city         String?
   logoUrl      String?  @map("logo_url")
   userId       String   @map("user_id")
   departmentId Int?     @map("department_id")
