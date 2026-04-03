@@ -1,10 +1,7 @@
 import { notFound } from "next/navigation";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { NextIntlClientProvider } from "next-intl";
-import { Inter } from "next/font/google";
 import { routing } from "@/i18n/routing";
-
-const inter = Inter({ subsets: ["latin"] });
 
 interface LocaleLayoutProps {
   children: React.ReactNode;
@@ -29,12 +26,8 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={`${inter.className} antialiased`}>
-      <body>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      {children}
+    </NextIntlClientProvider>
   );
 }
