@@ -23,6 +23,7 @@ export async function findOrCreateEmployee(
 
 const createEmployeeSchema = z.object({
   name: z.string().min(1, "Imię jest wymagane"),
+  displayName: z.string().optional(),
   departmentPublicId: z.string().min(1, "Wybierz oddział"),
 });
 
@@ -54,7 +55,12 @@ export async function createEmployeeCommand(
     }
 
     await prisma.employee.create({
-      data: { name: validated.name, departmentId: dept.id, userId: user.id },
+      data: {
+        name: validated.name,
+        displayName: validated.displayName || null,
+        departmentId: dept.id,
+        userId: user.id,
+      },
     });
 
     return { success: true };
@@ -66,6 +72,7 @@ export async function createEmployeeCommand(
 const updateEmployeeSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1, "Nazwa jest wymagana"),
+  displayName: z.string().optional(),
 });
 
 export async function updateEmployeeCommand(
@@ -85,7 +92,10 @@ export async function updateEmployeeCommand(
 
     await prisma.employee.update({
       where: { id: employee.id },
-      data: { name: validated.name },
+      data: {
+        name: validated.name,
+        displayName: validated.displayName || null,
+      },
     });
 
     return { success: true };

@@ -322,7 +322,7 @@ export function EditTransactionDialog({
 
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-amount">Kwota</Label>
+              <Label htmlFor="edit-amount">Kwota netto</Label>
               <Input
                 id="edit-amount"
                 type="number"

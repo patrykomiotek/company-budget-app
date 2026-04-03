@@ -13,6 +13,7 @@ interface EmployeeEditFormProps {
   employee: {
     id: string;
     name: string;
+    displayName: string | null;
     departmentName: string;
   };
 }
@@ -21,6 +22,7 @@ export function EmployeeEditForm({ employee }: EmployeeEditFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState(employee.name);
+  const [displayName, setDisplayName] = useState(employee.displayName || "");
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -35,6 +37,7 @@ export function EmployeeEditForm({ employee }: EmployeeEditFormProps) {
       const result = await updateEmployeeCommand({
         id: employee.id,
         name: name.trim(),
+        displayName: displayName.trim() || undefined,
       });
       if (result.success) {
         toast.success("Osoba zaktualizowana");
@@ -64,6 +67,16 @@ export function EmployeeEditForm({ employee }: EmployeeEditFormProps) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="displayName">Nazwa wyświetlana (opcjonalnie)</Label>
+            <Input
+              id="displayName"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="np. skrócona nazwa"
             />
           </div>
 

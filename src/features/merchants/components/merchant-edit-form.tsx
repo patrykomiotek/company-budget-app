@@ -14,6 +14,7 @@ interface MerchantEditFormProps {
   merchant: {
     id: string;
     name: string;
+    displayName: string | null;
     nip: string | null;
     logoUrl: string | null;
   };
@@ -23,6 +24,7 @@ export function MerchantEditForm({ merchant }: MerchantEditFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState(merchant.name);
+  const [displayName, setDisplayName] = useState(merchant.displayName || "");
   const [nip, setNip] = useState(merchant.nip || "");
   const [logoUrl, setLogoUrl] = useState(merchant.logoUrl || "");
 
@@ -34,6 +36,7 @@ export function MerchantEditForm({ merchant }: MerchantEditFormProps) {
       const result = await updateMerchantCommand({
         id: merchant.id,
         name,
+        displayName: displayName || undefined,
         nip: nip || undefined,
         logoUrl: logoUrl || undefined,
       });
@@ -76,6 +79,16 @@ export function MerchantEditForm({ merchant }: MerchantEditFormProps) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="displayName">Nazwa wyświetlana (opcjonalnie)</Label>
+            <Input
+              id="displayName"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="np. skrócona nazwa"
             />
           </div>
 

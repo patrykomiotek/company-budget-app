@@ -17,13 +17,13 @@ export async function getEmployeesQuery(
       userId: user.id,
       ...(departmentId ? { departmentId } : {}),
     },
-    select: { publicId: true, name: true },
+    select: { publicId: true, name: true, displayName: true },
     orderBy: { name: "asc" },
   });
 
   return employees.map((e) => ({
     id: e.publicId,
-    name: e.name,
+    name: e.displayName || e.name,
   }));
 }
 
@@ -42,6 +42,7 @@ export async function getEmployeesListQuery(): Promise<EmployeeItem[]> {
   return employees.map((e) => ({
     id: e.publicId,
     name: e.name,
+    displayName: e.displayName,
     departmentName: e.department.name,
     transactionCount: e._count.transactions,
   }));
@@ -62,6 +63,7 @@ export async function getEmployeeByIdQuery(publicId: string) {
   return {
     id: employee.publicId,
     name: employee.name,
+    displayName: employee.displayName,
     departmentId: employee.department.publicId,
     departmentName: employee.department.name,
   };

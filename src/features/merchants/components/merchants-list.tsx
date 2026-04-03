@@ -85,9 +85,22 @@ export function MerchantsList({ merchants }: MerchantsListProps) {
       enableSorting: false,
       size: 48,
     }),
-    columnHelper.accessor("name", {
+    columnHelper.accessor((row) => row.displayName || row.name, {
+      id: "name",
       header: "Nazwa",
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+      cell: (info) => {
+        const m = info.row.original;
+        return (
+          <div>
+            <span className="font-medium">{m.displayName || m.name}</span>
+            {m.displayName && (
+              <span className="block text-xs text-muted-foreground">
+                {m.name}
+              </span>
+            )}
+          </div>
+        );
+      },
     }),
     columnHelper.accessor("nip", {
       header: "NIP",

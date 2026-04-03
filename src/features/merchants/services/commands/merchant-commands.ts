@@ -8,6 +8,7 @@ import type { OperationResult } from "@/shared/types/common";
 
 const createMerchantSchema = z.object({
   name: z.string().min(1, "Nazwa jest wymagana"),
+  displayName: z.string().optional(),
   nip: z.string().optional(),
 });
 
@@ -29,6 +30,7 @@ export async function createMerchantCommand(
     await prisma.merchant.create({
       data: {
         name: validated.name,
+        displayName: validated.displayName || null,
         nip: validated.nip || null,
         userId: user.id,
       },
@@ -42,6 +44,7 @@ export async function createMerchantCommand(
 
 const quickCreateMerchantSchema = z.object({
   name: z.string().min(1, "Nazwa jest wymagana"),
+  displayName: z.string().optional(),
   nip: z.string().optional(),
 });
 
@@ -63,6 +66,7 @@ export async function quickCreateMerchantCommand(
     const merchant = await prisma.merchant.create({
       data: {
         name: validated.name,
+        displayName: validated.displayName || null,
         nip: validated.nip || null,
         userId: user.id,
       },
@@ -81,6 +85,7 @@ export async function quickCreateMerchantCommand(
 const updateMerchantSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1, "Nazwa jest wymagana"),
+  displayName: z.string().optional(),
   nip: z.string().optional(),
   logoUrl: z.string().url("Niepoprawny URL").optional().or(z.literal("")),
 });
@@ -108,6 +113,7 @@ export async function updateMerchantCommand(
       where: { id: merchant.id },
       data: {
         name: validated.name,
+        displayName: validated.displayName || null,
         nip: validated.nip || null,
         logoUrl: validated.logoUrl || null,
       },

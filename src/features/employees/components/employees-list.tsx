@@ -65,9 +65,22 @@ export function EmployeesList({ employees }: EmployeesListProps) {
   }
 
   const columns = [
-    columnHelper.accessor("name", {
+    columnHelper.accessor((row) => row.displayName || row.name, {
+      id: "name",
       header: "Imię i nazwisko",
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+      cell: (info) => {
+        const e = info.row.original;
+        return (
+          <div>
+            <span className="font-medium">{e.displayName || e.name}</span>
+            {e.displayName && (
+              <span className="block text-xs text-muted-foreground">
+                {e.name}
+              </span>
+            )}
+          </div>
+        );
+      },
     }),
     columnHelper.accessor("departmentName", {
       header: "Firma",

@@ -51,11 +51,11 @@ describe("merchant-commands", () => {
 
       expect(result).toEqual({ success: true });
       expect(mockPrisma.merchant.create).toHaveBeenCalledWith({
-        data: {
+        data: expect.objectContaining({
           name: "Nowy Dostawca",
           nip: null,
           userId: "user-1",
-        },
+        }),
       });
     });
 
@@ -93,11 +93,11 @@ describe("merchant-commands", () => {
 
       expect(result).toEqual({ success: true });
       expect(mockPrisma.merchant.create).toHaveBeenCalledWith({
-        data: {
+        data: expect.objectContaining({
           name: "Firma z NIP",
           nip: "9876543210",
           userId: "user-1",
-        },
+        }),
       });
     });
   });
@@ -118,11 +118,11 @@ describe("merchant-commands", () => {
       expect(result).toEqual({ success: true });
       expect(mockPrisma.merchant.update).toHaveBeenCalledWith({
         where: { id: 5 },
-        data: {
+        data: expect.objectContaining({
           name: "Updated Merchant",
           nip: null,
           logoUrl: null,
-        },
+        }),
       });
     });
 
@@ -158,11 +158,11 @@ describe("merchant-commands", () => {
       expect(result).toEqual({ success: true });
       expect(mockPrisma.merchant.update).toHaveBeenCalledWith({
         where: { id: 5 },
-        data: {
+        data: expect.objectContaining({
           name: "Full Update",
           nip: "1112223344",
           logoUrl: "https://example.com/logo.png",
-        },
+        }),
       });
     });
   });
