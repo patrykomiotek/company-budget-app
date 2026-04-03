@@ -59,9 +59,8 @@ export async function getDashboardStatsQuery(): Promise<DashboardStats> {
       where: {
         userId: user.id,
         ...departmentFilter,
-        type: "EXPENSE",
+        type: "INCOME",
         invoiceSent: false,
-        invoiceNumber: { not: null },
       },
     }),
   ]);

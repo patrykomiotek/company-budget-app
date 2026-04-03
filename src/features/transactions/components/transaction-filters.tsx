@@ -123,25 +123,39 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
   const isPaid = searchParams.get("isPaid") ?? "";
   const invoiceSent = searchParams.get("invoiceSent") ?? "";
 
-  // On first load: restore from localStorage or default to current month
+  // On first load: restore date range from localStorage or default to current month
   useEffect(() => {
     if (initialized.current) {
       return;
     }
     initialized.current = true;
 
-    const currentParams = searchParams.toString();
-    if (currentParams) {
-      // URL already has params — save them to localStorage
-      localStorage.setItem(FILTERS_STORAGE_KEY, currentParams);
+    // If URL already has params, don't override — just save date range
+    if (searchParams.toString()) {
+      if (dateFrom && dateTo) {
+        localStorage.setItem(
+          FILTERS_STORAGE_KEY,
+          JSON.stringify({ dateFrom, dateTo }),
+        );
+      }
       return;
     }
 
-    // Try restoring from localStorage
-    const saved = localStorage.getItem(FILTERS_STORAGE_KEY);
-    if (saved) {
-      router.replace(`/transactions?${saved}`);
-      return;
+    // Try restoring date range from localStorage
+    try {
+      const saved = localStorage.getItem(FILTERS_STORAGE_KEY);
+      if (saved) {
+        const { dateFrom: savedFrom, dateTo: savedTo } = JSON.parse(saved);
+        if (savedFrom && savedTo) {
+          const params = new URLSearchParams();
+          params.set("dateFrom", savedFrom);
+          params.set("dateTo", savedTo);
+          router.replace(`/transactions?${params.toString()}`);
+          return;
+        }
+      }
+    } catch {
+      // ignore parse errors
     }
 
     // No saved state — default to current month
@@ -152,18 +166,20 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
       params.set("dateTo", dates.end);
       router.replace(`/transactions?${params.toString()}`);
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, dateFrom, dateTo]);
 
-  // Save filter changes to localStorage
+  // Save date range to localStorage on change
   useEffect(() => {
     if (!initialized.current) {
       return;
     }
-    const currentParams = searchParams.toString();
-    if (currentParams) {
-      localStorage.setItem(FILTERS_STORAGE_KEY, currentParams);
+    if (dateFrom && dateTo) {
+      localStorage.setItem(
+        FILTERS_STORAGE_KEY,
+        JSON.stringify({ dateFrom, dateTo }),
+      );
     }
-  }, [searchParams]);
+  }, [dateFrom, dateTo]);
 
   function updateFilter(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());

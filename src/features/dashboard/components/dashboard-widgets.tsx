@@ -45,7 +45,7 @@ export function DashboardWidgets({ stats }: DashboardWidgetsProps) {
       bg: "bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-800",
     },
     stats.pendingInvoiceCount > 0 && {
-      href: "/transactions?type=EXPENSE&invoiceSent=false",
+      href: "/transactions?type=INCOME&invoiceSent=false",
       icon: FileWarning,
       label: "Faktury do wysłania",
       count: stats.pendingInvoiceCount,
