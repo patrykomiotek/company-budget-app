@@ -36,6 +36,11 @@ const createTransactionSchema = z.object({
   departmentPublicId: z.string().optional(),
   employeeName: z.string().optional(),
   customerName: z.string().optional(),
+  customerNip: z.string().optional(),
+  customerStreet: z.string().optional(),
+  customerPostalCode: z.string().optional(),
+  customerCity: z.string().optional(),
+  customerEmail: z.string().optional(),
   invoiceNumber: z.string().optional(),
   invoiceDueDate: z.string().optional(),
   lineItems: z.array(lineItemInputSchema).optional(),
@@ -134,6 +139,13 @@ export async function createTransactionCommand(
         validated.customerName,
         user.id,
         departmentId,
+        {
+          nip: validated.customerNip,
+          street: validated.customerStreet,
+          postalCode: validated.customerPostalCode,
+          city: validated.customerCity,
+          email: validated.customerEmail,
+        },
       );
     }
 
@@ -271,6 +283,13 @@ export async function updateTransactionCommand(
         validated.customerName,
         user.id,
         departmentId,
+        {
+          nip: validated.customerNip,
+          street: validated.customerStreet,
+          postalCode: validated.customerPostalCode,
+          city: validated.customerCity,
+          email: validated.customerEmail,
+        },
       );
     }
 

@@ -181,7 +181,10 @@ export function TransactionsTable({
       id: "counterparty",
       header: "Kontrahent",
       cell: (info) => (
-        <span className="truncate block" title={info.getValue() || undefined}>
+        <span
+          className="truncate block max-w-[250px]"
+          title={info.getValue() || undefined}
+        >
           {info.getValue() || "—"}
         </span>
       ),

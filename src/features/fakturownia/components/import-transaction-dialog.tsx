@@ -164,6 +164,16 @@ export function ImportTransactionDialog({
           importType === "income" && counterpartName
             ? counterpartName
             : undefined,
+        customerNip:
+          importType === "income" ? invoiceData.customerNip : undefined,
+        customerStreet:
+          importType === "income" ? invoiceData.customerStreet : undefined,
+        customerPostalCode:
+          importType === "income" ? invoiceData.customerPostalCode : undefined,
+        customerCity:
+          importType === "income" ? invoiceData.customerCity : undefined,
+        customerEmail:
+          importType === "income" ? invoiceData.customerEmail : undefined,
         departmentPublicId: departmentId || undefined,
         projectName: projectName || undefined,
         invoiceNumber: invoiceNumber || undefined,

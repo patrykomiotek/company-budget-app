@@ -39,11 +39,27 @@ export async function findOrCreateCustomer(
   name: string,
   userId: string,
   departmentId?: number | null,
+  extra?: {
+    nip?: string;
+    street?: string;
+    postalCode?: string;
+    city?: string;
+    email?: string;
+  },
 ): Promise<number> {
   const customer = await prisma.customer.upsert({
     where: { name_userId: { name, userId } },
     update: {},
-    create: { name, userId, departmentId: departmentId ?? undefined },
+    create: {
+      name,
+      userId,
+      departmentId: departmentId ?? undefined,
+      nip: extra?.nip || null,
+      street: extra?.street || null,
+      postalCode: extra?.postalCode || null,
+      city: extra?.city || null,
+      email: extra?.email || null,
+    },
     select: { id: true },
   });
   return customer.id;

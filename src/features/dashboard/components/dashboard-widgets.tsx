@@ -72,8 +72,7 @@ export function DashboardWidgets({ stats }: DashboardWidgetsProps) {
       href: "/projects",
       icon: FolderKanban,
       label: "Projekty",
-      count: stats.activeProjectCount,
-      sub: `z ${stats.projectCount}`,
+      count: stats.projectCount,
     },
     {
       href: "/products",
@@ -133,12 +132,6 @@ export function DashboardWidgets({ stats }: DashboardWidgetsProps) {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground">
                     {entity.label}
-                    {entity.sub && (
-                      <span className="text-muted-foreground/60">
-                        {" "}
-                        ({entity.sub})
-                      </span>
-                    )}
                   </p>
                 </div>
                 <p className="text-2xl font-bold shrink-0">{entity.count}</p>
