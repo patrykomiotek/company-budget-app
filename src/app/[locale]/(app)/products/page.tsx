@@ -1,10 +1,13 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { getProductsListQuery } from "@/features/products/services/queries/product-queries";
-import { ProductsList } from "@/features/products/components/products-list";
+import { ProductsTabs } from "@/features/products/components/products-tabs";
 import { CreateProductButton } from "@/features/products/components/create-product-dialog";
 
 export default async function ProductsPage() {
-  const products = await getProductsListQuery();
+  const [incomeProducts, expenseProducts] = await Promise.all([
+    getProductsListQuery("income"),
+    getProductsListQuery("expense"),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -15,7 +18,10 @@ export default async function ProductsPage() {
 
       <Card className="py-0">
         <CardContent className="p-0">
-          <ProductsList products={products} />
+          <ProductsTabs
+            incomeProducts={incomeProducts}
+            expenseProducts={expenseProducts}
+          />
         </CardContent>
       </Card>
     </div>

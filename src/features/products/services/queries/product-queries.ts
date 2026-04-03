@@ -25,11 +25,24 @@ export async function getProductsQuery(): Promise<ProductOption[]> {
   }));
 }
 
-export async function getProductsListQuery(): Promise<ProductItem[]> {
+export async function getProductsListQuery(
+  transactionType?: "income" | "expense",
+): Promise<ProductItem[]> {
   const user = await requireUser();
 
+  const where: Record<string, unknown> = { userId: user.id };
+  if (transactionType) {
+    const types =
+      transactionType === "income"
+        ? ["INCOME", "FORECAST_INCOME"]
+        : ["EXPENSE", "FORECAST_EXPENSE"];
+    where.lineItems = {
+      some: { transaction: { type: { in: types } } },
+    };
+  }
+
   const products = await prisma.product.findMany({
-    where: { userId: user.id },
+    where,
     include: {
       _count: { select: { lineItems: true } },
     },

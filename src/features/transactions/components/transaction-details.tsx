@@ -1,16 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Pencil } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatAmount } from "@/shared/utils/format";
+import { EditTransactionDialog } from "./edit-transaction-dialog";
 import type {
   TransactionWithDetails,
   TransactionType,
 } from "../contracts/transaction.types";
+import type { CategoryWithSubcategories } from "@/features/categories/contracts/category.types";
 
 const typeBadgeConfig: Record<
   TransactionType,
@@ -31,11 +35,24 @@ function isIncomeType(type: TransactionType) {
 
 interface TransactionDetailsProps {
   transaction: TransactionWithDetails;
+  categories: CategoryWithSubcategories[];
+  merchants: { id: string; name: string }[];
+  customers: { id: string; name: string; nip?: string | null }[];
+  employees: { id: string; name: string }[];
+  products: { id: string; name: string }[];
+  projects: { id: string; name: string }[];
 }
 
 export function TransactionDetails({
   transaction: t,
+  categories,
+  merchants,
+  customers,
+  employees,
+  products,
+  projects,
 }: TransactionDetailsProps) {
+  const [editOpen, setEditOpen] = useState(false);
   const income = isIncomeType(t.type);
   const badge = typeBadgeConfig[t.type];
   const totalNet = t.lineItems.reduce((sum, li) => sum + li.netAmount, 0);
@@ -62,12 +79,16 @@ export function TransactionDetails({
             </span>
           </h1>
           <Badge variant={badge.variant}>{badge.label}</Badge>
+          {t.currency !== "PLN" && t.exchangeRate && (
+            <span className="text-sm text-muted-foreground">
+              ≈ {formatAmount(t.amountPln)} PLN (kurs: {t.exchangeRate})
+            </span>
+          )}
         </div>
-        {t.currency !== "PLN" && t.exchangeRate && (
-          <span className="text-sm text-muted-foreground">
-            ≈ {formatAmount(t.amountPln)} PLN (kurs: {t.exchangeRate})
-          </span>
-        )}
+        <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+          <Pencil className="h-3.5 w-3.5 mr-1.5" />
+          Edytuj
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -87,6 +108,9 @@ export function TransactionDetails({
             />
             {t.departmentName && (
               <DetailRow label="Oddział" value={t.departmentName} />
+            )}
+            {t.projectName && (
+              <DetailRow label="Projekt" value={t.projectName} />
             )}
             {t.description && <DetailRow label="Opis" value={t.description} />}
             <DetailRow
@@ -199,6 +223,18 @@ export function TransactionDetails({
           </CardContent>
         </Card>
       )}
+
+      <EditTransactionDialog
+        transaction={editOpen ? t : null}
+        categories={categories}
+        merchants={merchants}
+        customers={customers}
+        employees={employees}
+        products={products}
+        projects={projects}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
     </div>
   );
 }
