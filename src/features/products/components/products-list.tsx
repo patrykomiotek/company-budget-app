@@ -142,7 +142,7 @@ export function ProductsList({ products }: ProductsListProps) {
 
   return (
     <>
-      <div className="flex items-center justify-end gap-2 py-2">
+      <div className="flex items-center gap-2 py-2 px-2">
         <Search className="h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Szukaj..."
