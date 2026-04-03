@@ -18,6 +18,7 @@ import {
 const lineItemInputSchema = z.object({
   name: z.string().min(1, "Nazwa pozycji jest wymagana"),
   quantity: z.number().positive("Ilość musi być większa od 0"),
+  unit: z.string().optional(),
   unitPrice: z.number().min(0, "Cena nie może być ujemna"),
   vatRate: z.number().min(0).max(100),
   projectName: z.string().optional(),
@@ -179,6 +180,7 @@ export async function createTransactionCommand(
             data: {
               name: item.name,
               quantity: item.quantity,
+              unit: item.unit || null,
               unitPrice: item.unitPrice,
               vatRate: item.vatRate,
               netAmount,
@@ -300,6 +302,7 @@ export async function updateTransactionCommand(
             data: {
               name: item.name,
               quantity: item.quantity,
+              unit: item.unit || null,
               unitPrice: item.unitPrice,
               vatRate: item.vatRate,
               netAmount,

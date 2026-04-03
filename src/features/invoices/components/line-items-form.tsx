@@ -105,7 +105,7 @@ export function LineItemsForm({
               </div>
             )}
           </div>
-          <div className="grid grid-cols-5 gap-2 items-end">
+          <div className="grid grid-cols-6 gap-2 items-end">
             <div className="space-y-1">
               <span className="text-xs text-muted-foreground">Ilość</span>
               <Input
@@ -118,6 +118,15 @@ export function LineItemsForm({
                     quantity: parseFloat(e.target.value) || 0,
                   })
                 }
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <span className="text-xs text-muted-foreground">Jednostka</span>
+              <Input
+                value={item.unit ?? ""}
+                onChange={(e) => updateItem(index, { unit: e.target.value })}
+                placeholder="szt"
                 className="h-8 text-sm"
               />
             </div>

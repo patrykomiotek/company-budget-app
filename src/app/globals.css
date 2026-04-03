@@ -127,3 +127,23 @@
     @apply font-sans;
   }
 }
+
+/* Sticky table columns */
+.sticky-col {
+  position: sticky;
+  z-index: 10;
+  background: inherit;
+}
+
+thead .sticky-col {
+  z-index: 20;
+}
+
+.sticky-col-0 {
+  left: 0;
+}
+
+.sticky-col-1 {
+  left: 90px;
+}
+

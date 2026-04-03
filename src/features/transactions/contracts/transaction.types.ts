@@ -9,6 +9,7 @@ export interface TransactionLineItemDetail {
   id: string;
   name: string;
   quantity: number;
+  unit: string | null;
   unitPrice: number;
   vatRate: number;
   netAmount: number;

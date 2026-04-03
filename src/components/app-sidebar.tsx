@@ -17,6 +17,7 @@ import {
   FolderKanban,
   PackageOpen,
   BarChart3,
+  FileDown,
   ChevronUp,
   Settings,
   User,
@@ -46,6 +47,7 @@ const navItems = [
   { href: "/merchants", label: "Dostawcy", icon: Store },
   { href: "/employees", label: "Współpracownicy", icon: Users },
   { href: "/reports", label: "Raporty", icon: BarChart3 },
+  { href: "/import", label: "Import", icon: FileDown },
   { href: "/categories", label: "Kategorie", icon: Tags },
 ];
 

@@ -84,6 +84,7 @@ export interface ImportedInvoiceData {
 export interface ImportedLineItem {
   name: string;
   quantity: number;
+  unit?: string;
   unitPrice: number;
   vatRate: number;
 }
@@ -91,9 +92,13 @@ export interface ImportedLineItem {
 export interface FakturowniaInvoiceListItem {
   id: number;
   number: string;
+  kind: string;
   issueDate: string;
+  paymentTo: string;
   buyerName: string;
+  buyerTaxNo: string | null;
   priceNet: string;
+  priceGross: string;
   currency: string;
   status: string;
   alreadyImported: boolean;

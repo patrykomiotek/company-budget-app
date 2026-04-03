@@ -3,6 +3,7 @@ import { z } from "zod";
 export const lineItemSchema = z.object({
   name: z.string().min(1, "Nazwa jest wymagana"),
   quantity: z.number().positive("Ilość musi być większa od 0"),
+  unit: z.string().optional(),
   unitPrice: z.number().min(0, "Cena nie może być ujemna"),
   vatRate: z.number().min(0).max(100, "Stawka VAT: 0-100%"),
 });

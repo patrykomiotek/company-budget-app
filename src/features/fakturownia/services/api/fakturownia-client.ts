@@ -63,10 +63,12 @@ export async function getInvoices(params?: {
   period?: string;
   dateFrom?: string;
   dateTo?: string;
+  kind?: string;
+  perPage?: number;
 }): Promise<FakturowniaInvoice[]> {
   const queryParams: Record<string, string> = {
     include_positions: "true",
-    per_page: "25",
+    per_page: String(params?.perPage ?? 25),
     order: "issue_date.desc",
   };
 
@@ -83,6 +85,9 @@ export async function getInvoices(params?: {
   if (params?.dateTo) {
     queryParams.date_to = params.dateTo;
     queryParams.period = "more";
+  }
+  if (params?.kind) {
+    queryParams.kind = params.kind;
   }
 
   return fakturowniaGet<FakturowniaInvoice[]>("/invoices.json", queryParams);

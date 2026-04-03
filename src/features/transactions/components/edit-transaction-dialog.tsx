@@ -123,10 +123,11 @@ export function EditTransactionDialog({
           key: li.id,
           name: li.name,
           quantity: li.quantity,
+          unit: li.unit || undefined,
           unitPrice: li.unitPrice,
           vatRate: li.vatRate,
           projectName: li.projectName || undefined,
-          ...calculateLineItem(li),
+          ...calculateLineItem({ ...li, unit: li.unit || undefined }),
         })),
       );
       setShowInvoice(
@@ -229,7 +230,7 @@ export function EditTransactionDialog({
           <DialogTitle>Edytuj transakcję</DialogTitle>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Typ</Label>
               <Select
@@ -271,28 +272,27 @@ export function EditTransactionDialog({
                 required
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Oddział</Label>
-            <Select
-              value={companyId}
-              onValueChange={(v) => setCompanyId(v ?? "")}
-            >
-              <SelectTrigger>
-                <span>
-                  {companies.find((c) => c.id === companyId)?.name ??
-                    "Wybierz oddział"}
-                </span>
-              </SelectTrigger>
-              <SelectContent>
-                {companies.map((company) => (
-                  <SelectItem key={company.id} value={company.id}>
-                    {company.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <Label>Oddział</Label>
+              <Select
+                value={companyId}
+                onValueChange={(v) => setCompanyId(v ?? "")}
+              >
+                <SelectTrigger>
+                  <span>
+                    {companies.find((c) => c.id === companyId)?.name ??
+                      "Wybierz oddział"}
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  {companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -324,6 +324,19 @@ export function EditTransactionDialog({
 
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
+              <Label htmlFor="edit-amount">Kwota</Label>
+              <Input
+                id="edit-amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+                required
+              />
+            </div>
+            <div className="space-y-2">
               <Label>Waluta</Label>
               <Select
                 value={currency}
@@ -343,19 +356,6 @@ export function EditTransactionDialog({
                   <SelectItem value="USD">USD</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-amount">Kwota</Label>
-              <Input
-                id="edit-amount"
-                type="number"
-                step="0.01"
-                min="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-                required
-              />
             </div>
             {currency !== "PLN" && (
               <div className="space-y-2">

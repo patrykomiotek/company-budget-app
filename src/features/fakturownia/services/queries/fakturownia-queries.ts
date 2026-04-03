@@ -10,6 +10,8 @@ export async function fetchFakturowniaInvoicesQuery(params?: {
   period?: string;
   dateFrom?: string;
   dateTo?: string;
+  kind?: string;
+  perPage?: number;
 }): Promise<FakturowniaInvoiceListItem[]> {
   const user = await requireUser();
 
@@ -28,9 +30,13 @@ export async function fetchFakturowniaInvoicesQuery(params?: {
   return invoices.map((inv) => ({
     id: inv.id,
     number: inv.number,
+    kind: inv.kind,
     issueDate: inv.issue_date,
+    paymentTo: inv.payment_to,
     buyerName: inv.buyer_name,
+    buyerTaxNo: inv.buyer_tax_no,
     priceNet: inv.price_net,
+    priceGross: inv.price_gross,
     currency: inv.currency,
     status: inv.status,
     alreadyImported: importedIds.has(inv.id),

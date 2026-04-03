@@ -202,6 +202,7 @@ export function TransactionForm({
                 .map((li) => ({
                   name: li.name,
                   quantity: li.quantity,
+                  unit: li.unit || undefined,
                   unitPrice: li.unitPrice,
                   vatRate: li.vatRate,
                   projectName: li.projectName || undefined,

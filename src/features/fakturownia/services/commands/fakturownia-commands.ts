@@ -75,6 +75,7 @@ function parsePositions(
   positions: {
     name: string;
     quantity: string;
+    quantity_unit: string | null;
     price_net: string;
     tax: string;
   }[],
@@ -86,6 +87,7 @@ function parsePositions(
     return {
       name: pos.name,
       quantity: parseFloat(pos.quantity) || 1,
+      unit: pos.quantity_unit || undefined,
       unitPrice: parseFloat(pos.price_net) || 0,
       vatRate,
     };

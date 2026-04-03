@@ -17,7 +17,6 @@ import { ArrowRightLeft, Columns3, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatAmount } from "@/shared/utils/format";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,15 +66,24 @@ interface TransactionsTableProps {
 
 const typeBadgeConfig: Record<
   TransactionType,
-  {
-    label: string;
-    variant: "default" | "secondary" | "outline" | "destructive";
-  }
+  { label: string; className: string }
 > = {
-  INCOME: { label: "Przychód", variant: "default" },
-  EXPENSE: { label: "Wydatek", variant: "destructive" },
-  FORECAST_INCOME: { label: "Prognoza +", variant: "outline" },
-  FORECAST_EXPENSE: { label: "Prognoza -", variant: "outline" },
+  INCOME: {
+    label: "Przychód",
+    className: "bg-green-100 text-green-800 border-green-200",
+  },
+  EXPENSE: {
+    label: "Wydatek",
+    className: "bg-red-100 text-red-800 border-red-200",
+  },
+  FORECAST_INCOME: {
+    label: "Prognoza +",
+    className: "bg-green-50 text-green-600 border-green-200 border-dashed",
+  },
+  FORECAST_EXPENSE: {
+    label: "Prognoza -",
+    className: "bg-red-50 text-red-600 border-red-200 border-dashed",
+  },
 };
 
 function isIncomeType(type: TransactionType) {
@@ -103,7 +111,11 @@ export function TransactionsTable({
   const [editingTransaction, setEditingTransaction] =
     useState<TransactionWithDetails | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    employeeName: false,
+    description: false,
+    invoiceDueDate: false,
+  });
 
   async function handleConvertForecast(id: string) {
     try {
@@ -142,16 +154,20 @@ export function TransactionsTable({
       cell: (info) => {
         const badge = typeBadgeConfig[info.getValue()];
         return (
-          <Badge variant={badge.variant} className="text-xs whitespace-nowrap">
+          <span
+            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap ${badge.className}`}
+          >
             {badge.label}
-          </Badge>
+          </span>
         );
       },
       size: 90,
       enableHiding: false,
+      meta: { sticky: 0 },
     }),
     columnHelper.accessor("date", {
       header: "Data",
+      meta: { sticky: 1 },
       cell: (info) => (
         <span className="whitespace-nowrap">
           {format(new Date(info.getValue()), "d MMM yyyy", { locale: pl })}
@@ -160,16 +176,6 @@ export function TransactionsTable({
       sortingFn: "datetime",
       size: 110,
       enableHiding: false,
-    }),
-    columnHelper.accessor("categoryName", {
-      header: "Kategoria",
-      cell: (info) => (
-        <div>
-          <div className="text-xs text-muted-foreground">{info.getValue()}</div>
-          <div>{info.row.original.subcategoryName}</div>
-        </div>
-      ),
-      size: 140,
     }),
     columnHelper.accessor((row) => row.customerName || row.merchantName || "", {
       id: "counterparty",
@@ -180,6 +186,16 @@ export function TransactionsTable({
         </span>
       ),
       size: 180,
+    }),
+    columnHelper.accessor("categoryName", {
+      header: "Kategoria",
+      cell: (info) => (
+        <div>
+          <div className="text-xs text-muted-foreground">{info.getValue()}</div>
+          <div>{info.row.original.subcategoryName}</div>
+        </div>
+      ),
+      size: 170,
     }),
     columnHelper.accessor("employeeName", {
       header: "Osoba",
@@ -207,31 +223,21 @@ export function TransactionsTable({
       ),
       size: 110,
     }),
-    columnHelper.accessor("isPaid", {
-      header: "Status",
+    columnHelper.accessor("invoiceDueDate", {
+      header: "Termin płatności",
       cell: (info) => {
-        const t = info.row.original;
-        if (isForecastType(t.type)) {
-          return null;
+        const val = info.getValue();
+        if (!val) {
+          return <span className="text-muted-foreground">—</span>;
         }
         return (
-          <div className="flex flex-col gap-0.5">
-            <span
-              className={`text-xs ${t.isPaid ? "text-green-600" : "text-muted-foreground"}`}
-            >
-              {t.isPaid ? "Opłacone" : "Nieopłacone"}
-            </span>
-            {isIncomeType(t.type) && (
-              <span
-                className={`text-xs ${t.invoiceSent ? "text-green-600" : "text-muted-foreground"}`}
-              >
-                {t.invoiceSent ? "FV wysłana" : "FV niewysłana"}
-              </span>
-            )}
-          </div>
+          <span className="text-xs whitespace-nowrap">
+            {format(new Date(val), "d MMM yyyy", { locale: pl })}
+          </span>
         );
       },
-      size: 90,
+      sortingFn: "datetime",
+      size: 110,
     }),
     columnHelper.accessor("amountPln", {
       header: "Kwota",
@@ -257,6 +263,32 @@ export function TransactionsTable({
       },
       meta: { align: "right" },
       size: 130,
+    }),
+    columnHelper.accessor("isPaid", {
+      header: "Status",
+      cell: (info) => {
+        const t = info.row.original;
+        if (isForecastType(t.type)) {
+          return null;
+        }
+        return (
+          <div className="flex flex-col gap-0.5">
+            <span
+              className={`text-xs ${t.isPaid ? "text-green-600" : "text-muted-foreground"}`}
+            >
+              {t.isPaid ? "Opłacone" : "Nieopłacone"}
+            </span>
+            {isIncomeType(t.type) && (
+              <span
+                className={`text-xs ${t.invoiceSent ? "text-green-600" : "text-muted-foreground"}`}
+              >
+                {t.invoiceSent ? "FV wysłana" : "FV niewysłana"}
+              </span>
+            )}
+          </div>
+        );
+      },
+      size: 90,
     }),
     columnHelper.display({
       id: "actions",
@@ -323,6 +355,7 @@ export function TransactionsTable({
   const columnLabels: Record<string, string> = {
     categoryName: "Kategoria",
     counterparty: "Kontrahent",
+    invoiceDueDate: "Termin płatności",
     employeeName: "Osoba",
     description: "Opis",
     invoiceNumber: "Nr faktury",
@@ -366,15 +399,22 @@ export function TransactionsTable({
         <Card className="py-0">
           <CardContent className="p-0">
             <div className="w-full overflow-x-auto">
-              <Table className="table-fixed w-full">
+              <Table>
                 <TableHeader>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
                       {headerGroup.headers.map((header) => {
+                        const meta = header.column.columnDef.meta as
+                          | {
+                              align?: string;
+                              sticky?: number;
+                            }
+                          | undefined;
                         const align =
-                          (header.column.columnDef.meta as { align?: string })
-                            ?.align === "right"
-                            ? "text-right"
+                          meta?.align === "right" ? "text-right" : "";
+                        const sticky =
+                          meta?.sticky !== undefined
+                            ? `sticky-col sticky-col-${meta.sticky}`
                             : "";
                         const canSort = header.column.getCanSort();
                         return (
@@ -382,6 +422,7 @@ export function TransactionsTable({
                             key={header.id}
                             className={cn(
                               align,
+                              sticky,
                               canSort && "cursor-pointer select-none",
                             )}
                             style={{ width: header.getSize() }}
@@ -414,13 +455,23 @@ export function TransactionsTable({
                       }
                     >
                       {row.getVisibleCells().map((cell) => {
+                        const cellMeta = cell.column.columnDef.meta as
+                          | {
+                              align?: string;
+                              sticky?: number;
+                            }
+                          | undefined;
                         const align =
-                          (cell.column.columnDef.meta as { align?: string })
-                            ?.align === "right"
-                            ? "text-right"
+                          cellMeta?.align === "right" ? "text-right" : "";
+                        const sticky =
+                          cellMeta?.sticky !== undefined
+                            ? `sticky-col sticky-col-${cellMeta.sticky}`
                             : "";
                         return (
-                          <TableCell key={cell.id} className={align}>
+                          <TableCell
+                            key={cell.id}
+                            className={cn(align, sticky)}
+                          >
                             {flexRender(
                               cell.column.columnDef.cell,
                               cell.getContext(),
