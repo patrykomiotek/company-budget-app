@@ -20,11 +20,17 @@ export async function findOrCreateProduct(
   name: string,
   userId: string,
   type: "PRODUCT" | "SERVICE" = "SERVICE",
+  departmentId?: number | null,
 ): Promise<number> {
   const product = await prisma.product.upsert({
     where: { name_userId: { name, userId } },
     update: {},
-    create: { name, userId, type: type as ProductType },
+    create: {
+      name,
+      userId,
+      type: type as ProductType,
+      departmentId: departmentId ?? undefined,
+    },
     select: { id: true },
   });
 

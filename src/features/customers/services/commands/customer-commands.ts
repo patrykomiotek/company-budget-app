@@ -17,20 +17,33 @@ const createCustomerSchema = z.object({
   phone: z.string().optional(),
   notes: z.string().optional(),
   isVip: z.boolean().optional(),
+  departmentId: z.string().optional(),
 });
 
 const updateCustomerSchema = createCustomerSchema.extend({
   id: z.string().min(1),
 });
 
+async function resolveDeptId(publicId?: string): Promise<number | null> {
+  if (!publicId) {
+    return null;
+  }
+  const dept = await prisma.department.findUnique({
+    where: { publicId },
+    select: { id: true },
+  });
+  return dept?.id ?? null;
+}
+
 export async function findOrCreateCustomer(
   name: string,
   userId: string,
+  departmentId?: number | null,
 ): Promise<number> {
   const customer = await prisma.customer.upsert({
     where: { name_userId: { name, userId } },
     update: {},
-    create: { name, userId },
+    create: { name, userId, departmentId: departmentId ?? undefined },
     select: { id: true },
   });
   return customer.id;
@@ -63,6 +76,7 @@ export async function createCustomerCommand(
         phone: validated.phone || null,
         notes: validated.notes || null,
         isVip: validated.isVip ?? false,
+        departmentId: await resolveDeptId(validated.departmentId),
         userId: user.id,
       },
     });
@@ -101,6 +115,7 @@ export async function updateCustomerCommand(
         phone: validated.phone || null,
         notes: validated.notes || null,
         isVip: validated.isVip ?? false,
+        departmentId: await resolveDeptId(validated.departmentId),
       },
     });
 

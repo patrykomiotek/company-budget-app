@@ -8,6 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
 import { updateCustomerCommand } from "../services/commands/customer-commands";
 
 interface CustomerEditFormProps {
@@ -23,10 +29,15 @@ interface CustomerEditFormProps {
     phone: string | null;
     notes: string | null;
     isVip: boolean;
+    departmentId: string | null;
   };
+  departments: { id: string; name: string }[];
 }
 
-export function CustomerEditForm({ customer }: CustomerEditFormProps) {
+export function CustomerEditForm({
+  customer,
+  departments,
+}: CustomerEditFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState(customer.name);
@@ -39,6 +50,9 @@ export function CustomerEditForm({ customer }: CustomerEditFormProps) {
   const [phone, setPhone] = useState(customer.phone || "");
   const [notes, setNotes] = useState(customer.notes || "");
   const [isVip, setIsVip] = useState(customer.isVip);
+  const [departmentId, setDepartmentId] = useState<string | null>(
+    customer.departmentId,
+  );
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,6 +70,7 @@ export function CustomerEditForm({ customer }: CustomerEditFormProps) {
         phone: phone || undefined,
         notes: notes || undefined,
         isVip,
+        departmentId: departmentId ?? undefined,
       });
       if (result.success) {
         toast.success("Klient zaktualizowany");
@@ -147,6 +162,32 @@ export function CustomerEditForm({ customer }: CustomerEditFormProps) {
                 value={postalCode}
                 onChange={(e) => setPostalCode(e.target.value)}
               />
+            </div>
+            <div className="space-y-2 col-span-2">
+              <Label>Oddział</Label>
+              <Select
+                value={departmentId ?? "global"}
+                onValueChange={(v) =>
+                  setDepartmentId(!v || v === "global" ? null : v)
+                }
+              >
+                <SelectTrigger>
+                  <span>
+                    {departmentId
+                      ? (departments.find((d) => d.id === departmentId)?.name ??
+                        "Wybierz")
+                      : "Wszystkie (globalny)"}
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="global">Wszystkie (globalny)</SelectItem>
+                  {departments.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="col-span-2">
               <label className="flex items-center gap-2 cursor-pointer">

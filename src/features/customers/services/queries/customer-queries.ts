@@ -97,6 +97,9 @@ export async function getCustomerByIdQuery(publicId: string) {
 
   const customer = await prisma.customer.findFirst({
     where: { publicId, userId: user.id },
+    include: {
+      department: { select: { publicId: true } },
+    },
   });
 
   if (!customer) {
@@ -115,6 +118,7 @@ export async function getCustomerByIdQuery(publicId: string) {
     phone: customer.phone,
     notes: customer.notes,
     isVip: customer.isVip,
+    departmentId: customer.department?.publicId ?? null,
   };
 }
 

@@ -20,11 +20,12 @@ const updateProjectSchema = createProjectSchema.extend({
 export async function findOrCreateProject(
   name: string,
   userId: string,
+  departmentId?: number | null,
 ): Promise<number> {
   const project = await prisma.project.upsert({
     where: { name_userId: { name, userId } },
     update: {},
-    create: { name, userId },
+    create: { name, userId, departmentId: departmentId ?? undefined },
     select: { id: true },
   });
   return project.id;

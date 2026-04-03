@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getCustomerByIdQuery } from "@/features/customers/services/queries/customer-queries";
+import { getDepartmentsQuery } from "@/shared/lib/department/queries";
 import { CustomerEditForm } from "@/features/customers/components/customer-edit-form";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 
@@ -11,7 +12,10 @@ export default async function EditCustomerPage({
   params,
 }: EditCustomerPageProps) {
   const { id } = await params;
-  const customer = await getCustomerByIdQuery(id);
+  const [customer, departments] = await Promise.all([
+    getCustomerByIdQuery(id),
+    getDepartmentsQuery(),
+  ]);
 
   if (!customer) {
     notFound();
@@ -29,7 +33,7 @@ export default async function EditCustomerPage({
           { label: "Edycja" },
         ]}
       />
-      <CustomerEditForm customer={customer} />
+      <CustomerEditForm customer={customer} departments={departments} />
     </div>
   );
 }

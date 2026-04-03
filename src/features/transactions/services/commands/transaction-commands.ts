@@ -52,6 +52,7 @@ const updateTransactionSchema = createTransactionSchema.extend({
 async function findOrCreateMerchant(
   name: string,
   userId: string,
+  departmentId?: number | null,
 ): Promise<number> {
   const existing = await prisma.merchant.findFirst({
     where: { name, userId },
@@ -61,7 +62,7 @@ async function findOrCreateMerchant(
   }
 
   const created = await prisma.merchant.create({
-    data: { name, userId },
+    data: { name, userId, departmentId: departmentId ?? undefined },
   });
   return created.id;
 }
@@ -104,7 +105,11 @@ export async function createTransactionCommand(
 
     let merchantId: number | null = null;
     if (validated.merchantName) {
-      merchantId = await findOrCreateMerchant(validated.merchantName, user.id);
+      merchantId = await findOrCreateMerchant(
+        validated.merchantName,
+        user.id,
+        departmentId,
+      );
     }
 
     let employeeId: number | null = null;
@@ -125,12 +130,20 @@ export async function createTransactionCommand(
       validated.customerName &&
       (validated.type === "INCOME" || validated.type === "FORECAST_INCOME")
     ) {
-      customerId = await findOrCreateCustomer(validated.customerName, user.id);
+      customerId = await findOrCreateCustomer(
+        validated.customerName,
+        user.id,
+        departmentId,
+      );
     }
 
     let projectId: number | null = null;
     if (validated.projectName) {
-      projectId = await findOrCreateProject(validated.projectName, user.id);
+      projectId = await findOrCreateProject(
+        validated.projectName,
+        user.id,
+        departmentId,
+      );
     }
 
     await prisma.$transaction(async (tx) => {
@@ -164,7 +177,12 @@ export async function createTransactionCommand(
 
       if (validated.lineItems?.length) {
         for (const item of validated.lineItems) {
-          const productId = await findOrCreateProduct(item.name, user.id);
+          const productId = await findOrCreateProduct(
+            item.name,
+            user.id,
+            "SERVICE",
+            departmentId,
+          );
           const netAmount =
             Math.round(item.quantity * item.unitPrice * 100) / 100;
           const grossAmount =
@@ -224,7 +242,11 @@ export async function updateTransactionCommand(
 
     let merchantId: number | null = null;
     if (validated.merchantName) {
-      merchantId = await findOrCreateMerchant(validated.merchantName, user.id);
+      merchantId = await findOrCreateMerchant(
+        validated.merchantName,
+        user.id,
+        departmentId,
+      );
     }
 
     let employeeId: number | null = null;
@@ -245,12 +267,20 @@ export async function updateTransactionCommand(
       validated.customerName &&
       (validated.type === "INCOME" || validated.type === "FORECAST_INCOME")
     ) {
-      customerId = await findOrCreateCustomer(validated.customerName, user.id);
+      customerId = await findOrCreateCustomer(
+        validated.customerName,
+        user.id,
+        departmentId,
+      );
     }
 
     let projectId: number | null = null;
     if (validated.projectName) {
-      projectId = await findOrCreateProject(validated.projectName, user.id);
+      projectId = await findOrCreateProject(
+        validated.projectName,
+        user.id,
+        departmentId,
+      );
     }
 
     await prisma.$transaction(async (tx) => {
@@ -288,7 +318,12 @@ export async function updateTransactionCommand(
 
       if (validated.lineItems?.length) {
         for (const item of validated.lineItems) {
-          const productId = await findOrCreateProduct(item.name, user.id);
+          const productId = await findOrCreateProduct(
+            item.name,
+            user.id,
+            "SERVICE",
+            departmentId,
+          );
           const netAmount =
             Math.round(item.quantity * item.unitPrice * 100) / 100;
           const grossAmount =
