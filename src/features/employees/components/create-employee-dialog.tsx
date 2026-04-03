@@ -111,7 +111,7 @@ export function CreateEmployeeButton({ companies }: CreateEmployeeButtonProps) {
                 <SelectTrigger>
                   <span>
                     {companies.find((c) => c.id === departmentId)?.name ??
-                      "Wybierz firmę"}
+                      "Wybierz oddział"}
                   </span>
                 </SelectTrigger>
                 <SelectContent>

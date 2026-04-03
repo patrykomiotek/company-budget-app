@@ -1,5 +1,6 @@
 import { requireUser } from "@/shared/lib/auth/helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChangePasswordForm } from "@/features/auth/components/change-password-form";
 
 export default async function AccountPage() {
   const user = await requireUser();
@@ -23,6 +24,8 @@ export default async function AccountPage() {
           </div>
         </CardContent>
       </Card>
+
+      <ChangePasswordForm />
     </div>
   );
 }

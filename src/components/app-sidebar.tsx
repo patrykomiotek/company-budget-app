@@ -170,7 +170,7 @@ export function AppSidebar() {
             <span>
               {activeDepartmentId
                 ? (companies.find((c) => c.id === activeDepartmentId)?.name ??
-                  "Wybierz firmę")
+                  "Wybierz oddział")
                 : "Wszystko"}
             </span>
           </SelectTrigger>

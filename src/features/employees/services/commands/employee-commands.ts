@@ -23,7 +23,7 @@ export async function findOrCreateEmployee(
 
 const createEmployeeSchema = z.object({
   name: z.string().min(1, "Imię jest wymagane"),
-  departmentPublicId: z.string().min(1, "Wybierz firmę"),
+  departmentPublicId: z.string().min(1, "Wybierz oddział"),
 });
 
 export async function createEmployeeCommand(
