@@ -64,6 +64,7 @@ export async function getInvoices(params?: {
   dateFrom?: string;
   dateTo?: string;
   kind?: string;
+  income?: "yes" | "no";
   perPage?: number;
 }): Promise<FakturowniaInvoice[]> {
   const queryParams: Record<string, string> = {
@@ -85,6 +86,9 @@ export async function getInvoices(params?: {
   if (params?.dateTo) {
     queryParams.date_to = params.dateTo;
     queryParams.period = "more";
+  }
+  if (params?.income) {
+    queryParams.income = params.income;
   }
   if (params?.kind) {
     queryParams.kind = params.kind;

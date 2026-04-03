@@ -171,7 +171,7 @@ describe("category-commands", () => {
         subcategories: [],
       });
       mockPrisma.$transaction.mockImplementation(
-        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
+        async (fn: (tx: unknown) => Promise<void>) => {
           await fn({
             category: mockPrisma.category,
             subcategory: mockPrisma.subcategory,
@@ -209,7 +209,7 @@ describe("category-commands", () => {
       });
       mockPrisma.department.findUnique.mockResolvedValue({ id: 10 });
       mockPrisma.$transaction.mockImplementation(
-        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
+        async (fn: (tx: unknown) => Promise<void>) => {
           await fn({
             category: mockPrisma.category,
             subcategory: mockPrisma.subcategory,
@@ -270,7 +270,7 @@ describe("category-commands", () => {
         ],
       });
       mockPrisma.$transaction.mockImplementation(
-        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
+        async (fn: (tx: unknown) => Promise<void>) => {
           await fn({
             category: mockPrisma.category,
             subcategory: mockPrisma.subcategory,
@@ -326,7 +326,7 @@ describe("category-commands", () => {
         ],
       });
       mockPrisma.$transaction.mockImplementation(
-        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
+        async (fn: (tx: unknown) => Promise<void>) => {
           await fn({
             category: mockPrisma.category,
             subcategory: mockPrisma.subcategory,
@@ -366,7 +366,7 @@ describe("category-commands", () => {
         ],
       });
       mockPrisma.$transaction.mockImplementation(
-        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
+        async (fn: (tx: unknown) => Promise<void>) => {
           await fn({
             subcategory: mockPrisma.subcategory,
             category: mockPrisma.category,
@@ -424,7 +424,7 @@ describe("category-commands", () => {
   describe("reorderCategoriesCommand", () => {
     it("should update sort order for categories", async () => {
       mockPrisma.$transaction.mockImplementation(
-        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
+        async (fn: (tx: unknown) => Promise<void>) => {
           await fn({
             category: mockPrisma.category,
             subcategory: mockPrisma.subcategory,
@@ -454,7 +454,7 @@ describe("category-commands", () => {
 
     it("should update sort order for subcategories too", async () => {
       mockPrisma.$transaction.mockImplementation(
-        async (fn: (tx: typeof mockPrisma) => Promise<void>) => {
+        async (fn: (tx: unknown) => Promise<void>) => {
           await fn({
             category: mockPrisma.category,
             subcategory: mockPrisma.subcategory,

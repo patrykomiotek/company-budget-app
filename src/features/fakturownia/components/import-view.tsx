@@ -119,6 +119,7 @@ export function ImportView({
       const result = await fetchFakturowniaInvoicesQuery({
         dateFrom: month.dateFrom,
         dateTo: month.dateTo,
+        income: importType === "income" ? "yes" : "no",
         perPage: 100,
       });
       setInvoices(result);
@@ -127,7 +128,7 @@ export function ImportView({
     } finally {
       setLoading(false);
     }
-  }, [selectedMonth, monthOptions]);
+  }, [selectedMonth, importType, monthOptions]);
 
   async function handleSelectInvoice(invoice: FakturowniaInvoiceListItem) {
     setImportingId(invoice.id);

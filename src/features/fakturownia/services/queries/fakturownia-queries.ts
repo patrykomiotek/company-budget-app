@@ -11,6 +11,7 @@ export async function fetchFakturowniaInvoicesQuery(params?: {
   dateFrom?: string;
   dateTo?: string;
   kind?: string;
+  income?: "yes" | "no";
   perPage?: number;
 }): Promise<FakturowniaInvoiceListItem[]> {
   const user = await requireUser();
