@@ -2,7 +2,7 @@
 
 import { prisma } from "@/shared/lib/prisma";
 import { requireUser } from "@/shared/lib/auth/helpers";
-import { getActiveCompanyFilter } from "@/shared/lib/company/helpers";
+import { getActiveDepartmentFilter } from "@/shared/lib/department/helpers";
 
 export interface DashboardStats {
   customerCount: number;
@@ -18,7 +18,7 @@ export interface DashboardStats {
 
 export async function getDashboardStatsQuery(): Promise<DashboardStats> {
   const user = await requireUser();
-  const companyFilter = await getActiveCompanyFilter();
+  const departmentFilter = await getActiveDepartmentFilter();
 
   const [
     customerCount,
@@ -42,7 +42,7 @@ export async function getDashboardStatsQuery(): Promise<DashboardStats> {
     prisma.transaction.count({
       where: {
         userId: user.id,
-        ...companyFilter,
+        ...departmentFilter,
         type: "EXPENSE",
         isPaid: false,
       },
@@ -50,7 +50,7 @@ export async function getDashboardStatsQuery(): Promise<DashboardStats> {
     prisma.transaction.count({
       where: {
         userId: user.id,
-        ...companyFilter,
+        ...departmentFilter,
         type: "INCOME",
         isPaid: false,
       },
@@ -58,7 +58,7 @@ export async function getDashboardStatsQuery(): Promise<DashboardStats> {
     prisma.transaction.count({
       where: {
         userId: user.id,
-        ...companyFilter,
+        ...departmentFilter,
         type: "EXPENSE",
         invoiceSent: false,
         invoiceNumber: { not: null },

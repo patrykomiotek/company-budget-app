@@ -46,6 +46,7 @@ interface SubcategoryInput {
 
 interface CategoryFormProps {
   category?: CategoryWithSubcategories;
+  departments: { id: string; name: string }[];
 }
 
 function SortableSubcategoryRow({
@@ -103,7 +104,7 @@ function SortableSubcategoryRow({
   );
 }
 
-export function CategoryForm({ category }: CategoryFormProps) {
+export function CategoryForm({ category, departments }: CategoryFormProps) {
   const router = useRouter();
   const isEditing = !!category;
 
@@ -111,6 +112,9 @@ export function CategoryForm({ category }: CategoryFormProps) {
   const [name, setName] = useState(category?.name ?? "");
   const [type, setType] = useState<"INCOME" | "EXPENSE">(
     (category?.type as "INCOME" | "EXPENSE") ?? "EXPENSE",
+  );
+  const [departmentId, setDepartmentId] = useState<string | null>(
+    category?.departmentId ?? null,
   );
   const [subcategories, setSubcategories] = useState<SubcategoryInput[]>(
     category?.subcategories.map((s) => ({
@@ -169,6 +173,7 @@ export function CategoryForm({ category }: CategoryFormProps) {
       const payload = {
         name,
         type,
+        departmentId: departmentId ?? undefined,
         subcategories: subcategories
           .filter((s) => s.name.trim())
           .map((s) => ({
@@ -207,7 +212,7 @@ export function CategoryForm({ category }: CategoryFormProps) {
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Nazwa</Label>
               <Input
@@ -230,6 +235,32 @@ export function CategoryForm({ category }: CategoryFormProps) {
                 <SelectContent>
                   <SelectItem value="EXPENSE">Wydatek</SelectItem>
                   <SelectItem value="INCOME">Przychód</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Oddział</Label>
+              <Select
+                value={departmentId ?? "global"}
+                onValueChange={(v) =>
+                  setDepartmentId(!v || v === "global" ? null : v)
+                }
+              >
+                <SelectTrigger>
+                  <span>
+                    {departmentId
+                      ? (departments.find((d) => d.id === departmentId)?.name ??
+                        "Wybierz")
+                      : "Globalna"}
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="global">Globalna</SelectItem>
+                  {departments.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

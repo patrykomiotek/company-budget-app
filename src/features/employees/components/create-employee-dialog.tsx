@@ -22,13 +22,13 @@ import {
 } from "@/components/ui/dialog";
 import { createEmployeeCommand } from "../services/commands/employee-commands";
 
-interface CompanyOption {
+interface DepartmentOption {
   id: string;
   name: string;
 }
 
 interface CreateEmployeeButtonProps {
-  companies: CompanyOption[];
+  companies: DepartmentOption[];
 }
 
 export function CreateEmployeeButton({ companies }: CreateEmployeeButtonProps) {
@@ -36,7 +36,7 @@ export function CreateEmployeeButton({ companies }: CreateEmployeeButtonProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
-  const [companyId, setCompanyId] = useState(companies[0]?.id ?? "");
+  const [departmentId, setCompanyId] = useState(companies[0]?.id ?? "");
 
   function reset() {
     setName("");
@@ -45,7 +45,7 @@ export function CreateEmployeeButton({ companies }: CreateEmployeeButtonProps) {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !companyId) {
+    if (!name.trim() || !departmentId) {
       return;
     }
 
@@ -53,7 +53,7 @@ export function CreateEmployeeButton({ companies }: CreateEmployeeButtonProps) {
     try {
       const result = await createEmployeeCommand({
         name: name.trim(),
-        companyPublicId: companyId,
+        departmentPublicId: departmentId,
       });
       if (result.success) {
         toast.success("Współpracownik dodany");
@@ -105,12 +105,12 @@ export function CreateEmployeeButton({ companies }: CreateEmployeeButtonProps) {
             <div className="space-y-2">
               <Label>Firma</Label>
               <Select
-                value={companyId}
+                value={departmentId}
                 onValueChange={(v) => setCompanyId(v ?? "")}
               >
                 <SelectTrigger>
                   <span>
-                    {companies.find((c) => c.id === companyId)?.name ??
+                    {companies.find((c) => c.id === departmentId)?.name ??
                       "Wybierz firmę"}
                   </span>
                 </SelectTrigger>
@@ -133,7 +133,7 @@ export function CreateEmployeeButton({ companies }: CreateEmployeeButtonProps) {
               </Button>
               <Button
                 type="submit"
-                disabled={loading || !name.trim() || !companyId}
+                disabled={loading || !name.trim() || !departmentId}
               >
                 {loading ? "Dodawanie..." : "Dodaj"}
               </Button>

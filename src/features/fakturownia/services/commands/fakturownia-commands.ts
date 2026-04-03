@@ -10,7 +10,7 @@ import type {
 } from "../../contracts/fakturownia.types";
 import type { OperationResult } from "@/shared/types/common";
 
-const DEPARTMENT_TO_COMPANY: Record<number, string> = {
+const DEPARTMENT_MAPPING: Record<number, string> = {
   1493345: "Web Amigos",
   1891309: "Anna PRO",
 };
@@ -25,24 +25,24 @@ function mapCurrency(currency: string): "PLN" | "EUR" | "USD" {
   return "PLN";
 }
 
-async function resolveCompanyPublicId(
+async function resolveDepartmentPublicId(
   departmentId: number | null,
 ): Promise<string | undefined> {
   if (!departmentId) {
     return undefined;
   }
 
-  const companyName = DEPARTMENT_TO_COMPANY[departmentId];
-  if (!companyName) {
+  const departmentName = DEPARTMENT_MAPPING[departmentId];
+  if (!departmentName) {
     return undefined;
   }
 
-  const company = await prisma.company.findUnique({
-    where: { name: companyName },
+  const dept = await prisma.department.findUnique({
+    where: { name: departmentName },
     select: { publicId: true },
   });
 
-  return company?.publicId;
+  return dept?.publicId;
 }
 
 async function matchCustomerName(
@@ -108,7 +108,9 @@ export async function importFakturowniaInvoiceCommand(
         ? parseFloat(invoice.exchange_currency_rate)
         : undefined;
 
-    const companyPublicId = await resolveCompanyPublicId(invoice.department_id);
+    const departmentPublicId = await resolveDepartmentPublicId(
+      invoice.department_id,
+    );
     const customerName = await matchCustomerName(
       invoice.buyer_name,
       invoice.buyer_tax_no,
@@ -127,7 +129,7 @@ export async function importFakturowniaInvoiceCommand(
       description: `${invoice.buyer_name} — ${invoice.number}`,
       customerName,
       customerNip: invoice.buyer_tax_no ?? undefined,
-      companyPublicId,
+      departmentPublicId,
       lineItems,
       fakturowniaInvoiceId: invoice.id,
     };

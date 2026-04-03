@@ -2,7 +2,7 @@
 
 import { prisma } from "@/shared/lib/prisma";
 import { requireUser } from "@/shared/lib/auth/helpers";
-import { getActiveCompanyFilter } from "@/shared/lib/company/helpers";
+import { getActiveDepartmentFilter } from "@/shared/lib/department/helpers";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import type {
   TransactionWithDetails,
@@ -18,11 +18,11 @@ export async function getTransactionsQuery(
   const safePageSize = Math.min(100, Math.max(1, pageSize));
 
   const user = await requireUser();
-  const companyFilter = await getActiveCompanyFilter();
+  const departmentFilter = await getActiveDepartmentFilter();
 
   const where: Prisma.TransactionWhereInput = {
     userId: user.id,
-    ...companyFilter,
+    ...departmentFilter,
   };
 
   if (filters?.dateFrom) {
@@ -70,7 +70,7 @@ export async function getTransactionsQuery(
           include: { category: true },
         },
         merchant: true,
-        company: true,
+        department: true,
         employee: true,
         customer: true,
         project: true,
@@ -109,8 +109,8 @@ export async function getTransactionsQuery(
       categoryId: t.subcategory.category.publicId,
       categoryName: t.subcategory.category.name,
       categoryType: t.subcategory.category.type,
-      companyId: t.company?.publicId ?? null,
-      companyName: t.company?.name ?? null,
+      departmentId: t.department?.publicId ?? null,
+      departmentName: t.department?.name ?? null,
       employeeId: t.employee?.publicId ?? null,
       employeeName: t.employee?.name ?? null,
       customerId: t.customer?.publicId ?? null,
@@ -157,7 +157,7 @@ export async function getTransactionByIdQuery(
         include: { category: true },
       },
       merchant: true,
-      company: true,
+      department: true,
       employee: true,
       customer: true,
       project: true,
@@ -195,8 +195,8 @@ export async function getTransactionByIdQuery(
     categoryId: t.subcategory.category.publicId,
     categoryName: t.subcategory.category.name,
     categoryType: t.subcategory.category.type,
-    companyId: t.company?.publicId ?? null,
-    companyName: t.company?.name ?? null,
+    departmentId: t.department?.publicId ?? null,
+    departmentName: t.department?.name ?? null,
     employeeId: t.employee?.publicId ?? null,
     employeeName: t.employee?.name ?? null,
     customerId: t.customer?.publicId ?? null,

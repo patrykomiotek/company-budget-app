@@ -2,7 +2,7 @@
 
 import { prisma } from "@/shared/lib/prisma";
 import { requireUser } from "@/shared/lib/auth/helpers";
-import { getActiveCompanyFilter } from "@/shared/lib/company/helpers";
+import { getActiveDepartmentFilter } from "@/shared/lib/department/helpers";
 import type {
   MonthSummary,
   CategorySummary,
@@ -13,7 +13,7 @@ export async function getMonthSummaryQuery(
   month: number,
 ): Promise<MonthSummary> {
   const user = await requireUser();
-  const companyFilter = await getActiveCompanyFilter();
+  const departmentFilter = await getActiveDepartmentFilter();
 
   const startDate = new Date(Date.UTC(year, month - 1, 1));
   const endDate = new Date(Date.UTC(year, month, 0));
@@ -21,7 +21,7 @@ export async function getMonthSummaryQuery(
   const transactions = await prisma.transaction.findMany({
     where: {
       userId: user.id,
-      ...companyFilter,
+      ...departmentFilter,
       date: {
         gte: startDate,
         lte: endDate,
@@ -105,7 +105,7 @@ export async function getMonthSummaryQuery(
 
 export async function getDailySummaryQuery(year: number, month: number) {
   const user = await requireUser();
-  const companyFilter = await getActiveCompanyFilter();
+  const departmentFilter = await getActiveDepartmentFilter();
 
   const startDate = new Date(Date.UTC(year, month - 1, 1));
   const endDate = new Date(Date.UTC(year, month, 0));
@@ -113,7 +113,7 @@ export async function getDailySummaryQuery(year: number, month: number) {
   const transactions = await prisma.transaction.findMany({
     where: {
       userId: user.id,
-      ...companyFilter,
+      ...departmentFilter,
       date: {
         gte: startDate,
         lte: endDate,

@@ -1,38 +1,49 @@
-'use server';
+"use server";
 
-import { z } from 'zod';
-import { prisma } from '@/shared/lib/prisma';
-import { requireUser } from '@/shared/lib/auth/helpers';
-import { handleCommandError } from '@/shared/utils/error-handling';
-import { getActiveCompanyId } from '@/shared/lib/company/helpers';
-import type { OperationResult } from '@/shared/types/common';
-import { CategoryType, TransactionType, Currency as PrismaCurrency } from '@/lib/generated/prisma/client';
+import { z } from "zod";
+import { prisma } from "@/shared/lib/prisma";
+import { requireUser } from "@/shared/lib/auth/helpers";
+import { handleCommandError } from "@/shared/utils/error-handling";
+import { getActiveDepartmentId } from "@/shared/lib/department/helpers";
+import type { OperationResult } from "@/shared/types/common";
+import {
+  CategoryType,
+  TransactionType,
+  Currency as PrismaCurrency,
+} from "@/lib/generated/prisma/client";
 
-const TOOLS_CATEGORY_NAME = 'Narzędzia i subskrypcje';
+const TOOLS_CATEGORY_NAME = "Narzędzia i subskrypcje";
 
 const createSubscriptionSchema = z.object({
-  toolName: z.string().min(1, 'Nazwa narzędzia jest wymagana'),
-  amount: z.number().positive('Kwota musi być większa od 0'),
-  currency: z.enum(['PLN', 'EUR', 'USD']).default('PLN'),
+  toolName: z.string().min(1, "Nazwa narzędzia jest wymagana"),
+  amount: z.number().positive("Kwota musi być większa od 0"),
+  currency: z.enum(["PLN", "EUR", "USD"]).default("PLN"),
   exchangeRate: z.number().positive().optional(),
-  startMonth: z.string().min(7, 'Wybierz miesiąc rozpoczęcia'), // YYYY-MM
+  startMonth: z.string().min(7, "Wybierz miesiąc rozpoczęcia"), // YYYY-MM
   months: z.number().int().min(1).max(12),
-  companyPublicId: z.string().optional(),
+  departmentPublicId: z.string().optional(),
   description: z.string().optional(),
 });
 
 async function findOrCreateToolsCategory(): Promise<{ categoryId: number }> {
-  const category = await prisma.category.upsert({
-    where: { name_type: { name: TOOLS_CATEGORY_NAME, type: CategoryType.EXPENSE } },
-    update: {},
-    create: { name: TOOLS_CATEGORY_NAME, type: CategoryType.EXPENSE },
+  let category = await prisma.category.findFirst({
+    where: {
+      name: TOOLS_CATEGORY_NAME,
+      type: CategoryType.EXPENSE,
+      departmentId: null,
+    },
   });
+  if (!category) {
+    category = await prisma.category.create({
+      data: { name: TOOLS_CATEGORY_NAME, type: CategoryType.EXPENSE },
+    });
+  }
   return { categoryId: category.id };
 }
 
 async function findOrCreateToolSubcategory(
   toolName: string,
-  categoryId: number
+  categoryId: number,
 ): Promise<number> {
   const subcategory = await prisma.subcategory.upsert({
     where: { name_categoryId: { name: toolName, categoryId } },
@@ -43,33 +54,36 @@ async function findOrCreateToolSubcategory(
 }
 
 export async function createSubscriptionCommand(
-  input: z.infer<typeof createSubscriptionSchema>
+  input: z.infer<typeof createSubscriptionSchema>,
 ): Promise<OperationResult<{ count: number }>> {
   try {
     const user = await requireUser();
     const validated = createSubscriptionSchema.parse(input);
 
-    // Resolve company
-    let companyId: number | null = null;
-    if (validated.companyPublicId) {
-      const company = await prisma.company.findUnique({
-        where: { publicId: validated.companyPublicId },
+    // Resolve department
+    let departmentId: number | null = null;
+    if (validated.departmentPublicId) {
+      const dept = await prisma.department.findUnique({
+        where: { publicId: validated.departmentPublicId },
         select: { id: true },
       });
-      if (!company) {
-        return { success: false, error: 'Nie znaleziono firmy' };
+      if (!dept) {
+        return { success: false, error: "Nie znaleziono firmy" };
       }
-      companyId = company.id;
+      departmentId = dept.id;
     } else {
-      companyId = await getActiveCompanyId();
+      departmentId = await getActiveDepartmentId();
     }
 
     // Find or create category + subcategory
     const { categoryId } = await findOrCreateToolsCategory();
-    const subcategoryId = await findOrCreateToolSubcategory(validated.toolName, categoryId);
+    const subcategoryId = await findOrCreateToolSubcategory(
+      validated.toolName,
+      categoryId,
+    );
 
     // Parse start month
-    const [yearStr, monthStr] = validated.startMonth.split('-');
+    const [yearStr, monthStr] = validated.startMonth.split("-");
     const startYear = parseInt(yearStr, 10);
     const startMonth = parseInt(monthStr, 10);
 
@@ -85,12 +99,16 @@ export async function createSubscriptionCommand(
           data: {
             type: TransactionType.EXPENSE,
             amount: validated.amount,
-            currency: (validated.currency as PrismaCurrency) ?? 'PLN',
-            exchangeRate: validated.currency !== 'PLN' ? validated.exchangeRate ?? null : null,
+            currency: (validated.currency as PrismaCurrency) ?? "PLN",
+            exchangeRate:
+              validated.currency !== "PLN"
+                ? (validated.exchangeRate ?? null)
+                : null,
             date,
             subcategoryId,
-            companyId,
-            description: validated.description || `Subskrypcja: ${validated.toolName}`,
+            departmentId,
+            description:
+              validated.description || `Subskrypcja: ${validated.toolName}`,
             userId: user.id,
           },
         });
@@ -99,6 +117,6 @@ export async function createSubscriptionCommand(
 
     return { success: true, data: { count: validated.months } };
   } catch (error) {
-    return handleCommandError(error, 'Nie udało się utworzyć subskrypcji');
+    return handleCommandError(error, "Nie udało się utworzyć subskrypcji");
   }
 }

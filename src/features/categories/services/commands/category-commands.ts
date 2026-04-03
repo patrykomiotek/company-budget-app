@@ -5,8 +5,23 @@ import { prisma } from "@/shared/lib/prisma";
 import { requireUser } from "@/shared/lib/auth/helpers";
 import { handleCommandError } from "@/shared/utils/error-handling";
 import type { OperationResult } from "@/shared/types/common";
+import { getActiveDepartmentId } from "@/shared/lib/department/helpers";
 import type { CategoryType } from "@/lib/generated/prisma/client";
 import type { CategoryWithSubcategories } from "../../contracts/category.types";
+
+async function resolveDeptId(publicId?: string | null): Promise<number | null> {
+  if (publicId === null) {
+    return null;
+  }
+  if (!publicId) {
+    return null;
+  }
+  const dept = await prisma.department.findUnique({
+    where: { publicId },
+    select: { id: true },
+  });
+  return dept?.id ?? null;
+}
 
 const subcategorySchema = z.object({
   id: z.string().optional(),
@@ -18,6 +33,7 @@ const createCategorySchema = z.object({
   name: z.string().min(1, "Nazwa jest wymagana"),
   type: z.enum(["INCOME", "EXPENSE"]),
   sortOrder: z.number().int().min(0).optional(),
+  departmentId: z.string().optional(),
   subcategories: z.array(subcategorySchema).optional(),
 });
 
@@ -26,6 +42,7 @@ const updateCategorySchema = z.object({
   name: z.string().min(1, "Nazwa jest wymagana"),
   type: z.enum(["INCOME", "EXPENSE"]),
   sortOrder: z.number().int().min(0).optional(),
+  departmentId: z.string().nullable().optional(),
   subcategories: z.array(subcategorySchema).optional(),
 });
 
@@ -36,11 +53,14 @@ export async function createCategoryCommand(
     await requireUser();
     const validated = createCategorySchema.parse(input);
 
+    const deptId = await resolveDeptId(validated.departmentId);
+
     await prisma.category.create({
       data: {
         name: validated.name,
         type: validated.type as CategoryType,
         sortOrder: validated.sortOrder ?? 0,
+        departmentId: deptId,
         subcategories: validated.subcategories
           ? {
               create: validated.subcategories.map((s) => ({
@@ -74,6 +94,10 @@ export async function updateCategoryCommand(
       return { success: false, error: "Kategoria nie została znaleziona" };
     }
 
+    const deptId =
+      validated.departmentId !== undefined
+        ? await resolveDeptId(validated.departmentId)
+        : category.departmentId;
     const skippedDeletions: string[] = [];
 
     await prisma.$transaction(async (tx) => {
@@ -83,6 +107,7 @@ export async function updateCategoryCommand(
           name: validated.name,
           type: validated.type as CategoryType,
           sortOrder: validated.sortOrder ?? category.sortOrder,
+          departmentId: deptId,
         },
       });
 
@@ -260,10 +285,13 @@ export async function quickCreateCategoryCommand(
         ? validated.subcategoryNames
         : [validated.name];
 
+    const activeDeptId = await getActiveDepartmentId();
+
     const category = await prisma.category.create({
       data: {
         name: validated.name,
         type: validated.type as CategoryType,
+        departmentId: activeDeptId,
         subcategories: {
           create: subcategoryNames.map((name, i) => ({
             name,
@@ -271,7 +299,10 @@ export async function quickCreateCategoryCommand(
           })),
         },
       },
-      include: { subcategories: true },
+      include: {
+        department: { select: { publicId: true, name: true } },
+        subcategories: true,
+      },
     });
 
     return {
@@ -281,6 +312,8 @@ export async function quickCreateCategoryCommand(
         name: category.name,
         type: category.type,
         sortOrder: category.sortOrder,
+        departmentId: category.department?.publicId ?? null,
+        departmentName: category.department?.name ?? null,
         subcategories: category.subcategories.map((s) => ({
           id: s.publicId,
           name: s.name,

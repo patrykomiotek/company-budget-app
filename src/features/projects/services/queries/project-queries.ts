@@ -2,7 +2,7 @@
 
 import { prisma } from "@/shared/lib/prisma";
 import { requireUser } from "@/shared/lib/auth/helpers";
-import { getActiveCompanyFilter } from "@/shared/lib/company/helpers";
+import { getActiveDepartmentFilter } from "@/shared/lib/department/helpers";
 import type {
   ProjectOption,
   ProjectItem,
@@ -86,7 +86,7 @@ export async function getProjectsListQuery(
   statusFilter?: ProjectStatus,
 ): Promise<ProjectItem[]> {
   const user = await requireUser();
-  const companyFilter = await getActiveCompanyFilter();
+  const departmentFilter = await getActiveDepartmentFilter();
 
   const projects = await prisma.project.findMany({
     where: {
@@ -96,7 +96,7 @@ export async function getProjectsListQuery(
     include: {
       customer: { select: { name: true } },
       transactions: {
-        where: { ...companyFilter },
+        where: { ...departmentFilter },
         select: {
           type: true,
           amount: true,
@@ -167,7 +167,7 @@ export async function getProjectStatsQuery(
   interval: IntervalFilter,
 ): Promise<ProjectStats> {
   const user = await requireUser();
-  const companyFilter = await getActiveCompanyFilter();
+  const departmentFilter = await getActiveDepartmentFilter();
   const { start, end } = getIntervalDateRange(interval);
 
   const project = await prisma.project.findFirst({
@@ -193,7 +193,7 @@ export async function getProjectStatsQuery(
     where: {
       projectId: project.id,
       userId: user.id,
-      ...companyFilter,
+      ...departmentFilter,
       date: { gte: start, lte: end },
     },
     select: {
@@ -210,7 +210,7 @@ export async function getProjectStatsQuery(
       transaction: {
         projectId: { not: project.id },
         userId: user.id,
-        ...companyFilter,
+        ...departmentFilter,
         date: { gte: start, lte: end },
       },
     },
@@ -267,7 +267,7 @@ export async function getProjectStatsQuery(
     const customerTransactions = await prisma.transaction.findMany({
       where: {
         userId: user.id,
-        ...companyFilter,
+        ...departmentFilter,
         project: { customerId: project.customerId },
       },
       select: {
@@ -312,7 +312,7 @@ export async function getProjectTransactionsQuery(
   publicId: string,
 ): Promise<ProjectTransaction[]> {
   const user = await requireUser();
-  const companyFilter = await getActiveCompanyFilter();
+  const departmentFilter = await getActiveDepartmentFilter();
 
   const project = await prisma.project.findFirst({
     where: { publicId, userId: user.id },
@@ -326,7 +326,7 @@ export async function getProjectTransactionsQuery(
   const transactions = await prisma.transaction.findMany({
     where: {
       userId: user.id,
-      ...companyFilter,
+      ...departmentFilter,
       OR: [
         { projectId: project.id },
         { lineItems: { some: { projectId: project.id } } },

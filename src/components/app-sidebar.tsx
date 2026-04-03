@@ -36,7 +36,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { useCompany } from "@/shared/context/company-context";
+import { useDepartment } from "@/shared/context/department-context";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -48,6 +48,7 @@ const navItems = [
   { href: "/employees", label: "Współpracownicy", icon: Users },
   { href: "/reports", label: "Raporty", icon: BarChart3 },
   { href: "/import", label: "Import", icon: FileDown },
+  { href: "/departments", label: "Oddziały", icon: Building2 },
   { href: "/categories", label: "Kategorie", icon: Tags },
 ];
 
@@ -78,8 +79,8 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { collapsed, setCollapsed } = useSidebar();
-  const { companies, activeCompanyId, switchCompany, isSwitching } =
-    useCompany();
+  const { companies, activeDepartmentId, switchDepartment, isSwitching } =
+    useDepartment();
   const { data: session } = authClient.useSession();
 
   const userName = session?.user?.name || "Użytkownik";
@@ -139,17 +140,17 @@ export function AppSidebar() {
           size="icon"
           className="mb-4"
           title={
-            activeCompanyId
-              ? (companies.find((c) => c.id === activeCompanyId)?.name ??
+            activeDepartmentId
+              ? (companies.find((c) => c.id === activeDepartmentId)?.name ??
                 "Wszystko")
               : "Wszystko"
           }
           onClick={() => {
-            const currentIndex = activeCompanyId
-              ? companies.findIndex((c) => c.id === activeCompanyId)
+            const currentIndex = activeDepartmentId
+              ? companies.findIndex((c) => c.id === activeDepartmentId)
               : -1;
             const nextIndex = (currentIndex + 1) % (companies.length + 1);
-            switchCompany(
+            switchDepartment(
               nextIndex < companies.length ? companies[nextIndex].id : null,
             );
           }}
@@ -158,16 +159,16 @@ export function AppSidebar() {
         </Button>
       ) : (
         <Select
-          value={activeCompanyId ?? "all"}
+          value={activeDepartmentId ?? "all"}
           onValueChange={(value) =>
-            switchCompany(value === "all" ? null : value)
+            switchDepartment(value === "all" ? null : value)
           }
           disabled={isSwitching}
         >
           <SelectTrigger className="mb-4">
             <span>
-              {activeCompanyId
-                ? (companies.find((c) => c.id === activeCompanyId)?.name ??
+              {activeDepartmentId
+                ? (companies.find((c) => c.id === activeDepartmentId)?.name ??
                   "Wybierz firmę")
                 : "Wszystko"}
             </span>

@@ -6,13 +6,13 @@ import { ReportFilters } from "./report-filters";
 import { ReportChart } from "./report-chart";
 import { ReportTable } from "./report-table";
 import { getReportDataQuery } from "../services/queries/report-queries";
-import { useCompany } from "@/shared/context/company-context";
+import { useDepartment } from "@/shared/context/department-context";
 import type {
   ReportFilters as ReportFiltersType,
   ReportData,
 } from "../contracts/report.types";
 
-function getDefaultFilters(companyId?: string | null): ReportFiltersType {
+function getDefaultFilters(departmentId?: string | null): ReportFiltersType {
   const now = new Date();
   const year = now.getFullYear();
   const dateFrom = `${year}-01-01`;
@@ -24,27 +24,27 @@ function getDefaultFilters(companyId?: string | null): ReportFiltersType {
     dateTo,
     grouping: "month",
     amountMode: "netto",
-    companyId: companyId ?? undefined,
+    departmentId: departmentId ?? undefined,
   };
 }
 
 export function ReportView() {
-  const { activeCompanyId } = useCompany();
+  const { activeDepartmentId } = useDepartment();
   const [filters, setFilters] = useState<ReportFiltersType>(() =>
-    getDefaultFilters(activeCompanyId),
+    getDefaultFilters(activeDepartmentId),
   );
-  const prevCompanyId = useRef(activeCompanyId);
+  const prevCompanyId = useRef(activeDepartmentId);
 
-  // Sync companyId filter when the sidebar company selector changes
+  // Sync departmentId filter when the sidebar company selector changes
   useEffect(() => {
-    if (prevCompanyId.current !== activeCompanyId) {
-      prevCompanyId.current = activeCompanyId;
+    if (prevCompanyId.current !== activeDepartmentId) {
+      prevCompanyId.current = activeDepartmentId;
       setFilters((prev) => ({
         ...prev,
-        companyId: activeCompanyId ?? undefined,
+        departmentId: activeDepartmentId ?? undefined,
       }));
     }
-  }, [activeCompanyId]);
+  }, [activeDepartmentId]);
   const [data, setData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
 

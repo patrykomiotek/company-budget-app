@@ -5,7 +5,9 @@ import { prisma } from "@/shared/lib/prisma";
 
 const COMPANY_COOKIE = "active-company";
 
-export async function setActiveCompany(publicId: string | null): Promise<void> {
+export async function setActiveDepartment(
+  publicId: string | null,
+): Promise<void> {
   const cookieStore = await cookies();
   if (publicId) {
     cookieStore.set(COMPANY_COOKIE, publicId, {
@@ -19,31 +21,31 @@ export async function setActiveCompany(publicId: string | null): Promise<void> {
   }
 }
 
-export async function getActiveCompanyPublicId(): Promise<string | null> {
+export async function getActiveDepartmentPublicId(): Promise<string | null> {
   const cookieStore = await cookies();
   return cookieStore.get(COMPANY_COOKIE)?.value ?? null;
 }
 
-export async function getActiveCompanyId(): Promise<number | null> {
-  const publicId = await getActiveCompanyPublicId();
+export async function getActiveDepartmentId(): Promise<number | null> {
+  const publicId = await getActiveDepartmentPublicId();
   if (!publicId) {
     return null;
   }
 
-  const company = await prisma.company.findUnique({
+  const dept = await prisma.department.findUnique({
     where: { publicId },
     select: { id: true },
   });
 
-  return company?.id ?? null;
+  return dept?.id ?? null;
 }
 
-export async function getActiveCompanyFilter(): Promise<{
-  companyId?: number;
+export async function getActiveDepartmentFilter(): Promise<{
+  departmentId?: number;
 }> {
-  const companyId = await getActiveCompanyId();
-  if (companyId === null) {
+  const departmentId = await getActiveDepartmentId();
+  if (departmentId === null) {
     return {};
   }
-  return { companyId };
+  return { departmentId };
 }

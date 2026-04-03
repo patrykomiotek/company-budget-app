@@ -76,7 +76,7 @@ export interface ImportedInvoiceData {
   description: string;
   customerName: string;
   customerNip?: string;
-  companyPublicId?: string;
+  departmentPublicId?: string;
   lineItems: ImportedLineItem[];
   fakturowniaInvoiceId: number;
 }

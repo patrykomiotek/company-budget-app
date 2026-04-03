@@ -85,8 +85,8 @@ export function TransactionDetails({
               label="Kategoria"
               value={`${t.categoryName} / ${t.subcategoryName}`}
             />
-            {t.companyName && (
-              <DetailRow label="Oddział" value={t.companyName} />
+            {t.departmentName && (
+              <DetailRow label="Oddział" value={t.departmentName} />
             )}
             {t.description && <DetailRow label="Opis" value={t.description} />}
             <DetailRow

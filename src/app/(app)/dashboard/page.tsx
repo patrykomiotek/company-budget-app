@@ -4,8 +4,8 @@ import { getMonthSummaryQuery } from "@/features/dashboard/services/queries/dash
 import { getDashboardStatsQuery } from "@/features/dashboard/services/queries/dashboard-stats-queries";
 import { MonthOverview } from "@/features/dashboard/components/month-overview";
 import { DashboardWidgets } from "@/features/dashboard/components/dashboard-widgets";
-import { getActiveCompanyPublicId } from "@/shared/lib/company/helpers";
-import { getCompaniesQuery } from "@/shared/lib/company/queries";
+import { getActiveDepartmentPublicId } from "@/shared/lib/department/helpers";
+import { getDepartmentsQuery } from "@/shared/lib/department/queries";
 
 interface DashboardPageProps {
   searchParams: Promise<{ year?: string; month?: string }>;
@@ -24,17 +24,18 @@ export default async function DashboardPage({
       ? now.getMonth() + 1
       : parsedMonth;
 
-  const [summary, stats, activeCompanyPublicId, companies] = await Promise.all([
-    getMonthSummaryQuery(year, month),
-    getDashboardStatsQuery(),
-    getActiveCompanyPublicId(),
-    getCompaniesQuery(),
-  ]);
+  const [summary, stats, activeDepartmentPublicId, companies] =
+    await Promise.all([
+      getMonthSummaryQuery(year, month),
+      getDashboardStatsQuery(),
+      getActiveDepartmentPublicId(),
+      getDepartmentsQuery(),
+    ]);
   const monthLabel = format(new Date(year, month - 1), "LLLL yyyy", {
     locale: pl,
   });
-  const companyName = activeCompanyPublicId
-    ? (companies.find((c) => c.id === activeCompanyPublicId)?.name ?? null)
+  const departmentName = activeDepartmentPublicId
+    ? (companies.find((c) => c.id === activeDepartmentPublicId)?.name ?? null)
     : null;
 
   return (
@@ -63,7 +64,7 @@ export default async function DashboardPage({
       <MonthOverview
         summary={summary}
         monthLabel={monthLabel}
-        companyName={companyName}
+        departmentName={departmentName}
       />
     </div>
   );

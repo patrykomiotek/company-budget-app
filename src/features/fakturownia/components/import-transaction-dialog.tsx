@@ -25,7 +25,7 @@ import { CustomerCombobox } from "@/features/customers/components/customer-combo
 import { ProjectCombobox } from "@/features/projects/components/project-combobox";
 import { LineItemsForm } from "@/features/invoices/components/line-items-form";
 import { createTransactionCommand } from "@/features/transactions/services/commands/transaction-commands";
-import { useCompany } from "@/shared/context/company-context";
+import { useDepartment } from "@/shared/context/department-context";
 import type {
   ImportedInvoiceData,
   FakturowniaInvoiceListItem,
@@ -61,7 +61,7 @@ export function ImportTransactionDialog({
   projects,
   onSuccess,
 }: ImportTransactionDialogProps) {
-  const { companies, activeCompanyId } = useCompany();
+  const { companies, activeDepartmentId } = useDepartment();
   const [loading, setLoading] = useState(false);
 
   const transactionType = importType === "income" ? "INCOME" : "EXPENSE";
@@ -89,8 +89,8 @@ export function ImportTransactionDialog({
     return matched?.name ?? invoice.buyerName ?? "";
   });
   const [projectName, setProjectName] = useState("");
-  const [companyId, setCompanyId] = useState(
-    invoiceData.companyPublicId ?? activeCompanyId ?? "",
+  const [departmentId, setCompanyId] = useState(
+    invoiceData.departmentPublicId ?? activeDepartmentId ?? "",
   );
   const [invoiceNumber, setInvoiceNumber] = useState(invoiceData.invoiceNumber);
   const [invoiceDueDate, setInvoiceDueDate] = useState(
@@ -164,7 +164,7 @@ export function ImportTransactionDialog({
           importType === "income" && counterpartName
             ? counterpartName
             : undefined,
-        companyPublicId: companyId || undefined,
+        departmentPublicId: departmentId || undefined,
         projectName: projectName || undefined,
         invoiceNumber: invoiceNumber || undefined,
         invoiceDueDate: invoiceDueDate || undefined,
@@ -239,12 +239,12 @@ export function ImportTransactionDialog({
             <div className="space-y-2">
               <Label>Oddział</Label>
               <Select
-                value={companyId}
+                value={departmentId}
                 onValueChange={(v) => setCompanyId(v ?? "")}
               >
                 <SelectTrigger>
                   <span>
-                    {companies.find((c) => c.id === companyId)?.name ??
+                    {companies.find((c) => c.id === departmentId)?.name ??
                       "Wybierz oddział"}
                   </span>
                 </SelectTrigger>

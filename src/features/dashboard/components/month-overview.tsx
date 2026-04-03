@@ -6,7 +6,7 @@ import type { MonthSummary } from "@/features/transactions/contracts/transaction
 interface MonthOverviewProps {
   summary: MonthSummary;
   monthLabel: string;
-  companyName?: string | null;
+  departmentName?: string | null;
 }
 
 import { formatAmount as fmt } from "@/shared/utils/format";
@@ -14,15 +14,17 @@ import { formatAmount as fmt } from "@/shared/utils/format";
 export function MonthOverview({
   summary,
   monthLabel,
-  companyName,
+  departmentName,
 }: MonthOverviewProps) {
   const hasForecast = summary.forecastIncome > 0 || summary.forecastExpense > 0;
   const totalExpenseForBar = summary.totalExpense + summary.forecastExpense;
 
   return (
     <div className="space-y-6">
-      {companyName && (
-        <p className="text-sm text-muted-foreground">Oddział: {companyName}</p>
+      {departmentName && (
+        <p className="text-sm text-muted-foreground">
+          Oddział: {departmentName}
+        </p>
       )}
 
       {/* Actual values */}

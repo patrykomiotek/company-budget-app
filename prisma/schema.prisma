@@ -9,6 +9,7 @@ datasource db {
 
 model User {
   id            String    @id @default(cuid())
+  publicId      String    @unique @default(uuid()) @map("public_id") @db.Uuid
   name          String
   email         String    @unique
   emailVerified Boolean   @default(false) @map("email_verified")
@@ -104,18 +105,39 @@ enum ProjectStatus {
   ARCHIVED
 }
 
-model Category {
-  id        Int          @id @default(autoincrement())
-  publicId  String       @unique @default(uuid()) @map("public_id") @db.Uuid
-  name      String
-  type      CategoryType
-  sortOrder Int          @default(0) @map("sort_order")
-  createdAt DateTime     @default(now()) @map("created_at")
-  updatedAt DateTime     @updatedAt @map("updated_at")
+model Department {
+  id        Int      @id @default(autoincrement())
+  publicId  String   @unique @default(uuid()) @map("public_id") @db.Uuid
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
+  transactions Transaction[]
+  merchants    Merchant[]
+  employees    Employee[]
+  categories   Category[]
+  customers    Customer[]
+  projects     Project[]
+  products     Product[]
+
+  @@map("departments")
+}
+
+model Category {
+  id           Int          @id @default(autoincrement())
+  publicId     String       @unique @default(uuid()) @map("public_id") @db.Uuid
+  name         String
+  type         CategoryType
+  sortOrder    Int          @default(0) @map("sort_order")
+  departmentId Int?         @map("department_id")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  department    Department?   @relation(fields: [departmentId], references: [id])
   subcategories Subcategory[]
 
-  @@unique([name, type])
+  @@unique([name, type, departmentId])
+  @@index([departmentId])
   @@map("categories")
 }
 
@@ -135,33 +157,19 @@ model Subcategory {
   @@map("subcategories")
 }
 
-model Company {
-  id        Int      @id @default(autoincrement())
-  publicId  String   @unique @default(uuid()) @map("public_id") @db.Uuid
-  name      String   @unique
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  transactions Transaction[]
-  merchants    Merchant[]
-  employees    Employee[]
-
-  @@map("companies")
-}
-
 model Merchant {
-  id        Int      @id @default(autoincrement())
-  publicId  String   @unique @default(uuid()) @map("public_id") @db.Uuid
-  name      String
-  nip       String?
-  logoUrl   String?  @map("logo_url")
-  userId    String   @map("user_id")
-  companyId Int?     @map("company_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id           Int      @id @default(autoincrement())
+  publicId     String   @unique @default(uuid()) @map("public_id") @db.Uuid
+  name         String
+  nip          String?
+  logoUrl      String?  @map("logo_url")
+  userId       String   @map("user_id")
+  departmentId Int?     @map("department_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  company      Company?      @relation(fields: [companyId], references: [id])
+  department   Department?   @relation(fields: [departmentId], references: [id])
   transactions Transaction[]
 
   @@unique([name, userId])
@@ -182,7 +190,7 @@ model Transaction {
   fakturowniaInvoiceId Int?            @unique @map("fakturownia_invoice_id")
   merchantId           Int?            @map("merchant_id")
   subcategoryId        Int             @map("subcategory_id")
-  companyId            Int?            @map("company_id")
+  departmentId         Int?            @map("department_id")
   employeeId           Int?            @map("employee_id")
   customerId           Int?            @map("customer_id")
   projectId            Int?            @map("project_id")
@@ -195,7 +203,7 @@ model Transaction {
 
   merchant    Merchant?             @relation(fields: [merchantId], references: [id])
   subcategory Subcategory           @relation(fields: [subcategoryId], references: [id])
-  company     Company?              @relation(fields: [companyId], references: [id])
+  department  Department?           @relation(fields: [departmentId], references: [id])
   employee    Employee?             @relation(fields: [employeeId], references: [id])
   customer    Customer?             @relation(fields: [customerId], references: [id])
   project     Project?              @relation(fields: [projectId], references: [id], onDelete: SetNull)
@@ -206,7 +214,7 @@ model Transaction {
   @@index([userId, date])
   @@index([subcategoryId])
   @@index([merchantId])
-  @@index([companyId])
+  @@index([departmentId])
   @@index([employeeId])
   @@index([customerId])
   @@index([projectId])
@@ -215,19 +223,19 @@ model Transaction {
 }
 
 model Employee {
-  id        Int      @id @default(autoincrement())
-  publicId  String   @unique @default(uuid()) @map("public_id") @db.Uuid
-  name      String
-  companyId Int      @map("company_id")
-  userId    String   @map("user_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id           Int      @id @default(autoincrement())
+  publicId     String   @unique @default(uuid()) @map("public_id") @db.Uuid
+  name         String
+  departmentId Int      @map("department_id")
+  userId       String   @map("user_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  department   Department    @relation(fields: [departmentId], references: [id], onDelete: Cascade)
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
 
-  @@unique([name, companyId])
+  @@unique([name, departmentId])
   @@map("employees")
 }
 
@@ -245,11 +253,13 @@ model Customer {
   notes               String?
   isVip               Boolean  @default(false) @map("is_vip")
   fakturowniaClientId Int?     @unique @map("fakturownia_client_id")
+  departmentId        Int?     @map("department_id")
   userId              String   @map("user_id")
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department   Department?   @relation(fields: [departmentId], references: [id])
   transactions Transaction[]
   projects     Project[]
 
@@ -258,16 +268,18 @@ model Customer {
 }
 
 model Project {
-  id         Int           @id @default(autoincrement())
-  publicId   String        @unique @default(uuid()) @map("public_id") @db.Uuid
-  name       String
-  status     ProjectStatus @default(ACTIVE)
-  customerId Int?          @map("customer_id")
-  userId     String        @map("user_id")
-  createdAt  DateTime      @default(now()) @map("created_at")
-  updatedAt  DateTime      @updatedAt @map("updated_at")
+  id           Int           @id @default(autoincrement())
+  publicId     String        @unique @default(uuid()) @map("public_id") @db.Uuid
+  name         String
+  status       ProjectStatus @default(ACTIVE)
+  customerId   Int?          @map("customer_id")
+  departmentId Int?          @map("department_id")
+  userId       String        @map("user_id")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
 
   customer     Customer?              @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  department   Department?            @relation(fields: [departmentId], references: [id])
   user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
   lineItems    TransactionLineItem[]
@@ -282,12 +294,14 @@ model Product {
   name                 String
   type                 ProductType @default(SERVICE)
   fakturowniaProductId Int?        @unique @map("fakturownia_product_id")
+  departmentId         Int?        @map("department_id")
   userId               String      @map("user_id")
   createdAt            DateTime    @default(now()) @map("created_at")
   updatedAt            DateTime    @updatedAt @map("updated_at")
 
-  user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lineItems TransactionLineItem[]
+  user       User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department Department?           @relation(fields: [departmentId], references: [id])
+  lineItems  TransactionLineItem[]
 
   @@unique([name, userId])
   @@map("products")

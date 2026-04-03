@@ -69,7 +69,7 @@ export function EmployeesList({ employees }: EmployeesListProps) {
       header: "Imię i nazwisko",
       cell: (info) => <span className="font-medium">{info.getValue()}</span>,
     }),
-    columnHelper.accessor("companyName", {
+    columnHelper.accessor("departmentName", {
       header: "Firma",
       cell: (info) => <Badge variant="outline">{info.getValue()}</Badge>,
     }),

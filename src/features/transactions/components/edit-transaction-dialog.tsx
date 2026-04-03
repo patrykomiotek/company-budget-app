@@ -28,7 +28,7 @@ import { ProjectCombobox } from "@/features/projects/components/project-combobox
 import { InvoiceFields } from "@/features/invoices/components/invoice-fields";
 import { LineItemsForm } from "@/features/invoices/components/line-items-form";
 import { updateTransactionCommand } from "../services/commands/transaction-commands";
-import { useCompany } from "@/shared/context/company-context";
+import { useDepartment } from "@/shared/context/department-context";
 import type {
   TransactionWithDetails,
   TransactionType,
@@ -72,7 +72,7 @@ export function EditTransactionDialog({
   onOpenChange,
 }: EditTransactionDialogProps) {
   const router = useRouter();
-  const { companies, activeCompanyId } = useCompany();
+  const { companies, activeDepartmentId } = useDepartment();
   const [loading, setLoading] = useState(false);
   const [type, setType] = useState<TransactionType>("EXPENSE");
   const [categoryId, setCategoryId] = useState("");
@@ -86,7 +86,7 @@ export function EditTransactionDialog({
   const [customerName, setCustomerName] = useState("");
   const [employeeName, setEmployeeName] = useState("");
   const [projectName, setProjectName] = useState("");
-  const [companyId, setCompanyId] = useState("");
+  const [departmentId, setCompanyId] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [invoiceDueDate, setInvoiceDueDate] = useState("");
   const [lineItems, setLineItems] = useState<LineItemRow[]>([]);
@@ -109,7 +109,7 @@ export function EditTransactionDialog({
       setCustomerName(transaction.customerName || "");
       setEmployeeName(transaction.employeeName || "");
       setProjectName(transaction.projectName || "");
-      setCompanyId(transaction.companyId || activeCompanyId || "");
+      setCompanyId(transaction.departmentId || activeDepartmentId || "");
       setInvoiceNumber(transaction.invoiceNumber || "");
       setInvoiceDueDate(
         transaction.invoiceDueDate
@@ -135,7 +135,7 @@ export function EditTransactionDialog({
       );
       setShowLineItems(transaction.lineItems.length > 0);
     }
-  }, [transaction, activeCompanyId]);
+  }, [transaction, activeDepartmentId]);
 
   const filterType = getCategoryFilterType(type);
   const filteredCategories = categories.filter((c) => c.type === filterType);
@@ -149,7 +149,7 @@ export function EditTransactionDialog({
       value: s.id,
       label: s.name,
     })) ?? [];
-  const needsCompanySelection = !activeCompanyId;
+  const needsCompanySelection = !activeDepartmentId;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -184,7 +184,7 @@ export function EditTransactionDialog({
           isExpenseType(type) && merchantName ? merchantName : undefined,
         customerName:
           isIncomeType(type) && customerName ? customerName : undefined,
-        companyPublicId: companyId || undefined,
+        departmentPublicId: departmentId || undefined,
         employeeName:
           isExpenseType(type) && employeeName ? employeeName : undefined,
         projectName: projectName || undefined,
@@ -275,12 +275,12 @@ export function EditTransactionDialog({
             <div className="space-y-2">
               <Label>Oddział</Label>
               <Select
-                value={companyId}
+                value={departmentId}
                 onValueChange={(v) => setCompanyId(v ?? "")}
               >
                 <SelectTrigger>
                   <span>
-                    {companies.find((c) => c.id === companyId)?.name ??
+                    {companies.find((c) => c.id === departmentId)?.name ??
                       "Wybierz oddział"}
                   </span>
                 </SelectTrigger>

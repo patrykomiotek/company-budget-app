@@ -2,7 +2,7 @@
 
 import { prisma } from "@/shared/lib/prisma";
 import { requireUser } from "@/shared/lib/auth/helpers";
-import { getActiveCompanyFilter } from "@/shared/lib/company/helpers";
+import { getActiveDepartmentFilter } from "@/shared/lib/department/helpers";
 import type {
   CustomerOption,
   CustomerItem,
@@ -28,13 +28,13 @@ export async function getCustomersForSelectQuery(): Promise<CustomerOption[]> {
 
 export async function getCustomersListQuery(): Promise<CustomerItem[]> {
   const user = await requireUser();
-  const companyFilter = await getActiveCompanyFilter();
+  const departmentFilter = await getActiveDepartmentFilter();
 
   const customers = await prisma.customer.findMany({
     where: { userId: user.id },
     include: {
       transactions: {
-        where: { ...companyFilter },
+        where: { ...departmentFilter },
         select: {
           type: true,
           amount: true,
@@ -122,7 +122,7 @@ export async function getCustomerMetricsQuery(
   publicId: string,
 ): Promise<CustomerMetrics | null> {
   const user = await requireUser();
-  const companyFilter = await getActiveCompanyFilter();
+  const departmentFilter = await getActiveDepartmentFilter();
 
   const customer = await prisma.customer.findFirst({
     where: { publicId, userId: user.id },
@@ -137,7 +137,7 @@ export async function getCustomerMetricsQuery(
     where: {
       customerId: customer.id,
       userId: user.id,
-      ...companyFilter,
+      ...departmentFilter,
     },
     select: {
       type: true,
@@ -170,7 +170,7 @@ export async function getCustomerMetricsQuery(
     },
     include: {
       transactions: {
-        where: { ...companyFilter },
+        where: { ...departmentFilter },
         select: {
           type: true,
           amount: true,
@@ -214,7 +214,7 @@ export async function getCustomerMetricsQuery(
       transaction: {
         customerId: customer.id,
         userId: user.id,
-        ...companyFilter,
+        ...departmentFilter,
       },
     },
     include: {

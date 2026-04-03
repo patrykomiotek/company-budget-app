@@ -6,6 +6,6 @@ export interface EmployeeOption {
 export interface EmployeeItem {
   id: string;
   name: string;
-  companyName: string;
+  departmentName: string;
   transactionCount: number;
 }

@@ -29,7 +29,7 @@ import { QuickCreateProjectDialog } from "@/features/projects/components/quick-c
 import { SubscriptionDialog } from "./subscription-dialog";
 import { InvoicePickerDialog } from "@/features/fakturownia/components/invoice-picker-dialog";
 import { createTransactionCommand } from "../services/commands/transaction-commands";
-import { useCompany } from "@/shared/context/company-context";
+import { useDepartment } from "@/shared/context/department-context";
 import type { CategoryWithSubcategories } from "@/features/categories/contracts/category.types";
 import type { TransactionType, Currency } from "../contracts/transaction.types";
 import type { LineItemRow } from "@/features/invoices/contracts/invoice.types";
@@ -63,7 +63,7 @@ export function TransactionForm({
   projects,
 }: TransactionFormProps) {
   const router = useRouter();
-  const { companies, activeCompanyId } = useCompany();
+  const { companies, activeDepartmentId } = useDepartment();
   const [loading, setLoading] = useState(false);
   const [type, setType] = useState<TransactionType>("EXPENSE");
   const [categoryId, setCategoryId] = useState("");
@@ -77,7 +77,7 @@ export function TransactionForm({
   const [customerName, setCustomerName] = useState("");
   const [employeeName, setEmployeeName] = useState("");
   const [projectName, setProjectName] = useState("");
-  const [companyId, setCompanyId] = useState(activeCompanyId ?? "");
+  const [departmentId, setCompanyId] = useState(activeDepartmentId ?? "");
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [invoiceDueDate, setInvoiceDueDate] = useState("");
   const [lineItems, setLineItems] = useState<LineItemRow[]>([]);
@@ -115,7 +115,7 @@ export function TransactionForm({
       label: s.name,
     })) ?? [];
 
-  const needsCompanySelection = !activeCompanyId;
+  const needsCompanySelection = !activeDepartmentId;
 
   function handleFakturowniaImport(data: ImportedInvoiceData) {
     setType("INCOME");
@@ -132,8 +132,8 @@ export function TransactionForm({
     setShowInvoice(true);
     setFakturowniaInvoiceId(data.fakturowniaInvoiceId);
 
-    if (data.companyPublicId) {
-      setCompanyId(data.companyPublicId);
+    if (data.departmentPublicId) {
+      setCompanyId(data.departmentPublicId);
     }
 
     if (data.lineItems.length > 0) {
@@ -183,7 +183,7 @@ export function TransactionForm({
           isExpenseType(type) && merchantName ? merchantName : undefined,
         customerName:
           isIncomeType(type) && customerName ? customerName : undefined,
-        companyPublicId: companyId || undefined,
+        departmentPublicId: departmentId || undefined,
         employeeName:
           isExpenseType(type) && employeeName ? employeeName : undefined,
         invoiceNumber: invoiceNumber || undefined,
@@ -317,12 +317,12 @@ export function TransactionForm({
             <div className="space-y-2">
               <Label>Oddział</Label>
               <Select
-                value={companyId}
+                value={departmentId}
                 onValueChange={(v) => setCompanyId(v ?? "")}
               >
                 <SelectTrigger>
                   <span>
-                    {companies.find((c) => c.id === companyId)?.name ??
+                    {companies.find((c) => c.id === departmentId)?.name ??
                       "Wybierz oddział"}
                   </span>
                 </SelectTrigger>

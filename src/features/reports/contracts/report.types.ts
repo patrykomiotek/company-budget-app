@@ -7,7 +7,7 @@ export interface ReportFilters {
   dateFrom: string;
   dateTo: string;
   grouping: Grouping;
-  companyId?: string;
+  departmentId?: string;
   amountMode: AmountMode;
 }
 

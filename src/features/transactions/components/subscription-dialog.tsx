@@ -20,7 +20,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { useCompany } from "@/shared/context/company-context";
+import { useDepartment } from "@/shared/context/department-context";
 import { createSubscriptionCommand } from "../services/commands/subscription-commands";
 import type { Currency } from "../contracts/transaction.types";
 
@@ -41,7 +41,7 @@ export function SubscriptionDialog({
   onOpenChange,
 }: SubscriptionDialogProps) {
   const router = useRouter();
-  const { companies, activeCompanyId } = useCompany();
+  const { companies, activeDepartmentId } = useDepartment();
   const [loading, setLoading] = useState(false);
   const [toolName, setToolName] = useState("");
   const [amount, setAmount] = useState("");
@@ -49,10 +49,10 @@ export function SubscriptionDialog({
   const [exchangeRate, setExchangeRate] = useState("");
   const [startMonth, setStartMonth] = useState(format(new Date(), "yyyy-MM"));
   const [months, setMonths] = useState(1);
-  const [companyId, setCompanyId] = useState(activeCompanyId ?? "");
+  const [departmentId, setCompanyId] = useState(activeDepartmentId ?? "");
   const [description, setDescription] = useState("");
 
-  const needsCompanySelection = !activeCompanyId;
+  const needsCompanySelection = !activeDepartmentId;
 
   function reset() {
     setToolName("");
@@ -86,7 +86,7 @@ export function SubscriptionDialog({
       }
     }
 
-    if (needsCompanySelection && !companyId) {
+    if (needsCompanySelection && !departmentId) {
       toast.error("Wybierz oddział");
       return;
     }
@@ -100,7 +100,7 @@ export function SubscriptionDialog({
         exchangeRate: currency !== "PLN" ? parseFloat(exchangeRate) : undefined,
         startMonth,
         months,
-        companyPublicId: companyId || undefined,
+        departmentPublicId: departmentId || undefined,
         description: description || undefined,
       });
 
@@ -152,12 +152,12 @@ export function SubscriptionDialog({
             <div className="space-y-2">
               <Label>Oddział</Label>
               <Select
-                value={companyId}
+                value={departmentId}
                 onValueChange={(v) => setCompanyId(v ?? "")}
               >
                 <SelectTrigger>
                   <span>
-                    {companies.find((c) => c.id === companyId)?.name ??
+                    {companies.find((c) => c.id === departmentId)?.name ??
                       "Wybierz oddział"}
                   </span>
                 </SelectTrigger>

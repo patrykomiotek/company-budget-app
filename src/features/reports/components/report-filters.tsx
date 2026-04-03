@@ -8,7 +8,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
-import { useCompany } from "@/shared/context/company-context";
+import { useDepartment } from "@/shared/context/department-context";
 import type {
   ReportType,
   Grouping,
@@ -42,14 +42,15 @@ const amountModeLabels: Record<AmountMode, string> = {
 };
 
 export function ReportFilters({ filters, onChange }: ReportFiltersProps) {
-  const { companies } = useCompany();
+  const { companies } = useDepartment();
 
   function update(partial: Partial<ReportFiltersType>) {
     onChange({ ...filters, ...partial });
   }
 
-  const companyLabel = filters.companyId
-    ? (companies.find((c) => c.id === filters.companyId)?.name ?? "Wszystkie")
+  const companyLabel = filters.departmentId
+    ? (companies.find((c) => c.id === filters.departmentId)?.name ??
+      "Wszystkie")
     : "Wszystkie";
 
   return (
@@ -115,9 +116,9 @@ export function ReportFilters({ filters, onChange }: ReportFiltersProps) {
       <div className="grid grid-rows-[16px_32px] gap-1 content-end">
         <Label className="text-xs">Dział / oddział firmy</Label>
         <Select
-          value={filters.companyId ?? "all"}
+          value={filters.departmentId ?? "all"}
           onValueChange={(v) =>
-            update({ companyId: !v || v === "all" ? undefined : v })
+            update({ departmentId: !v || v === "all" ? undefined : v })
           }
         >
           <SelectTrigger className="w-[180px]">

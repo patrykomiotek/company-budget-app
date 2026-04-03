@@ -27,8 +27,8 @@ vi.mock("@/shared/lib/auth/helpers", () => ({
   requireUser: () => mockRequireUser(),
 }));
 
-vi.mock("@/shared/lib/company/helpers", () => ({
-  getActiveCompanyFilter: () => mockGetActiveCompanyFilter(),
+vi.mock("@/shared/lib/department/helpers", () => ({
+  getActiveDepartmentFilter: () => mockGetActiveCompanyFilter(),
 }));
 
 import {

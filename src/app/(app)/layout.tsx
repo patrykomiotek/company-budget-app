@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/shared/lib/auth/helpers";
 import { AppSidebar, SidebarProvider } from "@/components/app-sidebar";
-import { CompanyProvider } from "@/shared/context/company-context";
-import { getCompaniesQuery } from "@/shared/lib/company/queries";
-import { getActiveCompanyPublicId } from "@/shared/lib/company/helpers";
+import { DepartmentProvider } from "@/shared/context/department-context";
+import { getDepartmentsQuery } from "@/shared/lib/department/queries";
+import { getActiveDepartmentPublicId } from "@/shared/lib/department/helpers";
 import { Toaster } from "@/components/ui/sonner";
 
 export default async function AppLayout({
@@ -17,13 +17,16 @@ export default async function AppLayout({
     redirect("/sign-in");
   }
 
-  const [companies, activeCompanyId] = await Promise.all([
-    getCompaniesQuery(),
-    getActiveCompanyPublicId(),
+  const [companies, activeDepartmentId] = await Promise.all([
+    getDepartmentsQuery(),
+    getActiveDepartmentPublicId(),
   ]);
 
   return (
-    <CompanyProvider companies={companies} initialCompanyId={activeCompanyId}>
+    <DepartmentProvider
+      companies={companies}
+      initialCompanyId={activeDepartmentId}
+    >
       <SidebarProvider>
         <div className="flex min-h-screen">
           <AppSidebar />
@@ -31,6 +34,6 @@ export default async function AppLayout({
           <Toaster />
         </div>
       </SidebarProvider>
-    </CompanyProvider>
+    </DepartmentProvider>
   );
 }

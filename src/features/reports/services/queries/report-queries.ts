@@ -65,13 +65,13 @@ export async function getReportDataQuery(
     },
   };
 
-  if (filters.companyId) {
-    const company = await prisma.company.findUnique({
-      where: { publicId: filters.companyId },
+  if (filters.departmentId) {
+    const dept = await prisma.department.findUnique({
+      where: { publicId: filters.departmentId },
       select: { id: true },
     });
-    if (company) {
-      where.companyId = company.id;
+    if (dept) {
+      where.departmentId = dept.id;
     }
   }
 

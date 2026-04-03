@@ -4,7 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/shared/lib/prisma";
 import { requireUser } from "@/shared/lib/auth/helpers";
 import { handleCommandError } from "@/shared/utils/error-handling";
-import { getActiveCompanyId } from "@/shared/lib/company/helpers";
+import { getActiveDepartmentId } from "@/shared/lib/department/helpers";
 import { findOrCreateEmployee } from "@/features/employees/services/commands/employee-commands";
 import { findOrCreateProduct } from "@/features/products/services/commands/product-commands";
 import { findOrCreateCustomer } from "@/features/customers/services/commands/customer-commands";
@@ -33,7 +33,7 @@ const createTransactionSchema = z.object({
   subcategoryId: z.string().min(1, "Wybierz podkategorię"),
   description: z.string().optional(),
   merchantName: z.string().optional(),
-  companyPublicId: z.string().optional(),
+  departmentPublicId: z.string().optional(),
   employeeName: z.string().optional(),
   customerName: z.string().optional(),
   invoiceNumber: z.string().optional(),
@@ -76,18 +76,18 @@ async function resolveSubcategoryId(publicId: string): Promise<number> {
   return sub.id;
 }
 
-async function resolveCompanyId(publicId?: string): Promise<number | null> {
+async function resolveDepartmentId(publicId?: string): Promise<number | null> {
   if (!publicId) {
-    return await getActiveCompanyId();
+    return await getActiveDepartmentId();
   }
-  const company = await prisma.company.findUnique({
+  const dept = await prisma.department.findUnique({
     where: { publicId },
     select: { id: true },
   });
-  if (!company) {
+  if (!dept) {
     throw new Error("Firma nie została znaleziona");
   }
-  return company.id;
+  return dept.id;
 }
 
 export async function createTransactionCommand(
@@ -98,7 +98,9 @@ export async function createTransactionCommand(
     const validated = createTransactionSchema.parse(input);
 
     const subcategoryId = await resolveSubcategoryId(validated.subcategoryId);
-    const companyId = await resolveCompanyId(validated.companyPublicId);
+    const departmentId = await resolveDepartmentId(
+      validated.departmentPublicId,
+    );
 
     let merchantId: number | null = null;
     if (validated.merchantName) {
@@ -108,12 +110,12 @@ export async function createTransactionCommand(
     let employeeId: number | null = null;
     if (
       validated.employeeName &&
-      companyId &&
+      departmentId &&
       (validated.type === "EXPENSE" || validated.type === "FORECAST_EXPENSE")
     ) {
       employeeId = await findOrCreateEmployee(
         validated.employeeName,
-        companyId,
+        departmentId,
         user.id,
       );
     }
@@ -145,7 +147,7 @@ export async function createTransactionCommand(
           subcategoryId,
           description: validated.description || null,
           merchantId,
-          companyId,
+          departmentId,
           employeeId,
           customerId,
           projectId,
@@ -216,7 +218,9 @@ export async function updateTransactionCommand(
     }
 
     const subcategoryId = await resolveSubcategoryId(validated.subcategoryId);
-    const companyId = await resolveCompanyId(validated.companyPublicId);
+    const departmentId = await resolveDepartmentId(
+      validated.departmentPublicId,
+    );
 
     let merchantId: number | null = null;
     if (validated.merchantName) {
@@ -226,12 +230,12 @@ export async function updateTransactionCommand(
     let employeeId: number | null = null;
     if (
       validated.employeeName &&
-      companyId &&
+      departmentId &&
       (validated.type === "EXPENSE" || validated.type === "FORECAST_EXPENSE")
     ) {
       employeeId = await findOrCreateEmployee(
         validated.employeeName,
-        companyId,
+        departmentId,
         user.id,
       );
     }
@@ -264,7 +268,7 @@ export async function updateTransactionCommand(
           subcategoryId,
           description: validated.description || null,
           merchantId,
-          companyId,
+          departmentId,
           employeeId,
           customerId,
           projectId,

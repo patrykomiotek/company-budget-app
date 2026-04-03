@@ -33,8 +33,8 @@ export interface TransactionWithDetails {
   categoryId: string;
   categoryName: string;
   categoryType: string;
-  companyId: string | null;
-  companyName: string | null;
+  departmentId: string | null;
+  departmentName: string | null;
   employeeId: string | null;
   employeeName: string | null;
   customerId: string | null;

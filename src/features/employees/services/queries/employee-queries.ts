@@ -8,14 +8,14 @@ import type {
 } from "../../contracts/employee.types";
 
 export async function getEmployeesQuery(
-  companyId?: number,
+  departmentId?: number,
 ): Promise<EmployeeOption[]> {
   const user = await requireUser();
 
   const employees = await prisma.employee.findMany({
     where: {
       userId: user.id,
-      ...(companyId ? { companyId } : {}),
+      ...(departmentId ? { departmentId } : {}),
     },
     select: { publicId: true, name: true },
     orderBy: { name: "asc" },
@@ -33,16 +33,16 @@ export async function getEmployeesListQuery(): Promise<EmployeeItem[]> {
   const employees = await prisma.employee.findMany({
     where: { userId: user.id },
     include: {
-      company: { select: { name: true } },
+      department: { select: { name: true } },
       _count: { select: { transactions: true } },
     },
-    orderBy: [{ company: { name: "asc" } }, { name: "asc" }],
+    orderBy: [{ department: { name: "asc" } }, { name: "asc" }],
   });
 
   return employees.map((e) => ({
     id: e.publicId,
     name: e.name,
-    companyName: e.company.name,
+    departmentName: e.department.name,
     transactionCount: e._count.transactions,
   }));
 }
@@ -52,7 +52,7 @@ export async function getEmployeeByIdQuery(publicId: string) {
 
   const employee = await prisma.employee.findFirst({
     where: { publicId, userId: user.id },
-    include: { company: { select: { publicId: true, name: true } } },
+    include: { department: { select: { publicId: true, name: true } } },
   });
 
   if (!employee) {
@@ -62,7 +62,7 @@ export async function getEmployeeByIdQuery(publicId: string) {
   return {
     id: employee.publicId,
     name: employee.name,
-    companyId: employee.company.publicId,
-    companyName: employee.company.name,
+    departmentId: employee.department.publicId,
+    departmentName: employee.department.name,
   };
 }
