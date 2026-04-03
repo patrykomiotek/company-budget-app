@@ -191,13 +191,13 @@ export function CustomersList({ customers }: CustomersListProps) {
 
   return (
     <>
-      <div className="flex items-center gap-2 px-4 py-2">
+      <div className="flex items-center justify-end gap-2 px-4 py-2">
         <Search className="h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Szukaj..."
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          className="h-8 max-w-sm"
+          className="h-8 w-48"
         />
       </div>
       <Table>

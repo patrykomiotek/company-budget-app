@@ -128,9 +128,10 @@
   }
 }
 
-/* Remove border radius from cards containing tables */
+/* Remove border radius and border from cards containing tables */
 [data-slot="card"]:has([data-slot="table-container"]) {
   border-radius: 0;
+  --tw-ring-shadow: 0 0 0 0 transparent;
 }
 
 /* Sticky table columns */

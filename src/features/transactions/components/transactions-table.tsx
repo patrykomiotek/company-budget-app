@@ -380,7 +380,7 @@ export function TransactionsTable({
               placeholder="Szukaj..."
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
-              className="h-8 max-w-sm"
+              className="h-8 w-48"
             />
           </div>
           <Popover>
