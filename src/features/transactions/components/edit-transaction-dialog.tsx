@@ -190,9 +190,7 @@ export function EditTransactionDialog({
         projectName: projectName || undefined,
         isPaid: !isForecastType(type) ? isPaid : undefined,
         invoiceSent:
-          !isForecastType(type) && isExpenseType(type)
-            ? invoiceSent
-            : undefined,
+          !isForecastType(type) && isIncomeType(type) ? invoiceSent : undefined,
         invoiceNumber: invoiceNumber || undefined,
         invoiceDueDate: invoiceDueDate || undefined,
         lineItems:
@@ -425,7 +423,7 @@ export function EditTransactionDialog({
                 />
                 <span className="text-sm">Opłacone</span>
               </label>
-              {isExpenseType(type) && (
+              {isIncomeType(type) && (
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"

@@ -163,14 +163,9 @@ export function ImportView({
     router.refresh();
   }
 
-  const incomeKinds = new Set(["vat", "proforma"]);
-
-  const displayedInvoices = invoices.filter((inv) => {
-    if (importType === "income") {
-      return incomeKinds.has(inv.kind);
-    }
-    return !incomeKinds.has(inv.kind);
-  });
+  // Show all invoices — the importType only affects how the transaction is created
+  // (INCOME vs EXPENSE), not which invoices are fetched from Fakturownia
+  const displayedInvoices = invoices;
 
   return (
     <>

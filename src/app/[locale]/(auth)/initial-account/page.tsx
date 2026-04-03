@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { InitialAccountForm } from "@/features/auth/components/initial-account-form";
 import { checkInitialSetupNeeded } from "@/features/auth/services/commands/initial-account-commands";
 
+export const dynamic = "force-dynamic";
+
 export default async function InitialAccountPage() {
   const setupNeeded = await checkInitialSetupNeeded();
 

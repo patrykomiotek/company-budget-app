@@ -59,7 +59,8 @@ function getIntervalDates(interval: string) {
       return null;
   }
 
-  const fmt = (d: Date) => d.toISOString().split("T")[0];
+  const fmt = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   return { start: fmt(start), end: fmt(end) };
 }
 

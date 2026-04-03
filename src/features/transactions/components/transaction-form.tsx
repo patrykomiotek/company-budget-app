@@ -192,9 +192,7 @@ export function TransactionForm({
         projectName: projectName || undefined,
         isPaid: !isForecastType(type) ? isPaid : undefined,
         invoiceSent:
-          !isForecastType(type) && isExpenseType(type)
-            ? invoiceSent
-            : undefined,
+          !isForecastType(type) && isIncomeType(type) ? invoiceSent : undefined,
         lineItems:
           lineItems.length > 0
             ? lineItems
@@ -521,7 +519,7 @@ export function TransactionForm({
                 />
                 <span className="text-sm">Opłacone</span>
               </label>
-              {isExpenseType(type) && (
+              {isIncomeType(type) && (
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
